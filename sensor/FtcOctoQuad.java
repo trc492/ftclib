@@ -20,11 +20,14 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
+import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import ftclib.archive.FtcOpMode;
+import trclib.archive.TrcDbgTrace;
 import trclib.archive.TrcEncoder;
 import trclib.archive.TrcWrapValueConverter;
 
@@ -35,9 +38,11 @@ import trclib.archive.TrcWrapValueConverter;
 public class FtcOctoQuad implements TrcEncoder
 {
     private static OctoQuad octoQuad = null;
+
+    public final TrcDbgTrace tracer;
+    private final String instanceName;
     private final int encIndex;
     private final TrcWrapValueConverter wrapValueConverter;
-    private double sign = 1.0;
     private double scale = 1.0;
     private double offset = 0.0;
     private double zeroOffset = 0.0;
@@ -59,6 +64,8 @@ public class FtcOctoQuad implements TrcEncoder
             octoQuad = hardwareMap.get(OctoQuad.class, instanceName);
         }
 
+        this.tracer = new TrcDbgTrace();
+        this.instanceName = instanceName;
         this.encIndex = encIndex;
         if (wrapValueLow != null && wrapValueHigh != null)
         {
@@ -69,6 +76,13 @@ public class FtcOctoQuad implements TrcEncoder
         {
             wrapValueConverter = null;
         }
+//        LynxModule module = hardwareMap.get(LynxModule.class, "Control Hub");
+//        LynxI2cConfigureChannelCommand cmd = new LynxI2cConfigureChannelCommand(module, I2C_BUS, LynxI2cConfigureChannelCommand.SpeedCode.FAST_400K);
+//        try {
+//            cmd.send();
+//        } catch (LynxNackException e) {
+//            e.printStackTrace();
+//        }
     }   //FtcOctoQuad
 
     /**
@@ -128,6 +142,7 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public void reset()
     {
+        tracer.traceDebug(instanceName, "Reset encoder " + encIndex);
         octoQuad.resetSinglePosition(encIndex);
         if (wrapValueConverter != null)
         {
@@ -143,7 +158,9 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public double getRawPosition()
     {
-        return octoQuad.readSinglePosition(encIndex);
+        double value = octoQuad.readSinglePosition(encIndex);
+        tracer.traceDebug(instanceName, "RawPosition=" + value);
+        return value;
     }   //getRawPosition
 
     /**
@@ -155,7 +172,9 @@ public class FtcOctoQuad implements TrcEncoder
     public double getScaledPosition()
     {
         double value = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
-        return (value - zeroOffset) * scale * sign + offset;
+        value = (value - zeroOffset) * scale + offset;
+        tracer.traceDebug(instanceName, "ScaledPosition=" + value);
+        return value;
     }   //getScaledPosition
 
     /**
@@ -166,7 +185,8 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public void setInverted(boolean inverted)
     {
-        this.sign = inverted? -1.0: 1.0;
+        octoQuad.setSingleEncoderDirection(
+            encIndex, inverted? OctoQuadBase.EncoderDirection.REVERSE: OctoQuadBase.EncoderDirection.FORWARD);
     }   //setInverted
 
     /**
@@ -177,7 +197,7 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public boolean isInverted()
     {
-        return sign < 0.0;
+        return octoQuad.getSingleEncoderDirection(encIndex) == OctoQuadBase.EncoderDirection.REVERSE;
     }   //isInverted
 
     /**
