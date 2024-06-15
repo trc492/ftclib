@@ -26,10 +26,10 @@ import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import ftclib.archive.FtcOpMode;
+import ftclib.robotcore.FtcOpMode;
 import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcEncoder;
-import trclib.archive.TrcWrapValueConverter;
+import trclib.sensor.TrcEncoder;
+import trclib.dataprocessor.TrcWrapValueConverter;
 
 /**
  * This class implements a wrapper to OctoQuad that supports up to 8 quadrature or PWM encoders. It implements the
@@ -151,31 +151,57 @@ public class FtcOctoQuad implements TrcEncoder
     }   //reset
 
     /**
-     * This method reads the raw position of the specified encoder.
+     * This method reads the raw encoder position in encoder units (generally encoder counts).
      *
-     * @return raw encoder position.
+     * @return raw position of the encoder in encoder units.
      */
     @Override
     public double getRawPosition()
     {
-        double value = octoQuad.readSinglePosition(encIndex);
-        tracer.traceDebug(instanceName, "RawPosition=" + value);
-        return value;
+        double pos = octoQuad.readSinglePosition(encIndex);
+        tracer.traceDebug(instanceName, "RawPos=" + pos);
+        return pos;
     }   //getRawPosition
 
     /**
-     * This method returns the position of the specified encoder adjusted by scale and offset.
+     * This method returns the encoder position adjusted by scale and offset.
      *
      * @return encoder position adjusted by scale and offset.
      */
     @Override
     public double getScaledPosition()
     {
-        double value = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
-        value = (value - zeroOffset) * scale + offset;
-        tracer.traceDebug(instanceName, "ScaledPosition=" + value);
-        return value;
+        double pos = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
+        pos = (pos - zeroOffset) * scale + offset;
+        tracer.traceDebug(instanceName, "ScaledPos=" + pos);
+        return pos;
     }   //getScaledPosition
+
+    /**
+     * This method reads the raw encoder velocity in encoder units per second.
+     *
+     * @return raw encoder velocity in encoder units per second.
+     */
+    @Override
+    public double getRawVelocity()
+    {
+        double vel = octoQuad.readSingleVelocity(encIndex);
+        tracer.traceDebug(instanceName, "RawVel=" + vel);
+        return vel;
+    }   //getRawVelocity
+
+    /**
+     * This method returns the encoder velocity adjusted by scale.
+     *
+     * @return encoder velocity adjusted by scale.
+     */
+    @Override
+    public double getScaledVelocity()
+    {
+        double vel = octoQuad.readSingleVelocity(encIndex) * scale;
+        tracer.traceDebug(instanceName, "ScaledVel=" + vel);
+        return vel;
+    }   //getScaledVelocity
 
     /**
      * This method reverses the direction of the encoder.

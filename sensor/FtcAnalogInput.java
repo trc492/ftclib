@@ -20,36 +20,23 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
+import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 import ftclib.robotcore.FtcOpMode;
+import trclib.sensor.TrcAnalogInput;
 import trclib.archive.TrcFilter;
-import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 
 /**
- * This class implements the Modern Range sensor extending TrcAnalogInput. It provides implementation of the abstract
- * methods in TrcAnalogInput.
+ * This class implements a platform dependent AnalogInput sensor extending TrcAnalogInput. It provides implementation
+ * of the abstract methods in TrcAnalogInput.
  */
-public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
+public class FtcAnalogInput extends TrcAnalogInput
 {
-    public enum DataType
-    {
-        DISTANCE_INCH,
-        ULTRASONIC_CM,
-        OPTICAL_CM,
-        ULTRASONIC_RAW,
-        OPTICAL_RAW,
-        RAW_LIGHT_DETECTED,
-        LIGHT_DETECTED
-    }   //enum DataType
-
-    public ModernRoboticsI2cRangeSensor sensor;
+    private final AnalogInput sensor;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -59,11 +46,11 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
+    public FtcAnalogInput(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
     {
-        super(instanceName, 1, filters);
-        sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, instanceName);
-    }   //FtcMRRangeSensor
+        super(instanceName, 1, 0, filters);
+        sensor = hardwareMap.get(AnalogInput.class, instanceName);
+    }   //FtcAnalogInput
 
     /**
      * Constructor: Creates an instance of the object.
@@ -72,27 +59,27 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(String instanceName, TrcFilter[] filters)
+    public FtcAnalogInput(String instanceName, TrcFilter[] filters)
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, filters);
-    }   //FtcMRRangeSensor
+    }   //FtcAnalogInput
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcMRRangeSensor(String instanceName)
+    public FtcAnalogInput(String instanceName)
     {
         this(instanceName, null);
-    }   //FtcMRRangeSensor
+    }   //FtcAnalogInput
 
     /**
      * This method calibrates the sensor.
      */
     public synchronized void calibrate()
     {
-        calibrate(DataType.DISTANCE_INCH);
+        calibrate(DataType.INPUT_DATA);
     }   //calibrate
 
     //
@@ -102,48 +89,33 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
     /**
      * This method returns the raw sensor data of the specified type.
      *
-     * @param index specifies the data index.
+     * @param index specifies the data index (not used).
      * @param dataType specifies the data type.
-     * @return raw sensor data of the specified index and type.
+     * @return raw sensor data of the specified type.
      */
     @Override
     public synchronized SensorData<Double> getRawData(int index, DataType dataType)
     {
-        SensorData<Double> data = null;
-        double timestamp = TrcTimer.getCurrentTime();
-
-        switch (dataType)
+        SensorData<Double> data;
+        //
+        // Ultrasonic sensor supports only INPUT_DATA type.
+        //
+        if (dataType == DataType.INPUT_DATA || dataType == DataType.NORMALIZED_DATA)
         {
-            case DISTANCE_INCH:
-                data = new SensorData<>(timestamp, sensor.getDistance(DistanceUnit.INCH));
-                break;
-
-            case ULTRASONIC_CM:
-                data = new SensorData<>(timestamp, sensor.cmUltrasonic());
-                break;
-
-            case OPTICAL_CM:
-                data = new SensorData<>(timestamp, sensor.cmOptical());
-                break;
-
-            case ULTRASONIC_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawUltrasonic());
-                break;
-
-            case OPTICAL_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawOptical());
-                break;
-
-            case RAW_LIGHT_DETECTED:
-                data = new SensorData<>(timestamp, sensor.getRawLightDetected());
-                break;
-
-            case LIGHT_DETECTED:
-                data = new SensorData<>(timestamp, sensor.getLightDetected());
-                break;
+            if (getInputElapsedTimer != null) getInputElapsedTimer.recordStartTime();
+            double sensorData = sensor.getVoltage();
+            if (getInputElapsedTimer != null) getInputElapsedTimer.recordEndTime();
+            data = new SensorData<>(
+                TrcTimer.getCurrentTime(),
+                dataType == DataType.INPUT_DATA? sensorData: sensorData/sensor.getMaxVoltage());
+        }
+        else
+        {
+            throw new UnsupportedOperationException(
+                    "AnalogInput sensor only support INPUT_DATA/NORMALIZED_DATA types.");
         }
 
         return data;
     }   //getRawData
 
-}   //class FtcMRRangeSensor
+}   //class FtcAnalogInput

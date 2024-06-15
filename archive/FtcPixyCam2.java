@@ -28,7 +28,9 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
 import java.util.Arrays;
 
-import trclib.archive.TrcPixyCam2;
+import ftclib.robotcore.FtcI2cDevice;
+import ftclib.robotcore.FtcOpMode;
+import trclib.vision.TrcPixyCam2;
 
 /**
  * This class implements a platform dependent pixy camera 2 that is connected to an I2C bus.

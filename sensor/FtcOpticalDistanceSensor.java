@@ -20,12 +20,10 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.archive.TrcFilter;
@@ -33,23 +31,18 @@ import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 
 /**
- * This class implements the Modern Range sensor extending TrcAnalogInput. It provides implementation of the abstract
- * methods in TrcAnalogInput.
+ * This class implements the Modern Robotics Optical Distance sensor extending TrcAnalogInput. It provides
+ * implementation of the abstract methods in TrcAnalogInput.
  */
-public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
+public class FtcOpticalDistanceSensor extends TrcSensor<FtcOpticalDistanceSensor.DataType>
 {
     public enum DataType
     {
-        DISTANCE_INCH,
-        ULTRASONIC_CM,
-        OPTICAL_CM,
-        ULTRASONIC_RAW,
-        OPTICAL_RAW,
         RAW_LIGHT_DETECTED,
         LIGHT_DETECTED
-    }   //enum DataType
+    }   //DataType
 
-    public ModernRoboticsI2cRangeSensor sensor;
+    public OpticalDistanceSensor sensor;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -59,11 +52,11 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
+    public FtcOpticalDistanceSensor(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
     {
         super(instanceName, 1, filters);
-        sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, instanceName);
-    }   //FtcMRRangeSensor
+        sensor = hardwareMap.get(OpticalDistanceSensor.class, instanceName);
+    }   //FtcOpticalDistanceSensor
 
     /**
      * Constructor: Creates an instance of the object.
@@ -72,27 +65,27 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(String instanceName, TrcFilter[] filters)
+    public FtcOpticalDistanceSensor(String instanceName, TrcFilter[] filters)
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, filters);
-    }   //FtcMRRangeSensor
+    }   //FtcOpticalDistanceSensor
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcMRRangeSensor(String instanceName)
+    public FtcOpticalDistanceSensor(String instanceName)
     {
         this(instanceName, null);
-    }   //FtcMRRangeSensor
+    }   //FtcOpticalDistanceSensor
 
     /**
      * This method calibrates the sensor.
      */
     public synchronized void calibrate()
     {
-        calibrate(DataType.DISTANCE_INCH);
+        calibrate(DataType.RAW_LIGHT_DETECTED);
     }   //calibrate
 
     //
@@ -104,7 +97,7 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      *
      * @param index specifies the data index.
      * @param dataType specifies the data type.
-     * @return raw sensor data of the specified index and type.
+     * @return raw sensor data of the specified type.
      */
     @Override
     public synchronized SensorData<Double> getRawData(int index, DataType dataType)
@@ -114,26 +107,6 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
 
         switch (dataType)
         {
-            case DISTANCE_INCH:
-                data = new SensorData<>(timestamp, sensor.getDistance(DistanceUnit.INCH));
-                break;
-
-            case ULTRASONIC_CM:
-                data = new SensorData<>(timestamp, sensor.cmUltrasonic());
-                break;
-
-            case OPTICAL_CM:
-                data = new SensorData<>(timestamp, sensor.cmOptical());
-                break;
-
-            case ULTRASONIC_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawUltrasonic());
-                break;
-
-            case OPTICAL_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawOptical());
-                break;
-
             case RAW_LIGHT_DETECTED:
                 data = new SensorData<>(timestamp, sensor.getRawLightDetected());
                 break;
@@ -146,4 +119,4 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
         return data;
     }   //getRawData
 
-}   //class FtcMRRangeSensor
+}   //class FtcOpticalDistanceSensor

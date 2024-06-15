@@ -24,6 +24,7 @@ package ftclib.archive;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import ftclib.robotcore.FtcI2cDevice;
 import trclib.archive.TrcUtil;
 
 /**

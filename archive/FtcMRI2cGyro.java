@@ -26,9 +26,10 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
-import trclib.archive.TrcGyro;
-import trclib.archive.TrcSensor;
-import trclib.archive.TrcTimer;
+import ftclib.robotcore.FtcOpMode;
+import trclib.sensor.TrcGyro;
+import trclib.sensor.TrcSensor;
+import trclib.timer.TrcTimer;
 import trclib.archive.TrcUtil;
 
 /**

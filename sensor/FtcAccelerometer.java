@@ -20,25 +20,26 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.robotcore.hardware.GyroSensor;
+import com.qualcomm.robotcore.hardware.AccelerationSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+
 import ftclib.robotcore.FtcOpMode;
+import trclib.sensor.TrcAccelerometer;
 import trclib.archive.TrcFilter;
-import trclib.sensor.TrcGyro;
 import trclib.timer.TrcTimer;
 
 /**
- * This class implements the Modern Robotics gyro extending TrcGyro. It provides implementation of the abstract
- * methods in TrcGyro. The Modern Robotics gyro supports 3 axes: x, y and z. It provides rotation rate data for
- * all 3 axes. However, it only provides heading data for the z-axis and the heading data is wrap-around.
+ * This class implements the platform dependent accelerometer extending TrcAccelerometer. It provides implementation
+ * of the abstract methods in TrcAccelerometer. It supports 3 axes: x, y and z. It provides acceleration data for all
+ * 3 axes. However, it doesn't provide any velocity or distance data.
  */
-public class FtcMRGyro extends TrcGyro
+public class FtcAccelerometer extends TrcAccelerometer
 {
-    private final ModernRoboticsI2cGyro gyro;
+    private final AccelerationSensor accel;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -48,11 +49,13 @@ public class FtcMRGyro extends TrcGyro
      * @param filters specifies an array of filters to use for filtering sensor noise, one for each axis. Since we
      *                have 3 axes, the array should have 3 elements. If no filters are used, it can be set to null.
      */
-    public FtcMRGyro(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
+    public FtcAccelerometer(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
     {
-        super(instanceName, 3, GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS, filters);
-        gyro = (ModernRoboticsI2cGyro)hardwareMap.get(GyroSensor.class, instanceName);
-    }   //FtcMRGyro
+        super(instanceName, 3,
+              ACCEL_HAS_X_AXIS | ACCEL_HAS_Y_AXIS | ACCEL_HAS_Z_AXIS | ACCEL_INTEGRATE | ACCEL_DOUBLE_INTEGRATE,
+              filters);
+        accel = hardwareMap.get(AccelerationSensor.class, instanceName);
+    }   //FtcAccelerometer
 
     /**
      * Constructor: Creates an instance of the object.
@@ -61,66 +64,31 @@ public class FtcMRGyro extends TrcGyro
      * @param filters specifies an array of filters to use for filtering sensor noise, one for each axis. Since we
      *                have 3 axes, the array should have 3 elements. If no filters are used, it can be set to null.
      */
-    public FtcMRGyro(String instanceName, TrcFilter[] filters)
+    public FtcAccelerometer(String instanceName, TrcFilter[] filters)
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, filters);
-    }   //FtcMRGyro
+    }   //FtcAccelerometer
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcMRGyro(String instanceName)
+    public FtcAccelerometer(String instanceName)
     {
         this(instanceName, null);
-    }   //FtcMRGyro
+    }   //FtcAccelerometer
 
     /**
      * This method calibrates the sensor.
      */
-    public synchronized void calibrate()
+    public void calibrate()
     {
-        gyro.calibrate();
-        while (gyro.isCalibrating())
-        {
-            TrcTimer.sleep(10);
-        }
+        calibrate(DataType.ACCELERATION);
     }   //calibrate
 
     //
-    // Overriding TrcGyro methods.
-    //
-
-    /**
-     * This method overrides the TrcGyro class. It doesn't have an x-integrator.
-     */
-    @Override
-    public void resetXIntegrator()
-    {
-        throw new UnsupportedOperationException("Modern Robotics Gyro does not have an x-integrator.");
-    }   //resetXIntegrator
-
-    /**
-     * This method overrides the TrcGyro class. It doesn't have an y-integrator.
-     */
-    @Override
-    public void resetYIntegrator()
-    {
-        throw new UnsupportedOperationException("Modern Robotics Gyro does not have an y-integrator.");
-    }   //resetYIntegrator
-
-    /**
-     * This method overrides the TrcGyro class and calls its own.
-     */
-    @Override
-    public synchronized void resetZIntegrator()
-    {
-        gyro.resetZAxisIntegrator();
-    }   //resetZIntegrator
-
-    //
-    // Implements TrcGyro abstract methods.
+    // Implements TrcAccelerometer abstract methods.
     //
 
     /**
@@ -133,16 +101,15 @@ public class FtcMRGyro extends TrcGyro
     public synchronized SensorData<Double> getRawXData(DataType dataType)
     {
         SensorData<Double> data;
-        //
-        // MR gyro supports only rotation rate for the x-axis.
-        //
-        if (dataType == DataType.ROTATION_RATE)
+
+        if (dataType == DataType.ACCELERATION)
         {
-            data = new SensorData<>(TrcTimer.getCurrentTime(), (double)gyro.rawX());
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.xAccel);
         }
         else
         {
-            throw new UnsupportedOperationException("Modern Robotics Gyro only supports rotation rate.");
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
         return data;
@@ -158,16 +125,15 @@ public class FtcMRGyro extends TrcGyro
     public synchronized SensorData<Double> getRawYData(DataType dataType)
     {
         SensorData<Double> data;
-        //
-        // MR gyro supports only rotation rate for the y-axis.
-        //
-        if (dataType == DataType.ROTATION_RATE)
+
+        if (dataType == DataType.ACCELERATION)
         {
-            data = new SensorData<>(TrcTimer.getCurrentTime(), (double)gyro.rawY());
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.yAccel);
         }
         else
         {
-            throw new UnsupportedOperationException("Modern Robotics Gyro only supports rotation rate.");
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
         return data;
@@ -182,18 +148,19 @@ public class FtcMRGyro extends TrcGyro
     @Override
     public synchronized SensorData<Double> getRawZData(DataType dataType)
     {
-        double value = 0.0;
+        SensorData<Double> data;
 
-        if (dataType == DataType.ROTATION_RATE)
+        if (dataType == DataType.ACCELERATION)
         {
-            value = gyro.rawZ();
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.zAccel);
         }
-        else if (dataType == DataType.HEADING)
+        else
         {
-            value = -gyro.getIntegratedZValue();
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
-        return new SensorData<>(TrcTimer.getCurrentTime(), value);
+        return data;
     }   //getRawZData
 
-}   //class FtcMRGyro
+}   //class FtcAccelerometer
