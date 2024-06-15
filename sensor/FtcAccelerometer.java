@@ -29,7 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcAccelerometer;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.timer.TrcTimer;
 
 /**

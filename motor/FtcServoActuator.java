@@ -25,7 +25,7 @@ package ftclib.motor;
 import java.util.Arrays;
 import java.util.Locale;
 
-import trclib.archive.TrcDbgTrace;
+import trclib.robotcore.TrcDbgTrace;
 
 public class FtcServoActuator
 {

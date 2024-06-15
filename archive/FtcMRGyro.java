@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.sensor.TrcGyro;
 import trclib.timer.TrcTimer;
 

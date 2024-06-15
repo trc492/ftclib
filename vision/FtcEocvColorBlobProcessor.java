@@ -30,10 +30,10 @@ import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibra
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
 
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcOpenCvColorBlobPipeline;
-import trclib.archive.TrcOpenCvDetector;
-import trclib.archive.TrcOpenCvPipeline;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcOpenCvColorBlobPipeline;
+import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcOpenCvPipeline;
 
 /**
  * This class implements a vision processor on top of an EOCV color blob pipeline.

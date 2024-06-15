@@ -24,7 +24,7 @@ package ftclib.robotcore;
 
 import android.util.Log;
 
-import trclib.archive.TrcDbgTrace;
+import trclib.robotcore.TrcDbgTrace;
 
 /**
  * This class implements the TrcDbgTrace.DbgLog interface which provides platform specific ways to print trace log

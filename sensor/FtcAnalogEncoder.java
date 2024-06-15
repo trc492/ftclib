@@ -22,11 +22,11 @@
 
 package ftclib.sensor;
 
-import trclib.archive.TrcDbgTrace;
+import trclib.robotcore.TrcDbgTrace;
 import trclib.dataprocessor.TrcWrapValueConverter;
 import trclib.sensor.TrcAnalogInput.DataType;
 import trclib.sensor.TrcEncoder;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 
 /**
  * This class implements an Analog Absolute Encoders that implements the TrcEncoder interface to allow compatibility

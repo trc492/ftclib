@@ -27,7 +27,7 @@ import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcDbgTrace;
+import trclib.robotcore.TrcDbgTrace;
 import trclib.sensor.TrcEncoder;
 import trclib.dataprocessor.TrcWrapValueConverter;
 

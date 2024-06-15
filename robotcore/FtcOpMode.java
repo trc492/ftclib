@@ -33,14 +33,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import ftclib.inputoutput.FtcDashboard;
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcEvent;
-import trclib.archive.TrcMotor;
-import trclib.archive.TrcPeriodicThread;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTaskMgr;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcEvent;
+import trclib.motor.TrcMotor;
+import trclib.robotcore.TrcPeriodicThread;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcTaskMgr;
 import trclib.timer.TrcTimer;
-import trclib.archive.TrcWatchdogMgr;
+import trclib.robotcore.TrcWatchdogMgr;
 
 /**
  * This class implements a cooperative multi-tasking scheduler extending LinearOpMode.

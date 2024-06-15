@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcRobotBattery;
+import trclib.sensor.TrcRobotBattery;
 
 /**
  * This class extends the TrcRobotBattery which provides a task to monitor the robot battery levels and the methods to

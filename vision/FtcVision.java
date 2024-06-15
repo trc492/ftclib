@@ -39,7 +39,7 @@ import java.lang.reflect.Field;
 import java.util.concurrent.TimeUnit;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcDbgTrace;
+import trclib.robotcore.TrcDbgTrace;
 import trclib.timer.TrcTimer;
 
 /**

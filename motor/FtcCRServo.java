@@ -30,8 +30,8 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcDigitalInput;
 import trclib.sensor.TrcEncoder;
-import trclib.archive.TrcMotor;
-import trclib.archive.TrcPidController;
+import trclib.motor.TrcMotor;
+import trclib.robotcore.TrcPidController;
 
 /**
  * This class implements an FTC Continuous Rotation Servo extending TrcMotor. It provides implementation of the

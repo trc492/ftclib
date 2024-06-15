@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcDigitalOutput;
+import trclib.inputoutput.TrcDigitalOutput;
 
 /**
  * This class implements a platform dependent digital output extending TrcDigitalOutput. It provides

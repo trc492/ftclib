@@ -24,7 +24,7 @@ package ftclib.robotcore;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import trclib.archive.TrcSerialBusDevice;
+import trclib.robotcore.TrcSerialBusDevice;
 
 /**
  * This class implements a platform dependent I2C device.

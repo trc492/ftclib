@@ -26,10 +26,10 @@ package ftclib.vision;
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcOpenCvColorBlobPipeline;
-import trclib.archive.TrcOpenCvDetector;
-import trclib.archive.TrcOpenCvPipeline;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcOpenCvColorBlobPipeline;
+import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcOpenCvPipeline;
 
 /**
  * This class implements an EOCV color blob pipeline.

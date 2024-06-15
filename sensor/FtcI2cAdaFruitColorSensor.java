@@ -31,7 +31,7 @@ import ftclib.robotcore.FtcI2cDevice;
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
-import trclib.archive.TrcUtil;
+import trclib.robotcore.TrcUtil;
 
 /**
  * This class implements the AdaFruit Color Sensor extending FtcI2cDevice.

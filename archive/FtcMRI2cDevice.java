@@ -25,7 +25,7 @@ package ftclib.archive;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcI2cDevice;
-import trclib.archive.TrcUtil;
+import trclib.robotcore.TrcUtil;
 
 /**
  * This class implements the common features of all Modern Robotics I2C devices. Typically, this class will be

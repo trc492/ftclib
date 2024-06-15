@@ -33,8 +33,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcDigitalInput;
 import trclib.sensor.TrcEncoder;
-import trclib.archive.TrcMotor;
-import trclib.archive.TrcPidController;
+import trclib.motor.TrcMotor;
+import trclib.robotcore.TrcPidController;
 import trclib.timer.TrcTimer;
 
 /**

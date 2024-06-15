@@ -29,7 +29,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 

@@ -30,10 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcHomographyMapper;
-import trclib.archive.TrcOpenCvDetector;
-import trclib.archive.TrcOpenCvPipeline;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcHomographyMapper;
+import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcOpenCvPipeline;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**

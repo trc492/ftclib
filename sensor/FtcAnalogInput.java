@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcAnalogInput;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.timer.TrcTimer;
 
 /**

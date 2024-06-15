@@ -27,7 +27,7 @@ import android.hardware.SensorManager;
 
 import ftclib.sensor.FtcAndroidSensor;
 import trclib.sensor.TrcAccelerometer;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.timer.TrcTimer;
 
 /**

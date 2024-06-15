@@ -24,7 +24,7 @@ package ftclib.sensor;
 
 import android.hardware.Sensor;
 
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.sensor.TrcGyro;
 import trclib.timer.TrcTimer;
 

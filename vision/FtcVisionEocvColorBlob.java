@@ -29,9 +29,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcHomographyMapper;
-import trclib.archive.TrcOpenCvColorBlobPipeline;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcHomographyMapper;
+import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**

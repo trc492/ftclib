@@ -30,7 +30,7 @@ import java.util.Arrays;
 
 import ftclib.robotcore.FtcI2cDevice;
 import ftclib.robotcore.FtcOpMode;
-import trclib.vision.TrcPixyCam2;
+import trclib.archive.TrcPixyCam2;
 
 /**
  * This class implements a platform dependent pixy camera 2 that is connected to an I2C bus.

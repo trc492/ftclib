@@ -31,7 +31,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Scanner;
 
-import trclib.archive.TrcPidController;
+import trclib.robotcore.TrcPidController;
 
 /**
  * This class implements a PID Coefficient cache that write through to file storage on disk. The file format is

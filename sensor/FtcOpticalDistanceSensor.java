@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 

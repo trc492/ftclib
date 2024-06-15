@@ -28,7 +28,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcFilter;
+import trclib.dataprocessor.TrcFilter;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 

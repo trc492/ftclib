@@ -34,8 +34,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Locale;
 
-import trclib.archive.TrcDbgTrace;
-import trclib.archive.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.path.TrcPose2D;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**

@@ -27,7 +27,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.ServoController;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcServo;
+import trclib.motor.TrcServo;
 import trclib.timer.TrcTimer;
 
 /**

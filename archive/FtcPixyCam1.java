@@ -28,8 +28,8 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
 import ftclib.robotcore.FtcI2cDevice;
 import ftclib.robotcore.FtcOpMode;
-import trclib.archive.TrcEvent;
-import trclib.vision.TrcPixyCam1;
+import trclib.robotcore.TrcEvent;
+import trclib.archive.TrcPixyCam1;
 
 /**
  * This class implements a platform dependent pixy camera 1 that is connected to an I2C bus.

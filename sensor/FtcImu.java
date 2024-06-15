@@ -34,8 +34,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcGyro;
-import trclib.archive.TrcRobot;
-import trclib.archive.TrcTaskMgr;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcTaskMgr;
 import trclib.timer.TrcTimer;
 
 /**
