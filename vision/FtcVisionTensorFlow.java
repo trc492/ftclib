@@ -37,7 +37,7 @@ import java.util.Locale;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
-import trclib.path.TrcPose2D;
+import trclib.pathdrive.TrcPose2D;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
