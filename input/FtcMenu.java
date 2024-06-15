@@ -20,8 +20,9 @@
  * SOFTWARE.
  */
 
-package ftclib.inputoutput;
+package ftclib.input;
 
+import ftclib.output.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.timer.TrcTimer;
 

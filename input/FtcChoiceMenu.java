@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package ftclib.inputoutput;
+package ftclib.input;
 
 import java.util.ArrayList;
 

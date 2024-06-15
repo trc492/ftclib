@@ -20,17 +20,19 @@
  * SOFTWARE.
  */
 
-package ftclib.motor;
+package ftclib.subsystem;
 
 import java.util.Arrays;
 import java.util.Locale;
 
+import ftclib.motor.FtcCRServo;
+import ftclib.motor.FtcDcMotor;
 import ftclib.sensor.FtcAnalogEncoder;
 import ftclib.sensor.FtcDigitalInput;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.motor.TrcMotor;
 import trclib.sensor.TrcRobotBattery;
-import trclib.robotcore.TrcUtil;
+import trclib.dataprocessor.TrcUtil;
 
 /**
  * This class implements a platform dependent motor actuator. A motor actuator consists of a DC motor or a continuous

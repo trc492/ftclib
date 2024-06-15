@@ -20,13 +20,13 @@
  * SOFTWARE.
  */
 
-package ftclib.inputoutput;
+package ftclib.output;
 
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.inputoutput.TrcDigitalOutput;
+import trclib.output.TrcDigitalOutput;
 
 /**
  * This class implements a platform dependent digital output extending TrcDigitalOutput. It provides

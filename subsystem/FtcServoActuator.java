@@ -20,11 +20,12 @@
  * SOFTWARE.
  */
 
-package ftclib.motor;
+package ftclib.subsystem;
 
 import java.util.Arrays;
 import java.util.Locale;
 
+import ftclib.motor.FtcServo;
 import trclib.robotcore.TrcDbgTrace;
 
 public class FtcServoActuator

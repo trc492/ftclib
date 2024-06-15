@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package ftclib.inputoutput;
+package ftclib.input;
 
 /**
  * This class implements a value menu where a default value is displayed. The user can press the UP and DOWN button

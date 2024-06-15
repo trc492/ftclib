@@ -30,7 +30,7 @@ import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcGyro;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
-import trclib.robotcore.TrcUtil;
+import trclib.dataprocessor.TrcUtil;
 
 /**
  * This class implements the Modern Robotics Gyro extending FtcMRI2cDevice that implements the common features of

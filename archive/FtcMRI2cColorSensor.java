@@ -29,7 +29,7 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
-import trclib.robotcore.TrcUtil;
+import trclib.dataprocessor.TrcUtil;
 
 /**
  * This class implements the Modern Robotics Color Sensor extending FtcMRI2cDevice that implements the common

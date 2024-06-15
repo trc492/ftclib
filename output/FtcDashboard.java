@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package ftclib.inputoutput;
+package ftclib.output;
 
 import android.graphics.Paint;
 import android.widget.TextView;
@@ -30,7 +30,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 
-import trclib.inputoutput.TrcDashboard;
+import trclib.output.TrcDashboard;
 
 /**
  * This class is a wrapper for the Telemetry class. In addition to providing a way to send named data to the Driver

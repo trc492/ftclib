@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package ftclib.sensor;
+package ftclib.archive;
 
 import android.content.Context;
 import android.hardware.Sensor;

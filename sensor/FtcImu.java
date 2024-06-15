@@ -81,8 +81,7 @@ public class FtcImu extends TrcGyro
         // REV IMU has a 3-axis gyro. The angular orientation data it returns is in Ordinal system.
         // So we need to convert it to Cartesian system.
         //
-        super(instanceName, 3,
-              GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS | GYRO_CONVERT_TO_CARTESIAN, null);
+        super(instanceName, 3, GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS, null);
         //
         // Initialize the Rev built-in IMU, can be either BNO055 or BHI260.
         //
@@ -182,7 +181,7 @@ public class FtcImu extends TrcGyro
         // So we need to convert it to Cartesian system.
         //
         super(instanceName, 3,
-              GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS | GYRO_CONVERT_TO_CARTESIAN, null);
+              GYRO_HAS_X_AXIS | GYRO_HAS_Y_AXIS | GYRO_HAS_Z_AXIS, null);
         //
         // Initialize the Rev built-in IMU, can be either BNO055 or BHI260.
         //
