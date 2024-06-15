@@ -315,7 +315,7 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         }
 
         setBulkCachingModeEnabled(true);
-        TrcTaskMgr.registerIoTaskLoopCallback(this::ioTaskLoopBegin, null);
+        TrcTaskMgr.registerIoTaskLoopCallback(moduleName, this::ioTaskLoopBegin, null);
         //
         // Initialize mode start time before match starts in case somebody calls TrcUtil.getModeElapsedTime before
         // competition starts (e.g. in robotInit) so it will report elapsed time from the "Init" button being pressed.

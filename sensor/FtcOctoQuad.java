@@ -22,12 +22,15 @@
 
 package ftclib.sensor;
 
+import com.qualcomm.hardware.digitalchickenlabs.CachingOctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcTaskMgr;
 import trclib.sensor.TrcEncoder;
 import trclib.dataprocessor.TrcWrapValueConverter;
 
@@ -37,7 +40,8 @@ import trclib.dataprocessor.TrcWrapValueConverter;
  */
 public class FtcOctoQuad implements TrcEncoder
 {
-    private static OctoQuad octoQuad = null;
+    private static final String moduleName = FtcOctoQuad.class.getSimpleName();
+    private static CachingOctoQuad octoQuad = null;
 
     public final TrcDbgTrace tracer;
     private final String instanceName;
@@ -61,7 +65,9 @@ public class FtcOctoQuad implements TrcEncoder
     {
         if (octoQuad == null)
         {
-            octoQuad = hardwareMap.get(OctoQuad.class, instanceName);
+            octoQuad = (CachingOctoQuad) hardwareMap.get(OctoQuad.class, instanceName);
+            octoQuad.setCachingMode(CachingOctoQuad.CachingMode.MANUAL);
+            TrcTaskMgr.registerIoTaskLoopCallback(moduleName, this::ioTaskLoopBegin, null);
         }
 
         this.tracer = new TrcDbgTrace();
@@ -108,6 +114,16 @@ public class FtcOctoQuad implements TrcEncoder
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, encIndex, null, null);
     }   //FtcOctoQuad
+
+    /**
+     * This method is called by the IO task thread at the beginning of the IO loop so we can refresh the cache.
+     *
+     * @param runMode specifies the robot run mode (not used).
+     */
+    private void ioTaskLoopBegin(TrcRobot.RunMode runMode)
+    {
+        octoQuad.refreshCache();
+    }   //ioTaskLoopBegin
 
     /**
      * This method enables/disables the Wrap Value Converter task.
@@ -158,7 +174,7 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public double getRawPosition()
     {
-        double pos = octoQuad.readSinglePosition(encIndex);
+        double pos = octoQuad.readSinglePosition_Caching(encIndex);
         tracer.traceDebug(instanceName, "RawPos=" + pos);
         return pos;
     }   //getRawPosition
@@ -185,7 +201,7 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public double getRawVelocity()
     {
-        double vel = octoQuad.readSingleVelocity(encIndex);
+        double vel = octoQuad.readSingleVelocity_Caching(encIndex);
         tracer.traceDebug(instanceName, "RawVel=" + vel);
         return vel;
     }   //getRawVelocity
@@ -198,7 +214,7 @@ public class FtcOctoQuad implements TrcEncoder
     @Override
     public double getScaledVelocity()
     {
-        double vel = octoQuad.readSingleVelocity(encIndex) * scale;
+        double vel = octoQuad.readSingleVelocity_Caching(encIndex) * scale;
         tracer.traceDebug(instanceName, "ScaledVel=" + vel);
         return vel;
     }   //getScaledVelocity
