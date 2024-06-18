@@ -22,6 +22,7 @@
 
 package ftclib.sensor;
 
+/*
 import com.qualcomm.hardware.digitalchickenlabs.CachingOctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
@@ -258,3 +259,4 @@ public class FtcOctoQuad implements TrcEncoder
     }   //setScaleAndOffset
 
 }   //class FtcOctoQuad
+*/
