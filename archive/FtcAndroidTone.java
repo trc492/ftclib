@@ -27,7 +27,7 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 
-import trclib.archive.TrcTone;
+import trclib.driverio.TrcTone;
 
 /**
  * This class implements a platform dependent sound player that can play a tone with specified waveform, frequency,

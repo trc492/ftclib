@@ -26,10 +26,11 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
-import trclib.archive.TrcGyro;
-import trclib.archive.TrcSensor;
-import trclib.archive.TrcTimer;
-import trclib.archive.TrcUtil;
+import ftclib.robotcore.FtcOpMode;
+import trclib.sensor.TrcGyro;
+import trclib.sensor.TrcSensor;
+import trclib.timer.TrcTimer;
+import trclib.dataprocessor.TrcUtil;
 
 /**
  * This class implements the Modern Robotics Gyro extending FtcMRI2cDevice that implements the common features of

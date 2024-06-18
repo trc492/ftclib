@@ -24,9 +24,9 @@ package ftclib.archive;
 
 import android.hardware.Sensor;
 
-import trclib.archive.TrcFilter;
-import trclib.archive.TrcGyro;
-import trclib.archive.TrcTimer;
+import trclib.dataprocessor.TrcFilter;
+import trclib.sensor.TrcGyro;
+import trclib.timer.TrcTimer;
 
 /**
  * This class implements the Android gyro extending TrcGyro. It provides implementation of the abstract methods in

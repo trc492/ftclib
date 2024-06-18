@@ -26,7 +26,9 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
-import trclib.archive.TrcEvent;
+import ftclib.robotcore.FtcI2cDevice;
+import ftclib.robotcore.FtcOpMode;
+import trclib.robotcore.TrcEvent;
 import trclib.archive.TrcPixyCam1;
 
 /**

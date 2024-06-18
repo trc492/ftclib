@@ -26,9 +26,10 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.hardware.GyroSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import trclib.archive.TrcFilter;
-import trclib.archive.TrcGyro;
-import trclib.archive.TrcTimer;
+import ftclib.robotcore.FtcOpMode;
+import trclib.dataprocessor.TrcFilter;
+import trclib.sensor.TrcGyro;
+import trclib.timer.TrcTimer;
 
 /**
  * This class implements the Modern Robotics gyro extending TrcGyro. It provides implementation of the abstract

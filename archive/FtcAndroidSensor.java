@@ -28,9 +28,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
-import trclib.archive.TrcFilter;
-import trclib.archive.TrcSensor;
-import trclib.archive.TrcTimer;
+import ftclib.robotcore.FtcOpMode;
+import trclib.dataprocessor.TrcFilter;
+import trclib.sensor.TrcSensor;
+import trclib.timer.TrcTimer;
 
 /**
  * This class implements an Android sensor that may have multiple axes.

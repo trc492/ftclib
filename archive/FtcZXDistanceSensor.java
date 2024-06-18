@@ -26,9 +26,11 @@ import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
-import trclib.archive.TrcSensor;
-import trclib.archive.TrcTimer;
-import trclib.archive.TrcUtil;
+import ftclib.robotcore.FtcI2cDevice;
+import ftclib.robotcore.FtcOpMode;
+import trclib.sensor.TrcSensor;
+import trclib.timer.TrcTimer;
+import trclib.dataprocessor.TrcUtil;
 
 /**
  * This class implements the ZX Distance sensor extending FtcI2cDevice.
@@ -89,7 +91,7 @@ public class FtcZXDistanceSensor extends FtcI2cDevice implements TrcSensor.DataS
     //  HB - Heartbeat (RO).
     //      This bit will toggle every time the status register has been read.
     //
-    public static final int STATUS_DAV              = (1 << 0);
+    public static final int STATUS_DAV              = (1);
     public static final int STATUS_OVF              = (1 << 1);
     public static final int STATUS_SWP              = (1 << 2);
     public static final int STATUS_HOVER            = (1 << 3);
@@ -117,7 +119,7 @@ public class FtcZXDistanceSensor extends FtcI2cDevice implements TrcSensor.DataS
     //  EDGE - Edge Detection Events (RW).
     //      Enable 1 = assert DR when edge detection occurs.
     //
-    private static final int DRE_RNG                = (1 << 0);
+    private static final int DRE_RNG                = (1);
     private static final int DRE_CRD                = (1 << 1);
     private static final int DRE_SWP                = (1 << 2);
     private static final int DRE_HOVER              = (1 << 3);
@@ -141,7 +143,7 @@ public class FtcZXDistanceSensor extends FtcI2cDevice implements TrcSensor.DataS
     //      1 = DR enabled.
     //      0 = DR always negated.
     //
-    private static final int DRCFG_POLARITY         = (1 << 0);
+    private static final int DRCFG_POLARITY         = (1);
     private static final int DRCFG_EDGE             = (1 << 1);
     private static final int DRCFG_FORCE            = (1 << 6);
     private static final int DRCFG_EN               = (1 << 7);

@@ -28,6 +28,8 @@ import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 
 import java.util.Arrays;
 
+import ftclib.robotcore.FtcI2cDevice;
+import ftclib.robotcore.FtcOpMode;
 import trclib.archive.TrcPixyCam2;
 
 /**

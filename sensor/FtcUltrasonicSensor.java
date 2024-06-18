@@ -20,12 +20,10 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cRangeSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.hardware.UltrasonicSensor;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.dataprocessor.TrcFilter;
@@ -33,23 +31,17 @@ import trclib.sensor.TrcSensor;
 import trclib.timer.TrcTimer;
 
 /**
- * This class implements the Modern Range sensor extending TrcAnalogInput. It provides implementation of the abstract
- * methods in TrcAnalogInput.
+ * This class implements a platform dependent ultrasonic sensor extending TrcAnalogInput. It provides implementation
+ * of the abstract methods in TrcAnalogInput.
  */
-public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
+public class FtcUltrasonicSensor extends TrcSensor<FtcUltrasonicSensor.DataType>
 {
     public enum DataType
     {
-        DISTANCE_INCH,
-        ULTRASONIC_CM,
-        OPTICAL_CM,
-        ULTRASONIC_RAW,
-        OPTICAL_RAW,
-        RAW_LIGHT_DETECTED,
-        LIGHT_DETECTED
+        ULTRASONIC
     }   //enum DataType
 
-    public ModernRoboticsI2cRangeSensor sensor;
+    private final UltrasonicSensor sensor;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -59,11 +51,11 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
+    public FtcUltrasonicSensor(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
     {
         super(instanceName, 1, filters);
-        sensor = hardwareMap.get(ModernRoboticsI2cRangeSensor.class, instanceName);
-    }   //FtcMRRangeSensor
+        sensor = hardwareMap.get(UltrasonicSensor.class, instanceName);
+    }   //FtcUltrasonicSensor
 
     /**
      * Constructor: Creates an instance of the object.
@@ -72,28 +64,20 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
      *                is used, this can be set to null.
      */
-    public FtcMRRangeSensor(String instanceName, TrcFilter[] filters)
+    public FtcUltrasonicSensor(String instanceName, TrcFilter[] filters)
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, filters);
-    }   //FtcMRRangeSensor
+    }   //FtcUltrasonicSensor
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcMRRangeSensor(String instanceName)
+    public FtcUltrasonicSensor(String instanceName)
     {
         this(instanceName, null);
-    }   //FtcMRRangeSensor
-
-    /**
-     * This method calibrates the sensor.
-     */
-    public synchronized void calibrate()
-    {
-        calibrate(DataType.DISTANCE_INCH);
-    }   //calibrate
+    }   //FtcUltrasonicSensor
 
     //
     // Implements TrcAnalogInput abstract methods.
@@ -102,48 +86,21 @@ public class FtcMRRangeSensor extends TrcSensor<FtcMRRangeSensor.DataType>
     /**
      * This method returns the raw sensor data of the specified type.
      *
-     * @param index specifies the data index.
+     * @param index specifies the data index (not used).
      * @param dataType specifies the data type.
      * @return raw sensor data of the specified index and type.
      */
     @Override
-    public synchronized SensorData<Double> getRawData(int index, DataType dataType)
+    public SensorData<Double> getRawData(int index, DataType dataType)
     {
         SensorData<Double> data = null;
-        double timestamp = TrcTimer.getCurrentTime();
 
-        switch (dataType)
+        if (dataType == DataType.ULTRASONIC)
         {
-            case DISTANCE_INCH:
-                data = new SensorData<>(timestamp, sensor.getDistance(DistanceUnit.INCH));
-                break;
-
-            case ULTRASONIC_CM:
-                data = new SensorData<>(timestamp, sensor.cmUltrasonic());
-                break;
-
-            case OPTICAL_CM:
-                data = new SensorData<>(timestamp, sensor.cmOptical());
-                break;
-
-            case ULTRASONIC_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawUltrasonic());
-                break;
-
-            case OPTICAL_RAW:
-                data = new SensorData<>(timestamp, (double)sensor.rawOptical());
-                break;
-
-            case RAW_LIGHT_DETECTED:
-                data = new SensorData<>(timestamp, sensor.getRawLightDetected());
-                break;
-
-            case LIGHT_DETECTED:
-                data = new SensorData<>(timestamp, sensor.getLightDetected());
-                break;
+            data = new SensorData<>(TrcTimer.getCurrentTime(), sensor.getUltrasonicLevel());
         }
 
         return data;
     }   //getRawData
 
-}   //class FtcMRRangeSensor
+}   //class FtcUltrasonicSensor

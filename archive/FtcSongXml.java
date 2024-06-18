@@ -24,6 +24,8 @@ package ftclib.archive;
 
 import android.util.Xml;
 
+import androidx.annotation.NonNull;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -71,6 +73,7 @@ public class FtcSongXml
      *
      * @return instance name.
      */
+    @NonNull
     public String toString()
     {
         return instanceName;

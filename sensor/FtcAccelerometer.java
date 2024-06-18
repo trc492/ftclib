@@ -20,24 +20,42 @@
  * SOFTWARE.
  */
 
-package ftclib.archive;
+package ftclib.sensor;
 
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
+import com.qualcomm.robotcore.hardware.AccelerationSensor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
+
+import ftclib.robotcore.FtcOpMode;
 import trclib.sensor.TrcAccelerometer;
 import trclib.dataprocessor.TrcFilter;
 import trclib.timer.TrcTimer;
 
 /**
- * This class implements the Android accelerometer extending TrcAccelerometer. It provides implementation of the
- * abstract methods in TrcAccelerometer. It supports 3 axes: x, y and z. It provides acceleration data for all 3
- * axes. However, it doesn't provide any velocity or distance data.
+ * This class implements the platform dependent accelerometer extending TrcAccelerometer. It provides implementation
+ * of the abstract methods in TrcAccelerometer. It supports 3 axes: x, y and z. It provides acceleration data for all
+ * 3 axes. However, it doesn't provide any velocity or distance data.
  */
-public class FtcAndroidAccel extends TrcAccelerometer
+public class FtcAccelerometer extends TrcAccelerometer
 {
-    private final FtcAndroidSensor sensor;
-    private int samplingPeriod = SensorManager.SENSOR_DELAY_GAME;
+    private final AccelerationSensor accel;
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param hardwareMap specifies the global hardware map.
+     * @param instanceName specifies the instance name.
+     * @param filters specifies an array of filters to use for filtering sensor noise, one for each axis. Since we
+     *                have 3 axes, the array should have 3 elements. If no filters are used, it can be set to null.
+     */
+    public FtcAccelerometer(HardwareMap hardwareMap, String instanceName, TrcFilter[] filters)
+    {
+        super(instanceName, 3,
+              ACCEL_HAS_X_AXIS | ACCEL_HAS_Y_AXIS | ACCEL_HAS_Z_AXIS | ACCEL_INTEGRATE | ACCEL_DOUBLE_INTEGRATE,
+              filters);
+        accel = hardwareMap.get(AccelerationSensor.class, instanceName);
+    }   //FtcAccelerometer
 
     /**
      * Constructor: Creates an instance of the object.
@@ -46,65 +64,27 @@ public class FtcAndroidAccel extends TrcAccelerometer
      * @param filters specifies an array of filters to use for filtering sensor noise, one for each axis. Since we
      *                have 3 axes, the array should have 3 elements. If no filters are used, it can be set to null.
      */
-    public FtcAndroidAccel(String instanceName, TrcFilter[] filters)
+    public FtcAccelerometer(String instanceName, TrcFilter[] filters)
     {
-        super(instanceName, 3,
-              ACCEL_HAS_X_AXIS | ACCEL_HAS_Y_AXIS | ACCEL_HAS_Z_AXIS | ACCEL_INTEGRATE | ACCEL_DOUBLE_INTEGRATE,
-              filters);
-        sensor = new FtcAndroidSensor(instanceName, Sensor.TYPE_LINEAR_ACCELERATION, 3);
-    }   //FtcAndroidAccel
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, filters);
+    }   //FtcAccelerometer
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
      */
-    public FtcAndroidAccel(String instanceName)
+    public FtcAccelerometer(String instanceName)
     {
         this(instanceName, null);
-    }   //FtcAndroidAccel
+    }   //FtcAccelerometer
 
     /**
-     * This method sets the sampling period of the Android accelerometer sensor.
-     *
-     * @param period specifies the period with SensorManager.SENSOR_DELAY_* constants, or the number of microseconds.
+     * This method calibrates the sensor.
      */
-    public synchronized void setSamplingPeriod(int period)
+    public void calibrate()
     {
-        samplingPeriod = period;
-    }   //setSamplingPeriod
-
-    /**
-     * This method enables/disables the sensor.
-     *
-     * @param enabled specifies true if enabling, false otherwise.
-     */
-    @Override
-    public synchronized void setEnabled(boolean enabled)
-    {
-        sensor.setEnabled(enabled, samplingPeriod);
-        super.setEnabled(enabled);
-    }   //setEnabled
-
-    /**
-     * This method calibrates the sensor. If the sensor is not enabled, it must enable it first before starting
-     * calibration. It will disable the sensor if it was disabled before calibration.
-     */
-    public synchronized void calibrate()
-    {
-        boolean sensorEnabled = sensor.isEnabled();
-
-        if (!sensorEnabled)
-        {
-            sensor.setEnabled(true);
-        }
-
         calibrate(DataType.ACCELERATION);
-
-        if (!sensorEnabled)
-        {
-            sensor.setEnabled(false);
-        }
     }   //calibrate
 
     //
@@ -124,11 +104,12 @@ public class FtcAndroidAccel extends TrcAccelerometer
 
         if (dataType == DataType.ACCELERATION)
         {
-            data = new SensorData<>(TrcTimer.getCurrentTime(), sensor.getRawData(0, dataType).value);
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.xAccel);
         }
         else
         {
-            throw new UnsupportedOperationException("AndroidAccel sensor does not provide velocity or distance data.");
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
         return data;
@@ -147,11 +128,12 @@ public class FtcAndroidAccel extends TrcAccelerometer
 
         if (dataType == DataType.ACCELERATION)
         {
-            data = new SensorData<>(TrcTimer.getCurrentTime(), sensor.getRawData(1, dataType).value);
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.yAccel);
         }
         else
         {
-            throw new UnsupportedOperationException("AndroidAccel sensor does not provide velocity or distance data.");
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
         return data;
@@ -170,14 +152,15 @@ public class FtcAndroidAccel extends TrcAccelerometer
 
         if (dataType == DataType.ACCELERATION)
         {
-            data = new SensorData<>(TrcTimer.getCurrentTime(), sensor.getRawData(2, dataType).value);
+            Acceleration accelData = accel.getAcceleration();
+            data = new SensorData<>(TrcTimer.getCurrentTime(), accelData.zAccel);
         }
         else
         {
-            throw new UnsupportedOperationException("AndroidAccel sensor does not provide velocity or distance data.");
+            throw new UnsupportedOperationException("Accelerometer sensor does not provide velocity or distance data.");
         }
 
         return data;
     }   //getRawZData
 
-}   //class FtcAndroidAccel
+}   //class FtcAccelerometer
