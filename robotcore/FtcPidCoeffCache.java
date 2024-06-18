@@ -119,7 +119,7 @@ public class FtcPidCoeffCache
         {
             writer = new PrintWriter(
                 new BufferedWriter(new FileWriter(cacheFilePrefix + pidCtrl + ".txt")));
-            writer.printf("%f,%f,%f,%f", pidCoeff.kP, pidCoeff.kI, pidCoeff.kD, pidCoeff.kF);
+            writer.println(pidCoeff.kP + "," + pidCoeff.kI + "," + pidCoeff.kD + "," + pidCoeff.kF);
             writer.close();
         }
         catch (IOException e)

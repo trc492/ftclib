@@ -23,6 +23,8 @@
 
 package ftclib.vision;
 
+import androidx.annotation.NonNull;
+
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -49,7 +51,7 @@ public class FtcVisionEocvColorBlob
     }   //interface FilterTarget
 
     private final FtcEocvColorBlobProcessor colorBlobProcessor;
-    private final TrcDbgTrace tracer;
+    public final TrcDbgTrace tracer;
     private final String instanceName;
     private final TrcHomographyMapper homographyMapper;
 
@@ -78,7 +80,7 @@ public class FtcVisionEocvColorBlob
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
-        tracer = colorBlobProcessor.getTracer();
+        tracer = colorBlobProcessor.tracer;
         this.instanceName = instanceName;
 
         if (cameraRect != null && worldRect != null)
@@ -120,6 +122,7 @@ public class FtcVisionEocvColorBlob
      *
      * @return pipeline instance Name
      */
+    @NonNull
     @Override
     public String toString()
     {
@@ -135,16 +138,6 @@ public class FtcVisionEocvColorBlob
     {
         return colorBlobProcessor;
     }   //getVisionProcessor
-
-    /**
-     * This method returns its tracer used for tracing info.
-     *
-     * @return tracer.
-     */
-    public TrcDbgTrace getTracer()
-    {
-        return tracer;
-    }   //getTracer
 
     /**
      * This method returns the target info of the given detected target.
@@ -202,11 +195,9 @@ public class FtcVisionEocvColorBlob
                 tracer.traceDebug(instanceName, "[" + i + "] rejected=" + rejected);
             }
 
-            if (targets.size() > 0)
+            if (!targets.isEmpty())
             {
-                targetsInfo = new TrcVisionTargetInfo[targets.size()];
-                targets.toArray(targetsInfo);
-
+                targetsInfo = (TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>[]) targets.toArray();
                 if (comparator != null)
                 {
                     Arrays.sort(targetsInfo, comparator);

@@ -23,6 +23,8 @@
 
 package ftclib.vision;
 
+import androidx.annotation.NonNull;
+
 import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvPipeline;
 
@@ -38,6 +40,7 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
     implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>
 {
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
+    public final TrcDbgTrace tracer;
 
     /**
      * Constructor: Create an instance of the object.
@@ -59,6 +62,7 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+        this.tracer = colorBlobPipeline.tracer;
     }   //FtcRawEocvColorBlobPipeline
 
     /**
@@ -66,21 +70,12 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      *
      * @return pipeline instance Name
      */
+    @NonNull
     @Override
     public String toString()
     {
         return colorBlobPipeline.toString();
     }   //toString
-
-    /**
-     * This method returns its tracer used for tracing info.
-     *
-     * @return tracer.
-     */
-    public TrcDbgTrace getTracer()
-    {
-        return colorBlobPipeline.getTracer();
-    }   //getTracer
 
     /**
      * This method returns the color threshold values.

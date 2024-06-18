@@ -54,7 +54,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
     // AdaFruit RGB Color Sensor Registers.
     //
     private static final int REG_COMMAND_BIT= 0x80;                     //Must OR into the reg address.
-    private static final int REG_ENABLE     = (0x00 | REG_COMMAND_BIT); //Enables states and interrupts (R/W).
+    private static final int REG_ENABLE     = REG_COMMAND_BIT;          //Enables states and interrupts (R/W).
     private static final int REG_ATIME      = (0x01 | REG_COMMAND_BIT); //RGBC time (R/W).
     private static final int REG_WTIME      = (0x03 | REG_COMMAND_BIT); //Wait time (R/W).
     private static final int REG_AILTL      = (0x04 | REG_COMMAND_BIT); //Clear interrupt low threshold low byte (R/W).
@@ -79,7 +79,7 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
     private static final int READ_END       = REG_BDATAH;
     private static final int READ_LENGTH    = (READ_END - READ_START + 1);
 
-    private static final byte ENABLE_PON    = ((byte)(1 << 0)); //Power ON.
+    private static final byte ENABLE_PON    = ((byte)1);        //Power ON.
     private static final byte ENABLE_AEN    = ((byte)(1 << 1)); //RGBC enable.
     private static final byte ENABLE_WEN    = ((byte)(1 << 3)); //Wait enable.
     private static final byte ENABLE_AIEN   = ((byte)(1 << 4)); //RGBC interrupt enable.
@@ -101,14 +101,14 @@ public class FtcI2cAdaFruitColorSensor extends FtcI2cDevice
     private static final byte CONTROL_AGAIN_16X = 0x02;         //16X gain.
     private static final byte CONTROL_AGAIN_60X = 0x03;         //60X gain.
 
-    private static final byte STATUS_AVALID = ((byte)(1 << 0)); //RGBC Valid.
+    private static final byte STATUS_AVALID = ((byte)1);        //RGBC Valid.
     private static final byte STATUS_AINT   = ((byte)(1 << 4)); //RGBC clear channel Interrupt.
 
     private int deviceID = 0;
-    private TrcSensor.SensorData<Integer> clearValue = new TrcSensor.SensorData<>(0.0, null);
-    private TrcSensor.SensorData<Integer> redValue = new TrcSensor.SensorData<>(0.0, null);
-    private TrcSensor.SensorData<Integer> greenValue = new TrcSensor.SensorData<>(0.0, null);
-    private TrcSensor.SensorData<Integer> blueValue = new TrcSensor.SensorData<>(0.0, null);
+    private final TrcSensor.SensorData<Integer> clearValue = new TrcSensor.SensorData<>(0.0, null);
+    private final TrcSensor.SensorData<Integer> redValue = new TrcSensor.SensorData<>(0.0, null);
+    private final TrcSensor.SensorData<Integer> greenValue = new TrcSensor.SensorData<>(0.0, null);
+    private final TrcSensor.SensorData<Integer> blueValue = new TrcSensor.SensorData<>(0.0, null);
 
     /**
      * Constructor: Creates an instance of the object.

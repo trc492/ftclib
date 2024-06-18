@@ -22,6 +22,8 @@
 
 package ftclib.robotcore;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchDevice;
@@ -66,6 +68,7 @@ public class FtcI2cDeviceSynch extends I2cDeviceSynchDevice<I2cDeviceSynch>
      *
      * @return device name.
      */
+    @NonNull
     @Override
     public String toString()
     {

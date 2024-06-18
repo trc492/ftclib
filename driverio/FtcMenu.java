@@ -20,9 +20,8 @@
  * SOFTWARE.
  */
 
-package ftclib.input;
+package ftclib.driverio;
 
-import ftclib.output.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.timer.TrcTimer;
 
@@ -136,7 +135,7 @@ public abstract class FtcMenu
 
     private static final long LOOP_INTERVAL_MSEC        = 20;       //in msec.
 
-    private static final int MENUBUTTON_BACK            = (1 << 0);
+    private static final int MENUBUTTON_BACK            = (1);
     private static final int MENUBUTTON_ENTER           = (1 << 1);
     private static final int MENUBUTTON_UP              = (1 << 2);
     private static final int MENUBUTTON_DOWN            = (1 << 3);

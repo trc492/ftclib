@@ -23,6 +23,8 @@
 
 package ftclib.vision;
 
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -32,7 +34,6 @@ import org.opencv.core.Rect;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Locale;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.pathdrive.TrcPose2D;
@@ -152,29 +153,38 @@ public class FtcVisionAprilTag
          *
          * @return string form of the target info.
          */
+        @NonNull
         @Override
         public String toString()
         {
             if (aprilTagDetection.ftcPose != null)
             {
-                return String.format(
-                    Locale.US,
-                    "{id=%d,center=%.1f/%.1f,rect=%s,ftcPose=(x=%.1f,y=%.1f,z=%.1f,yaw=%.1f,pitch=%.1f,roll=%.1f," +
-                    "range=%.1f,bearing=%.1f,elevator=%.1f),fieldPos=%s,hamming=%d,decisionMargin=%.1f}",
-                    aprilTagDetection.id, aprilTagDetection.center.x, aprilTagDetection.center.y, getObjectRect(),
-                    aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.z,
-                    aprilTagDetection.ftcPose.yaw, aprilTagDetection.ftcPose.pitch, aprilTagDetection.ftcPose.roll,
-                    aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing,
-                    aprilTagDetection.ftcPose.elevation, aprilTagDetection.metadata.fieldPosition,
-                    aprilTagDetection.hamming, aprilTagDetection.decisionMargin);
+                return "{id=" + aprilTagDetection.id +
+                       ",center=" + aprilTagDetection.center +
+                       ",rect=" + getObjectRect() +
+                       ",ftcPose=(x=" + aprilTagDetection.ftcPose.x +
+                       ",y=" + aprilTagDetection.ftcPose.y +
+                       ",z=" + aprilTagDetection.ftcPose.z +
+                       ",yaw=" + aprilTagDetection.ftcPose.yaw +
+                       ",pitch=" + aprilTagDetection.ftcPose.pitch +
+                       ",roll=" + aprilTagDetection.ftcPose.roll +
+                       ",range=" + aprilTagDetection.ftcPose.range +
+                       ",bearing=" + aprilTagDetection.ftcPose.bearing +
+                       ",elevation=" + aprilTagDetection.ftcPose.elevation +
+                       ",fieldPos=" + aprilTagDetection.metadata.fieldPosition +
+                       ",hamming=" + aprilTagDetection.hamming +
+                       ",decisionMargin=" + aprilTagDetection.decisionMargin +
+                       "}";
             }
             else
             {
-                return String.format(
-                    Locale.US,
-                    "{id=%d,center=%.1f/%.1f,rect=%s,fieldPos=%s,hamming=%d,decisionMargin=%.1f}",
-                    aprilTagDetection.id, aprilTagDetection.center.x, aprilTagDetection.center.y, getObjectRect(),
-                    aprilTagDetection.hamming, aprilTagDetection.decisionMargin);
+                return "{id=" + aprilTagDetection.id +
+                       ",center=" + aprilTagDetection.center +
+                       ",rect=" + getObjectRect() +
+                       ",fieldPos=" + aprilTagDetection.metadata.fieldPosition +
+                       ",hamming=" + aprilTagDetection.hamming +
+                       ",decisionMargin=" + aprilTagDetection.decisionMargin +
+                       "}";
             }
         }   //toString
 
@@ -233,8 +243,8 @@ public class FtcVisionAprilTag
 
     }   //class Parameters
 
+    public final TrcDbgTrace tracer;
     private final String instanceName;
-    private final TrcDbgTrace tracer;
     private final AprilTagProcessor aprilTagProcessor;
 
     /**
@@ -245,8 +255,8 @@ public class FtcVisionAprilTag
      */
     public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily)
     {
-        instanceName = tagFamily.name();
         tracer = new TrcDbgTrace();
+        instanceName = tagFamily.name();
         // Create the AprilTag processor.
         AprilTagProcessor.Builder builder = new AprilTagProcessor.Builder().setTagFamily(tagFamily);
         if (params != null)
@@ -272,21 +282,12 @@ public class FtcVisionAprilTag
      *
      * @return tag family string.
      */
+    @NonNull
     @Override
     public String toString()
     {
         return instanceName;
     }   //toString
-
-    /**
-     * This method returns its tracer used for tracing info.
-     *
-     * @return tracer.
-     */
-    public TrcDbgTrace getTracer()
-    {
-        return tracer;
-    }   //getTracer
 
     /**
      * This method returns the AprilTag vision processor.
@@ -340,9 +341,7 @@ public class FtcVisionAprilTag
 
             if (!targetsList.isEmpty())
             {
-                targetsInfo = new TrcVisionTargetInfo[targetsList.size()];
-                targetsList.toArray(targetsInfo);
-
+                targetsInfo = (TrcVisionTargetInfo<DetectedObject>[]) targetsList.toArray();
                 if (comparator != null)
                 {
                     Arrays.sort(targetsInfo, comparator);

@@ -32,7 +32,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 
-import ftclib.output.FtcDashboard;
+import ftclib.driverio.FtcDashboard;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcEvent;
 import trclib.motor.TrcMotor;

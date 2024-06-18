@@ -43,7 +43,7 @@ import trclib.vision.TrcVisionTargetInfo;
  */
 public class FtcRawEocvVision
 {
-    private final TrcDbgTrace tracer;
+    public final TrcDbgTrace tracer;
     private final String instanceName;
     private final OpenCvCamera openCvCamera;
     private final TrcHomographyMapper homographyMapper;
@@ -192,18 +192,15 @@ public class FtcRawEocvVision
                     }
                 }
 
-                if (targetList.size() > 0)
+                if (!targetList.isEmpty())
                 {
-                    detectedTargets = targetList.toArray(new TrcVisionTargetInfo[0]);
+                    detectedTargets = (TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>[]) targetList.toArray();
                     if (comparator != null && detectedTargets.length > 1)
                     {
                         Arrays.sort(detectedTargets, comparator);
                     }
-                }
 
-                if (detectedTargets != null)
-                {
-                    if (tracer.getTraceLevel().ordinal() >= TrcDbgTrace.MsgLevel.DEBUG.ordinal())
+                    if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
                     {
                         for (int i = 0; i < detectedTargets.length; i++)
                         {

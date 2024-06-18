@@ -20,7 +20,7 @@
  * SOFTWARE.
  */
 
-package ftclib.input;
+package ftclib.driverio;
 
 import java.util.ArrayList;
 
@@ -159,7 +159,7 @@ public class FtcChoiceMenu<T> extends FtcMenu
      *
      * @return current selected choice, null if menu is empty.
      */
-    public ChoiceItem getCurrentChoice()
+    private ChoiceItem getCurrentChoice()
     {
         return currChoice >= 0 && currChoice < choiceItems.size()? choiceItems.get(currChoice): null;
     }   //getCurrentChoice
@@ -201,7 +201,7 @@ public class FtcChoiceMenu<T> extends FtcMenu
     @Override
     public void menuUp()
     {
-        if (choiceItems.size() == 0)
+        if (choiceItems.isEmpty())
         {
             currChoice = -1;
         }
@@ -230,7 +230,7 @@ public class FtcChoiceMenu<T> extends FtcMenu
     @Override
     public void menuDown()
     {
-        if (choiceItems.size() == 0)
+        if (choiceItems.isEmpty())
         {
             currChoice = -1;
         }
@@ -277,9 +277,7 @@ public class FtcChoiceMenu<T> extends FtcMenu
     public FtcMenu getChildMenu()
     {
         ChoiceItem choiceItem = getCurrentChoice();
-        FtcMenu childMenu = choiceItem != null? choiceItem.getChildMenu(): null;
-
-        return childMenu;
+        return choiceItem != null? choiceItem.getChildMenu(): null;
     }   //getChildMenu
 
     /**
@@ -302,8 +300,18 @@ public class FtcChoiceMenu<T> extends FtcMenu
         for (int i = firstDisplayedChoice; i <= lastDisplayedChoice; i++)
         {
             ChoiceItem item = choiceItems.get(i);
-            dashboard.displayPrintf(i - firstDisplayedChoice + 1, i == currChoice? ">>\t%s%s": "%s%s",
-                                    item.getText(), item.getChildMenu() != null? " ...": "");
+            if (i == currChoice)
+            {
+                dashboard.displayPrintf(
+                    i - firstDisplayedChoice + 1,
+                    ">>\t" + item.getText() + (item.getChildMenu() != null? " ...": ""));
+            }
+            else
+            {
+                dashboard.displayPrintf(
+                    i - firstDisplayedChoice + 1,
+                    item.getText() + (item.getChildMenu() != null? " ...": ""));
+            }
         }
     }   //displayMenu
 

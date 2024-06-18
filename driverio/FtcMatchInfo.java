@@ -20,7 +20,9 @@
  * SOFTWARE.
  */
 
-package ftclib.input;
+package ftclib.driverio;
+
+import androidx.annotation.NonNull;
 
 import java.util.Date;
 
@@ -53,6 +55,7 @@ public class FtcMatchInfo
      *
      * @return match info string.
      */
+    @NonNull
     @Override
     public String toString()
     {

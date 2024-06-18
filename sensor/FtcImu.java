@@ -283,7 +283,7 @@ public class FtcImu extends TrcGyro
             }
         }
         SensorData<Double> data = new SensorData<>(timestamp, value);
-        tracer.traceDebug(instanceName, "timestamp=%.3f,value=%f", data.timestamp, data.value);
+        tracer.traceDebug(instanceName, "timestamp=" + data.timestamp + ",value=" + data.value);
 
         return data;
     }   //getRawXData
@@ -313,7 +313,7 @@ public class FtcImu extends TrcGyro
             }
         }
         SensorData<Double> data = new SensorData<>(timestamp, value);
-        tracer.traceDebug(instanceName, "timestamp=%.3f,value=%f", data.timestamp, data.value);
+        tracer.traceDebug(instanceName, "timestamp=" + data.timestamp + ",value=" + data.value);
 
         return data;
     }   //getRawYData
@@ -343,7 +343,7 @@ public class FtcImu extends TrcGyro
             }
         }
         SensorData<Double> data = new SensorData<>(timestamp, value);
-        tracer.traceDebug(instanceName, "timestamp=%.3f,value=%f", data.timestamp, data.value);
+        tracer.traceDebug(instanceName, "timestamp=" + data.timestamp + ",value=" + data.value);
 
         return data;
     }   //getRawZData
@@ -363,7 +363,7 @@ public class FtcImu extends TrcGyro
         AngularVelocity angularVelocity = imu.getRobotAngularVelocity(AngleUnit.DEGREES);
 
         tracer.traceVerbose(
-            instanceName, "[%.3f]: elapsedTime=%.3f", currTime, TrcTimer.getCurrentTime() - currTime);
+            instanceName, "[" + currTime + "]: elapsedTime=" + (TrcTimer.getCurrentTime() - currTime));
         synchronized (gyroData)
         {
             gyroData.timestamp = currTime;
@@ -380,9 +380,13 @@ public class FtcImu extends TrcGyro
             gyroData.zRotationRate = angularVelocity.zRotationRate;
             tracer.traceVerbose(
                 instanceName ,
-                "[%.3f]: xAngle=%.1f, yAngle=%.1f, zAngle=%.1f, xRate=%.1f, yRate=%.1f, zRate=%.1f",
-                gyroData.timestamp, gyroData.xAngle, gyroData.yAngle, gyroData.zAngle,
-                gyroData.xRotationRate, gyroData.yRotationRate, gyroData.zRotationRate);
+                "[" + gyroData.timestamp +
+                "]: xAngle=" + gyroData.xAngle +
+                ", yAngle=" + gyroData.yAngle +
+                ", zAngle=" + gyroData.zAngle +
+                ", xRate=" + gyroData.xRotationRate +
+                ", yRate=" + gyroData.yRotationRate +
+                ", zRate=" + gyroData.zRotationRate);
         }
     }   //gyroTask
 

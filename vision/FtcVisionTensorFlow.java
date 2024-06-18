@@ -23,6 +23,8 @@
 
 package ftclib.vision;
 
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
@@ -33,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
@@ -138,11 +139,15 @@ public class FtcVisionTensorFlow
          *
          * @return string form of the target info.
          */
+        @NonNull
         @Override
         public String toString()
         {
-            return String.format(
-                Locale.US, "{label=%s,rect=%s,angle=%f,confidence=%f}", label, rect, angle, confidence);
+            return "{label=" + label +
+                   ",rect=" + rect +
+                   ",angle=" + angle +
+                   ",confidence=" + confidence +
+                   "}";
         }   //toString
 
     }   //class DetectedObject
@@ -199,8 +204,8 @@ public class FtcVisionTensorFlow
         boolean validateTarget(TrcVisionTargetInfo<DetectedObject> objInfo);
     }   //interface FilterTarget
 
+    public final TrcDbgTrace tracer;
     private final String instanceName;
-    private final TrcDbgTrace tracer;
     private final TfodProcessor tensorFlowProcessor;
     private final TrcHomographyMapper homographyMapper;
 
@@ -218,8 +223,8 @@ public class FtcVisionTensorFlow
         Parameters params, boolean modelIsAsset, String model, String[] objectLabels,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect)
     {
-        instanceName = model;
         tracer = new TrcDbgTrace();
+        instanceName = model;
         // Create the TensorFlow processor by using a builder.
         TfodProcessor.Builder builder = new TfodProcessor.Builder().setModelLabels(objectLabels);
 
@@ -270,6 +275,7 @@ public class FtcVisionTensorFlow
      *
      * @return tag family string.
      */
+    @NonNull
     @Override
     public String toString()
     {
@@ -285,16 +291,6 @@ public class FtcVisionTensorFlow
     {
         return tensorFlowProcessor;
     }   //getVisionProcessor
-
-    /**
-     * This method returns its tracer used for tracing info.
-     *
-     * @return tracer.
-     */
-    public TrcDbgTrace getTracer()
-    {
-        return tracer;
-    }   //getTracer
 
     /**
      * This method returns the target info of the given detected target.
@@ -315,8 +311,13 @@ public class FtcVisionTensorFlow
             homographyMapper, objHeightOffset, cameraHeight);
 
         tracer.traceInfo(
-            instanceName, "%s: x=%.0f,y=%.0f,w=%.0f,h=%.0f,TargetInfo=%s",
-            target.getLabel(), target.getLeft(), target.getTop(), target.getWidth(), target.getHeight(), targetInfo);
+            instanceName,
+            target.getLabel() +
+            ": x=" + target.getLeft() +
+            ",y=" + target.getTop() +
+            ",w=" + target.getWidth() +
+            ",h=" + target.getHeight() +
+            ",TargetInfo=" + targetInfo);
 
         return targetInfo;
     }   //getDetectedTargetInfo
@@ -342,7 +343,7 @@ public class FtcVisionTensorFlow
 
         if (updatedRecognitions != null)
         {
-            ArrayList<Recognition> targets = new ArrayList<>();
+            ArrayList<TrcVisionTargetInfo<?>> targets = new ArrayList<>();
             for (int i = 0; i < updatedRecognitions.size(); i++)
             {
                 Recognition object = updatedRecognitions.get(i);
@@ -355,7 +356,7 @@ public class FtcVisionTensorFlow
                 {
                     if (filter == null || filter.validateTarget(objInfo))
                     {
-                        targets.add(object);
+                        targets.add(objInfo);
                     }
                     else
                     {
@@ -365,11 +366,9 @@ public class FtcVisionTensorFlow
                 tracer.traceDebug(instanceName, "[" + i + "] foundIt=" + foundIt + ",rejected=" + rejected);
             }
 
-            if (targets.size() > 0)
+            if (!targets.isEmpty())
             {
-                targetsInfo = new TrcVisionTargetInfo[targets.size()];
-                targets.toArray(targetsInfo);
-
+                targetsInfo = (TrcVisionTargetInfo<DetectedObject>[]) targets.toArray();
                 if (comparator != null)
                 {
                     Arrays.sort(targetsInfo, comparator);

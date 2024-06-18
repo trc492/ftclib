@@ -50,8 +50,8 @@ public class FtcDcMotor extends TrcMotor
     public final DcMotorEx motor;
     private final VoltageSensor voltageSensor;
     private DcMotor.RunMode runMode;
-    private double velocityTarget = 0.0;
-    private int positionTarget = 0;
+//    private double velocityTarget = 0.0;
+//    private int positionTarget = 0;
 
     /**
      * Constructor: Create an instance of the object.
@@ -407,7 +407,7 @@ public class FtcDcMotor extends TrcMotor
         }
         // Restore previous motor mode.
         motor.setMode(prevMotorMode);
-        tracer.traceDebug(instanceName, "timeout=%.3f,pos=%d", timeout, motorPos);
+        tracer.traceDebug(instanceName, "timeout=" + timeout + ",pos=" + motorPos);
     }   //resetMotorPosition
 
     /**
@@ -488,7 +488,7 @@ public class FtcDcMotor extends TrcMotor
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             runMode = DcMotor.RunMode.RUN_USING_ENCODER;
         }
-        velocityTarget = velocity;
+//        velocityTarget = velocity;
     }   //setMotorVelocity
 
     /**
@@ -522,7 +522,7 @@ public class FtcDcMotor extends TrcMotor
             runMode = DcMotor.RunMode.RUN_TO_POSITION;
         }
         motor.setPower(powerLimit);
-        positionTarget = (int) position;
+//        positionTarget = (int) position;
     }   //setMotorPosition
 
     /**

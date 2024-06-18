@@ -22,11 +22,11 @@
 
 package ftclib.subsystem;
 
+import androidx.annotation.NonNull;
+
 import java.util.Arrays;
-import java.util.Locale;
 
 import ftclib.motor.FtcServo;
-import trclib.robotcore.TrcDbgTrace;
 
 public class FtcServoActuator
 {
@@ -119,15 +119,18 @@ public class FtcServoActuator
          *
          * @return string format of the servo param info.
          */
+        @NonNull
         @Override
         public String toString()
         {
-            return String.format(
-                Locale.US,
-                "servoInverted=%s,hasFollowerServo=%s,followerServoInverted=%s,logicalMin=%f,logicalMax=%f,phyMin=%f," +
-                "phyMax=%f,presets=%s",
-                servoInverted, hasFollowerServo, followerServoInverted, logicalPosMin, logicalPosMax, physicalPosMin,
-                physicalPosMax, Arrays.toString(positionPresets));
+            return "servoInverted=" + servoInverted +
+                   ",hasFollower=" + hasFollowerServo +
+                   ",followerInverted=" + followerServoInverted +
+                   ",logicalMin=" + logicalPosMin +
+                   ",logicalMax=" + logicalPosMax +
+                   ",physicalMin=" + physicalPosMin +
+                   ",physicalMax=" + physicalPosMax +
+                   ",posPresets=" + Arrays.toString(positionPresets);
         }   //toString
 
     }   //class Params
@@ -162,21 +165,12 @@ public class FtcServoActuator
      *
      * @return instance name.
      */
+    @NonNull
     @Override
     public String toString()
     {
         return instanceName;
     }   //toString
-
-    /**
-     * This method sets the tracing level.
-     *
-     * @param msgLevel specifies the message level.
-     */
-    public void setTraceLevel(TrcDbgTrace.MsgLevel msgLevel)
-    {
-        actuator.setTraceLevel(msgLevel);
-    }   //setTraceLevel
 
     /**
      * This method returns the actuator object.

@@ -52,7 +52,7 @@ public class FtcVision
     private static final long LOOP_INTERVAL_MS = 10;
     private static final long MAX_LOOP_TIME_MS = 5000;
 
-    private final TrcDbgTrace tracer;
+    public final TrcDbgTrace tracer;
     private final VisionPortal visionPortal;
     private OpenCvCamera openCvCamera;
     private WebcamName activeWebcam;
@@ -134,8 +134,9 @@ public class FtcVision
         }
 
         tracer.traceDebug(
-            moduleName, "Camera open elapsed time=%.3f (loop=%d).",
-            TrcTimer.getCurrentTime() - startTime, loopTimeMs/LOOP_INTERVAL_MS);
+            moduleName,
+            "Camera open elapsed time=" + (TrcTimer.getCurrentTime() - startTime) +
+            " (loop=" + (loopTimeMs/LOOP_INTERVAL_MS) + ").");
 
         try
         {

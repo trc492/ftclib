@@ -20,11 +20,11 @@
  * SOFTWARE.
  */
 
-package ftclib.input;
+package ftclib.driverio;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-import trclib.input.TrcGameController;
+import trclib.driverio.TrcGameController;
 import trclib.dataprocessor.TrcUtil;
 
 /**
@@ -79,7 +79,7 @@ public class FtcGamepad extends TrcGameController
         ARCADE_MODE
     }   //enum DriveMode
 
-    public static final int GAMEPAD_A           = ((int)1 << 0);
+    public static final int GAMEPAD_A           = ((int)1);
     public static final int GAMEPAD_B           = ((int)1 << 1);
     public static final int GAMEPAD_X           = ((int)1 << 2);
     public static final int GAMEPAD_Y           = ((int)1 << 3);
@@ -619,14 +619,14 @@ public class FtcGamepad extends TrcGameController
                 x = getRightStickX(doExp);
                 y = getLeftStickY(doExp);
                 rot = getTrigger(doExp);
-                tracer.traceDebug(instanceName, "%s:x=%.3f,y=%.df,rot=%.3f", driveMode, x, y, rot);
+                tracer.traceDebug(instanceName, driveMode + ":x=" + x + ",y=" + y + ",rot=" + rot);
                 break;
 
             case ARCADE_MODE:
                 x = getLeftStickX(doExp);
                 y = getLeftStickY(doExp);
                 rot = getRightStickX(doExp);
-                tracer.traceDebug(instanceName, "%s:x=%.3f,y=%.3f,rot=%.3f", driveMode, x, y, rot);
+                tracer.traceDebug(instanceName, driveMode + ":x=" + x + ",y=" + y + ",rot=" + rot);
                 break;
 
             case TANK_MODE:
@@ -635,7 +635,7 @@ public class FtcGamepad extends TrcGameController
                 x = 0.0;
                 y = (leftPower + rightPower)/2.0;
                 rot = (leftPower - rightPower)/2.0;
-                tracer.traceDebug(instanceName, "%s:left=%.3f,right=%.3f", driveMode, leftPower, rightPower);
+                tracer.traceDebug(instanceName, driveMode + ":left=" + leftPower + ",right=" + rightPower);
                 break;
         }
 

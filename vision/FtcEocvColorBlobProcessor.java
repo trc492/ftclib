@@ -26,6 +26,8 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 
+import androidx.annotation.NonNull;
+
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
@@ -47,6 +49,7 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
     private static final int DEF_TEXT_COLOR = Color.RED;
     private static final float DEF_TEXT_SIZE = 20.0f;
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
+    public final TrcDbgTrace tracer;
     private final Paint linePaint;
     private final Paint textPaint;
     private boolean annotate = false;
@@ -81,6 +84,7 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
 
+        this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
@@ -121,21 +125,12 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
      *
      * @return pipeline instance Name
      */
+    @NonNull
     @Override
     public String toString()
     {
         return colorBlobPipeline.toString();
     }   //toString
-
-    /**
-     * This method returns its tracer used for tracing info.
-     *
-     * @return tracer.
-     */
-    public TrcDbgTrace getTracer()
-    {
-        return colorBlobPipeline.getTracer();
-    }   //getTracer
 
     //
     // Implements TrcOpenCvPipeline interface.
