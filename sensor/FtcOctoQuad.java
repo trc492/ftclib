@@ -82,13 +82,6 @@ public class FtcOctoQuad implements TrcEncoder
         {
             wrapValueConverter = null;
         }
-//        LynxModule module = hardwareMap.get(LynxModule.class, "Control Hub");
-//        LynxI2cConfigureChannelCommand cmd = new LynxI2cConfigureChannelCommand(module, I2C_BUS, LynxI2cConfigureChannelCommand.SpeedCode.FAST_400K);
-//        try {
-//            cmd.send();
-//        } catch (LynxNackException e) {
-//            e.printStackTrace();
-//        }
     }   //FtcOctoQuad
 
     /**
