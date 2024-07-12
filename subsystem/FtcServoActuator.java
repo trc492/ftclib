@@ -42,6 +42,7 @@ public class FtcServoActuator
         public double logicalPosMax = 1.0;
         public double physicalPosMin = 0.0;
         public double physicalPosMax = 1.0;
+        public Double maxStepRate = null;
         public double presetTolerance = 0.0;
         public double[] positionPresets = null;
 
@@ -101,6 +102,18 @@ public class FtcServoActuator
         }   //setPhysicalPosRange
 
         /**
+         * This method sets the maximum stepping rate of the servo. This enables setPower to speed control the servo.
+         *
+         * @param maxStepRate specifies the maximum stepping rate (physicalPos/sec).
+         * @return this parameter object.
+         */
+        public Params setMaxStepRate(double maxStepRate)
+        {
+            this.maxStepRate = maxStepRate;
+            return this;
+        }   //setMaxStepRate
+
+        /**
          * This method sets an array of preset positions for the servo actuator.
          *
          * @param tolerance specifies the preset tolerance.
@@ -130,6 +143,7 @@ public class FtcServoActuator
                    ",logicalMax=" + logicalPosMax +
                    ",physicalMin=" + physicalPosMin +
                    ",physicalMax=" + physicalPosMax +
+                   ",maxStepRate=" + maxStepRate +
                    ",posPresets=" + Arrays.toString(positionPresets);
         }   //toString
 
@@ -152,6 +166,12 @@ public class FtcServoActuator
         actuator.setLogicalPosRange(params.logicalPosMin, params.logicalPosMax);
         actuator.setPhysicalPosRange(params.physicalPosMin, params.physicalPosMax);
         actuator.setPosPresets(params.presetTolerance, params.positionPresets);
+
+        if (params.maxStepRate != null)
+        {
+            actuator.setMaxStepRate(params.maxStepRate);
+        }
+
         if (params.hasFollowerServo)
         {
             FtcServo follower = new FtcServo(instanceName + ".followerServo");
