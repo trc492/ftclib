@@ -34,7 +34,7 @@ import trclib.sensor.TrcDriveBaseOdometry;
 /**
  * This class implements a DriveBase Odometry device using the SparkFun Optical Tracking Odometry Sensor.
  */
-class FtcSparkFunOtos implements TrcDriveBaseOdometry
+public class FtcSparkFunOtos implements TrcDriveBaseOdometry
 {
     public static class Config
     {
