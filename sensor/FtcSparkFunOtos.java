@@ -161,7 +161,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     public TrcPose2D getPosition()
     {
         SparkFunOTOS.Pose2D pose = otos.getPosition();
-        return new TrcPose2D(pose.x, pose.y, pose.h);
+        return new TrcPose2D(pose.x, pose.y, -pose.h);
     }   //getPosition
 
     /**
@@ -172,7 +172,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public void setPosition(TrcPose2D pose)
     {
-        otos.setPosition(new SparkFunOTOS.Pose2D(pose.x, pose.y, pose.angle));
+        otos.setPosition(new SparkFunOTOS.Pose2D(pose.x, pose.y, -pose.angle));
     }   //setPosition
 
     /**
@@ -184,7 +184,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     public TrcPose2D getVelocity()
     {
         SparkFunOTOS.Pose2D pose = otos.getVelocity();
-        return new TrcPose2D(pose.x, pose.y, pose.h);
+        return new TrcPose2D(pose.x, pose.y, -pose.h);
     }   //getVelocity
 
 }   //class FtcSparkFunOtos
