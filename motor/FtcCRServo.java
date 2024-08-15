@@ -28,8 +28,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.sensor.TrcDigitalInput;
-import trclib.sensor.TrcEncoder;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcPidController;
 
@@ -41,101 +39,47 @@ import trclib.robotcore.TrcPidController;
  */
 public class FtcCRServo extends TrcMotor
 {
-    public final CRServoImplEx motor;
+    public final CRServoImplEx servo;
     private final VoltageSensor voltageSensor;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param hardwareMap specifies the global hardware map.
-     * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     * @param encoder specifies an external position sensor for reporting motor position, can be null if not provided.
+     * @param instanceName specifies the instance name of the servo.
+     * @param sensors specifies external sensors, can be null if none.
      */
-    public FtcCRServo(
-        HardwareMap hardwareMap, String instanceName, TrcDigitalInput lowerLimitSwitch,
-        TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
+    public FtcCRServo(HardwareMap hardwareMap, String instanceName, TrcMotor.ExternalSensors sensors)
     {
-        super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
-
-        motor = hardwareMap.get(CRServoImplEx.class, instanceName);
+        super(instanceName, sensors);
+        servo = hardwareMap.get(CRServoImplEx.class, instanceName);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
     }   //FtcCRServo
 
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     * @param encoder specifies an external encoder for reporting motor position, can be null if not provided.
+     * @param instanceName specifies the instance name of the servo.
+     * @param sensors specifies external sensors, can be null if none.
      */
-    public FtcCRServo(
-        String instanceName, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
+    public FtcCRServo(String instanceName, TrcMotor.ExternalSensors sensors)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, sensors);
     }   //FtcCRServo
 
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     */
-    public FtcCRServo(String instanceName, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, lowerLimitSwitch, upperLimitSwitch, null);
-    }   //FtcCRServo
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param encoder specifies an external encoder for reporting motor position, can be null if not provided.
-     */
-    public FtcCRServo(String instanceName, TrcEncoder encoder)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, null, null, encoder);
-    }   //FtcCRServo
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
+     * @param instanceName specifies the instance name of the servo.
      */
     public FtcCRServo(String instanceName)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, null, null, null);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, null);
     }   //FtcCRServo
 
     //
     // Implements TrcMotorController interface.
     //
-
-//     /**
-//      * This method is used to check if the motor controller supports close loop control natively.
-//      *
-//      * @return true if motor controller supports close loop control, false otherwise.
-//      */
-//     public boolean supportCloseLoopControl()
-//     {
-//         return false;
-//     }   // supportCloseLoopControl
-
-//    /**
-//     * This method checks if the motor controller is connected to the robot. Note that this does NOT guarantee the
-//     * connection status of the motor to the motor controller. If detecting the motor presence is impossible (i.e. the
-//     * motor controller is connected via PWM) this method will always return true.
-//     *
-//     * @return true if the motor is connected or if it's impossible to know, false otherwise.
-//     */
-//    @Override
-//    public boolean isConnected()
-//    {
-//        return motor.isPwmEnabled();
-//    }   //isConnected
 
     /**
      * This method resets the motor controller configurations to factory default so that everything is at known state.
@@ -181,19 +125,6 @@ public class FtcCRServo extends TrcMotor
     {
         throw new UnsupportedOperationException("CRServo does not support setStatorCurrentLimit.");
     }   //setStatorCurrentLimit
-
-//     /**
-//      * This method sets the close loop percentage output limits. By default the limits are set to the max at -1 to 1.
-//      * By setting a non-default limits, it effectively limits the output power of the close loop control.
-//      *
-//      * @param revLimit specifies the percentage output limit of the reverse direction.
-//      * @param fwdLimit specifies the percentage output limit of the forward direction.
-//      */
-//     @Override
-//     public void setCloseLoopOutputLimits(double revLimit, double fwdLimit)
-//     {
-//        throw new UnsupportedOperationException("CRServo does not support setCloseLoopOutputLimits.");
-//     }   //setCloseLoopOutputLimits
 
     /**
      * This method sets the close loop ramp rate.
@@ -403,7 +334,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorInverted(boolean inverted)
     {
-        motor.setDirection(inverted? DcMotorSimple.Direction.REVERSE: DcMotorSimple.Direction.FORWARD);
+        servo.setDirection(inverted? DcMotorSimple.Direction.REVERSE: DcMotorSimple.Direction.FORWARD);
     }   //setMotorInverted
 
     /**
@@ -414,7 +345,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorInverted()
     {
-        return motor.getDirection() == DcMotorSimple.Direction.REVERSE;
+        return servo.getDirection() == DcMotorSimple.Direction.REVERSE;
     }   //isMotorInverted
 
     /**
@@ -425,7 +356,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorPower(double power)
     {
-        motor.setPower(power);
+        servo.setPower(power);
     }   //setMotorPower
 
     /**
@@ -436,7 +367,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public double getMotorPower()
     {
-        return motor.getPower();
+        return servo.getPower();
     }   //getMotorPower
 
     /**

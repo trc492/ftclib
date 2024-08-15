@@ -39,7 +39,6 @@ public class FtcServo extends TrcServo
     private final Servo servo;
     private final ServoController controller;
     private final TrcTimer timer;
-    private Double logicalPos;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -53,7 +52,6 @@ public class FtcServo extends TrcServo
         servo = hardwareMap.get(Servo.class, instanceName);
         controller = servo.getController();
         timer = new TrcTimer(instanceName);
-        logicalPos = null;
     }   //FtcServo
 
     /**
@@ -164,13 +162,9 @@ public class FtcServo extends TrcServo
     @Override
     public void setLogicalPosition(double position)
     {
-        if (logicalPos == null || position != logicalPos)
-        {
-            if (servoSetPosElapsedTimer != null) servoSetPosElapsedTimer.recordStartTime();
-            servo.setPosition(position);
-            if (servoSetPosElapsedTimer != null) servoSetPosElapsedTimer.recordEndTime();
-            logicalPos = position;
-        }
+        if (servoSetPosElapsedTimer != null) servoSetPosElapsedTimer.recordStartTime();
+        servo.setPosition(position);
+        if (servoSetPosElapsedTimer != null) servoSetPosElapsedTimer.recordEndTime();
     }   //setLogicalPosition
 
     /**
@@ -182,7 +176,7 @@ public class FtcServo extends TrcServo
     @Override
     public double getLogicalPosition()
     {
-        return logicalPos != null? logicalPos: 0.0;
+        return servo.getPosition();
     }   //getLogicalPosition
 
 }   //class FtcServo

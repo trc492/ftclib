@@ -20,58 +20,94 @@
  * SOFTWARE.
  */
 
-package ftclib.subsystem;
+package ftclib.motor;
 
 import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 
-import ftclib.motor.FtcServo;
+import trclib.motor.TrcServo;
 
+/**
+ * This class creates an FRC platform specific servo with the specified parameters.
+ */
 public class FtcServoActuator
 {
     /**
-     * This class contains all the parameters related to the actuator servo.
+     * This class contains all the parameters for creating the servo.
      */
     public static class Params
     {
-        public boolean servoInverted = false;
-        public boolean hasFollowerServo = false;
-        public boolean followerServoInverted = false;
-        public double logicalPosMin = 0.0;
-        public double logicalPosMax = 1.0;
-        public double physicalPosMin = 0.0;
-        public double physicalPosMax = 1.0;
-        public Double maxStepRate = null;
-        public double presetTolerance = 0.0;
-        public double[] positionPresets = null;
+        private String primaryServoName = null;
+        private boolean primaryServoInverted = false;
+
+        private String followerServoName = null;
+        private boolean followerServoInverted = false;
+
+        private double logicalPosMin = 0.0;
+        private double logicalPosMax = 1.0;
+
+        private double physicalPosMin = 0.0;
+        private double physicalPosMax = 1.0;
+
+        private Double maxStepRate = null;
+
+        private double presetTolerance = 0.0;
+        private double[] positionPresets = null;
 
         /**
-         * This methods sets the servo direction.
+         * This method returns the string format of the servoParams info.
          *
-         * @param inverted specifies true to invert servo direction, false otherwise.
-         * @return this object for chaining.
+         * @return string format of the servo param info.
          */
-        public Params setServoInverted(boolean inverted)
+        @NonNull
+        @Override
+        public String toString()
         {
-            servoInverted = inverted;
-            return this;
-        }   //setServoInverted
+            return "primaryServoName=" + primaryServoName +
+                   ",primaryServoInverted=" + primaryServoInverted +
+                   "\nfollowerServoName=" + followerServoName +
+                   ",followerServoInverted=" + followerServoInverted +
+                   "\nlogicalMin=" + logicalPosMin +
+                   ",logicalMax=" + logicalPosMax +
+                   "\nphysicalMin=" + physicalPosMin +
+                   ",physicalMax=" + physicalPosMax +
+                   "\nmaxStepRate=" + maxStepRate +
+                   "\nposPresets=" + Arrays.toString(positionPresets);
+        }   //toString
 
         /**
-         * This methods sets if the actuator has a follower servo and if the follower servo is inverted.
+         * This methods sets the parameters of the primary servo.
          *
-         * @param hasFollowerServo specifies true if the actuator has a follower servo, false otherwise.
-         * @param followerServoInverted specifies true if the follower servo is inverted, false otherwise. Only
-         *        applicable if hasFollowerServo is true.
+         * @param name specifies the name of the servo.
+         * @param inverted specifies true if the servo is inverted, false otherwise.
          * @return this object for chaining.
          */
-        public Params setHasFollowerServo(boolean hasFollowerServo, boolean followerServoInverted)
+        public Params setPrimaryServo(String name, boolean inverted)
         {
-            this.hasFollowerServo = hasFollowerServo;
-            this.followerServoInverted = followerServoInverted;
+            if (name == null)
+            {
+                throw new IllegalArgumentException("Must provide a valid primary servo name.");
+            }
+
+            this.primaryServoName = name;
+            this.primaryServoInverted = inverted;
             return this;
-        }   //setHasFollowerServo
+        }   //setPrimaryServo
+
+        /**
+         * This methods sets the parameter of the follower servo.
+         *
+         * @param name specifies the name of the servo.
+         * @param inverted specifies true if the servo is inverted, false otherwise.
+         * @return this object for chaining.
+         */
+        public Params setFollowerServo(String name, boolean inverted)
+        {
+            this.followerServoName = name;
+            this.followerServoInverted = inverted;
+            return this;
+        }   //setFollowerServo
 
         /**
          * This method sets the logical position range of the servo in the range of 0.0 to 1.0.
@@ -127,79 +163,44 @@ public class FtcServoActuator
             return this;
         }   //setPositionPresets
 
-        /**
-         * This method returns the string format of the servoParams info.
-         *
-         * @return string format of the servo param info.
-         */
-        @NonNull
-        @Override
-        public String toString()
-        {
-            return "servoInverted=" + servoInverted +
-                   ",hasFollower=" + hasFollowerServo +
-                   ",followerInverted=" + followerServoInverted +
-                   ",logicalMin=" + logicalPosMin +
-                   ",logicalMax=" + logicalPosMax +
-                   ",physicalMin=" + physicalPosMin +
-                   ",physicalMax=" + physicalPosMax +
-                   ",maxStepRate=" + maxStepRate +
-                   ",posPresets=" + Arrays.toString(positionPresets);
-        }   //toString
-
     }   //class Params
 
-    protected final String instanceName;
-    protected final FtcServo actuator;
+    private final TrcServo primaryServo;
 
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param instanceName specifies the instance name.
      * @param params specifies the parameters to set up the actuator servo.
      */
-    public FtcServoActuator(String instanceName, Params params)
+    public FtcServoActuator(Params params)
     {
-        this.instanceName = instanceName;
-        actuator = new FtcServo(instanceName + ".servo");
-        actuator.setInverted(params.servoInverted);
-        actuator.setLogicalPosRange(params.logicalPosMin, params.logicalPosMax);
-        actuator.setPhysicalPosRange(params.physicalPosMin, params.physicalPosMax);
-        actuator.setPosPresets(params.presetTolerance, params.positionPresets);
+        primaryServo = new FtcServo(params.primaryServoName);
+        primaryServo.setInverted(params.primaryServoInverted);
+        primaryServo.setLogicalPosRange(params.logicalPosMin, params.logicalPosMax);
+        primaryServo.setPhysicalPosRange(params.physicalPosMin, params.physicalPosMax);
+        primaryServo.setPosPresets(params.presetTolerance, params.positionPresets);
 
         if (params.maxStepRate != null)
         {
-            actuator.setMaxStepRate(params.maxStepRate);
+            primaryServo.setMaxStepRate(params.maxStepRate);
         }
 
-        if (params.hasFollowerServo)
+        if (params.followerServoName != null)
         {
-            FtcServo follower = new FtcServo(instanceName + ".followerServo");
-            follower.setInverted(params.followerServoInverted);
-            follower.follow(actuator);
+            FtcServo followerServo = new FtcServo(params.followerServoName);
+            followerServo.setInverted(params.followerServoInverted);
+            followerServo.follow(primaryServo);
         }
     }   //FtcServoActuator
 
     /**
-     * This method returns the instance name.
+     * This method returns the created primary servo.
      *
-     * @return instance name.
+     * @return primary servo.
      */
-    @NonNull
-    @Override
-    public String toString()
+    public TrcServo getServo()
     {
-        return instanceName;
-    }   //toString
-
-    /**
-     * This method returns the actuator object.
-     *
-     * @return actuator object.
-     */
-    public FtcServo getActuator()
-    {
-        return actuator;
-    }   //getActuator
+        return primaryServo;
+    }   //getServo
 
 }   //class FtcServoActuator

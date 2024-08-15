@@ -31,8 +31,6 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import ftclib.robotcore.FtcOpMode;
-import trclib.sensor.TrcDigitalInput;
-import trclib.sensor.TrcEncoder;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcPidController;
 import trclib.timer.TrcTimer;
@@ -58,16 +56,11 @@ public class FtcDcMotor extends TrcMotor
      *
      * @param hardwareMap specifies the global hardware map.
      * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     * @param encoder specifies an external position sensor overriding the motor controller one, can be null
-     *        if not provided.
+     * @param sensors specifies external sensors, can be null if none.
      */
-    public FtcDcMotor(
-        HardwareMap hardwareMap, String instanceName, TrcDigitalInput lowerLimitSwitch,
-        TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
+    public FtcDcMotor(HardwareMap hardwareMap, String instanceName, TrcMotor.ExternalSensors sensors)
     {
-        super(instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
+        super(instanceName, sensors);
         motor = hardwareMap.get(DcMotorEx.class, instanceName);
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
         runMode = motor.getMode();
@@ -77,40 +70,11 @@ public class FtcDcMotor extends TrcMotor
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     * @param encoder specifies an external position sensor overriding the motor controller one, can be null
-     *        if not provided.
+     * @param sensors specifies external sensors, can be null if none.
      */
-    public FtcDcMotor(
-        String instanceName, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch, TrcEncoder encoder)
+    public FtcDcMotor(String instanceName, TrcMotor.ExternalSensors sensors)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, lowerLimitSwitch, upperLimitSwitch, encoder);
-    }   //FtcDcMotor
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param lowerLimitSwitch specifies an external lower limit switch, can be null if not provided.
-     * @param upperLimitSwitch specifies an external upper limit switch, can be null if not provided.
-     */
-    public FtcDcMotor(
-        String instanceName, TrcDigitalInput lowerLimitSwitch, TrcDigitalInput upperLimitSwitch)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, lowerLimitSwitch, upperLimitSwitch, null);
-    }   //FtcDcMotor
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param encoder specifies an external position sensor overriding the motor controller one, can be null
-     *        if not provided.
-     */
-    public FtcDcMotor(String instanceName, TrcEncoder encoder)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, null, null, encoder);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, sensors);
     }   //FtcDcMotor
 
     /**
@@ -120,7 +84,7 @@ public class FtcDcMotor extends TrcMotor
      */
     public FtcDcMotor(String instanceName)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, null, null, null);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, null);
     }   //FtcDcMotor
 
     //
