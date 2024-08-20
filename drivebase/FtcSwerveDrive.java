@@ -29,6 +29,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcAnalogEncoder;
 import trclib.drivebase.TrcSwerveDriveBase;
@@ -74,8 +75,9 @@ public class FtcSwerveDrive extends FtcRobotDrive
     public final TrcMotor[] steerMotors;
     public final TrcSwerveModule[] swerveModules;
 
-    public final double[] steerZeros = new double[4];
-    public int steerZeroCalibrationCount = 0;
+    private final FtcDashboard dashboard;
+    private final double[] steerZeros = new double[4];
+    private int steerZeroCalibrationCount = 0;
     private String xModeOwner = null;
 
     /**
@@ -97,6 +99,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
             swerveModules[FtcRobotDrive.INDEX_RIGHT_FRONT], swerveModules[FtcRobotDrive.INDEX_RIGHT_BACK],
             gyro, swerveInfo.wheelBaseWidth, swerveInfo.wheelBaseLength);
         super.configDriveBase(driveBase, useExternalOdometry);
+        this.dashboard = FtcDashboard.getInstance();
     }   //FtcSwerveDrive
 
     /**
@@ -201,6 +204,39 @@ public class FtcSwerveDrive extends FtcRobotDrive
             xModeOwner = null;
         }
     }   //setXModeEnabled
+
+    /**
+     * This method displays the steer zero calibration progress to the dashboard.
+     *
+     * @param lineNum specifies the starting line number to display the info on the dashboard.
+     * @return updated line number to the next available line on the dashboard.
+     */
+    public int displaySteerZeroCalibration(int lineNum)
+    {
+        if (steerZeroCalibrationCount > 0)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "Count = %d", steerZeroCalibrationCount);
+            dashboard.displayPrintf(
+                lineNum++, "Encoder: lf=%.3f/%f",
+                steerEncoders[FtcSwerveDrive.INDEX_LEFT_FRONT].getRawPosition(),
+                steerZeros[FtcSwerveDrive.INDEX_LEFT_FRONT] / steerZeroCalibrationCount);
+            dashboard.displayPrintf(
+                lineNum++, "Encoder: rf=%.3f/%f",
+                steerEncoders[FtcSwerveDrive.INDEX_RIGHT_FRONT].getRawPosition(),
+                steerZeros[FtcSwerveDrive.INDEX_RIGHT_FRONT] / steerZeroCalibrationCount);
+            dashboard.displayPrintf(
+                lineNum++, "Encoder: lb=%.3f/%f",
+                steerEncoders[FtcSwerveDrive.INDEX_LEFT_BACK].getRawPosition(),
+                steerZeros[FtcSwerveDrive.INDEX_LEFT_BACK] / steerZeroCalibrationCount);
+            dashboard.displayPrintf(
+                lineNum++, "Encoder: rb=%.3f/%f",
+                steerEncoders[FtcSwerveDrive.INDEX_RIGHT_BACK].getRawPosition(),
+                steerZeros[FtcSwerveDrive.INDEX_RIGHT_BACK] / steerZeroCalibrationCount);
+        }
+
+        return lineNum;
+    }   //displaySteerZeroCalibration
 
     /**
      * This method starts the steering calibration.
