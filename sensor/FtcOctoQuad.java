@@ -27,26 +27,32 @@ import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import java.util.ArrayList;
+
 import ftclib.robotcore.FtcOpMode;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.robotcore.TrcRobot;
 import trclib.robotcore.TrcTaskMgr;
 import trclib.sensor.TrcEncoder;
 import trclib.dataprocessor.TrcWrapValueConverter;
+import trclib.sensor.TrcOdometrySensor;
+import trclib.timer.TrcTimer;
 
 /**
  * This class implements a wrapper to OctoQuad that supports up to 8 quadrature or PWM encoders. It implements the
  * TrcEncoder interface to allow compatibility to other types of encoders.
  */
-public class FtcOctoQuad implements TrcEncoder
+public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
 {
     private static final String moduleName = FtcOctoQuad.class.getSimpleName();
+    private static final ArrayList<FtcOctoQuad> odometrySensors = new ArrayList<>();
     private static CachingOctoQuad octoQuad = null;
 
     public final TrcDbgTrace tracer;
     private final String instanceName;
     private final int encIndex;
     private final TrcWrapValueConverter wrapValueConverter;
+    private final TrcOdometrySensor.Odometry odometry;
     private double scale = 1.0;
     private double offset = 0.0;
     private double zeroOffset = 0.0;
@@ -82,6 +88,11 @@ public class FtcOctoQuad implements TrcEncoder
         {
             wrapValueConverter = null;
         }
+        odometry = new TrcOdometrySensor.Odometry(this);
+        synchronized (odometrySensors)
+        {
+            odometrySensors.add(this);
+        }
     }   //FtcOctoQuad
 
     /**
@@ -115,7 +126,30 @@ public class FtcOctoQuad implements TrcEncoder
      */
     private void ioTaskLoopBegin(TrcRobot.RunMode runMode)
     {
-        octoQuad.refreshCache();
+        if (octoQuad != null)
+        {
+            octoQuad.refreshCache();
+            synchronized (odometrySensors)
+            {
+                for (FtcOctoQuad sensor : odometrySensors)
+                {
+                    sensor.odometry.prevTimestamp = sensor.odometry.currTimestamp;
+                    sensor.odometry.prevPos = sensor.odometry.currPos;
+                    sensor.odometry.currTimestamp = TrcTimer.getCurrentTime();
+                    sensor.odometry.currPos = sensor.getScaledPosition();
+                    sensor.odometry.velocity = sensor.getScaledVelocity();
+                }
+            }
+        }
+        else
+        {
+            // OctoQuad is no more, unregister IoTaskLoopCallback.
+            TrcTaskMgr.unregisterIoTaskLoopCallback(moduleName);
+            synchronized (odometrySensors)
+            {
+                odometrySensors.clear();
+            }
+        }
     }   //ioTaskLoopBegin
 
     /**
@@ -249,5 +283,58 @@ public class FtcOctoQuad implements TrcEncoder
         this.offset = offset;
         this.zeroOffset = zeroOffset;
     }   //setScaleAndOffset
+
+    //
+    // Implements TrcOdometrySensor interfaces.
+    //
+
+    /**
+     * This method returns the instance name.
+     *
+     * @return instance name.
+     */
+    @Override
+    public String getName()
+    {
+        return instanceName;
+    }   //getName
+
+    /**
+     * This method resets the odometry data and sensor.
+     *
+     * @param resetHardware specifies true to do a hardware reset, false to do a software reset (not used).
+     */
+    @Override
+    public void resetOdometry(boolean resetHardware)
+    {
+        // External encoder doesn't support soft reset.
+        reset();
+        synchronized (odometry)
+        {
+            odometry.prevTimestamp = odometry.currTimestamp = TrcTimer.getCurrentTime();
+            odometry.prevPos = odometry.currPos = 0.0;
+            odometry.velocity = 0.0;
+        }
+    }   //resetOdometry
+
+    /**
+     * This method returns a copy of the odometry data of the specified axis. It must be a copy so it won't change while
+     * the caller is accessing the data fields.
+     *
+     * @param axisIndex specifies the axis index if it is a multi-axes sensor, 0 if it is a single axis sensor (not used).
+     * @return a copy of the odometry data of the specified axis.
+     */
+    @Override
+    public Odometry getOdometry(int axisIndex)
+    {
+        Odometry odom;
+
+        synchronized (odometry)
+        {
+            odom = odometry.clone();
+        }
+
+        return odom;
+    }   //getOdometry
 
 }   //class FtcOctoQuad

@@ -69,9 +69,9 @@ public class FtcAnalogEncoder implements TrcEncoder
     }   //FtcAnalogEncoder
 
     /**
-     * This method enables/disables the Cardinal Converter task.
+     * This method enables/disables the Wrap Value Converter task.
      *
-     * @param enabled specifies true to enable cardinal converter, false to disable.
+     * @param enabled specifies true to enable wrap value converter, false to disable.
      */
     public void setEnabled(boolean enabled)
     {

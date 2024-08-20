@@ -28,8 +28,10 @@ import java.util.Arrays;
 
 import ftclib.sensor.FtcAnalogEncoder;
 import ftclib.sensor.FtcDigitalInput;
-import trclib.motor.TrcMotor;
 import trclib.dataprocessor.TrcUtil;
+import trclib.motor.TrcMotor;
+import trclib.sensor.TrcDigitalInput;
+import trclib.sensor.TrcEncoder;
 
 /**
  * This class creates an FTC platform specific motor with the specified parameters.
@@ -61,6 +63,7 @@ public class FtcMotorActuator
         public String upperLimitSwitchName = null;
         public boolean upperLimitSwitchInverted = false;
 
+        public TrcEncoder externalEncoder = null;
         public String externalEncoderName = null;
         public boolean externalEncoderInverted = false;
 
@@ -167,12 +170,32 @@ public class FtcMotorActuator
         /**
          * This method sets the external encoder parameters.
          *
+         * @param encoder specifies the external analog encoder.
+         * @return this object for chaining.
+         */
+        public Params setExternalEncoder(TrcEncoder encoder)
+        {
+            if (this.externalEncoderName != null)
+            {
+                throw new IllegalStateException("Can only specify encoder or encode name but not both.");
+            }
+            this.externalEncoder = encoder;
+            return this;
+        }   //setExternalEncoder
+
+        /**
+         * This method sets the external encoder parameters.
+         *
          * @param name specifies the name of the analog encoder.
          * @param inverted specifies true if the encoder is inverted, false otherwise.
          * @return this object for chaining.
          */
         public Params setExternalEncoder(String name, boolean inverted)
         {
+            if (this.externalEncoder != null)
+            {
+                throw new IllegalStateException("Can only specify encoder or encode name but not both.");
+            }
             this.externalEncoderName = name;
             externalEncoderInverted = inverted;
             return this;
@@ -231,12 +254,13 @@ public class FtcMotorActuator
      */
     public FtcMotorActuator(Params params)
     {
-        FtcDigitalInput lowerLimitSwitch =
+        TrcDigitalInput lowerLimitSwitch =
             params.lowerLimitSwitchName != null? new FtcDigitalInput(params.lowerLimitSwitchName): null;
-        FtcDigitalInput upperLimitSwitch =
+        TrcDigitalInput upperLimitSwitch =
             params.upperLimitSwitchName != null? new FtcDigitalInput(params.upperLimitSwitchName): null;
-        FtcAnalogEncoder encoder =
-            params.externalEncoderName != null? new FtcAnalogEncoder(params.externalEncoderName): null;
+        TrcEncoder encoder =
+            params.externalEncoderName != null?
+                new FtcAnalogEncoder(params.externalEncoderName): params.externalEncoder;
 
         TrcMotor.ExternalSensors sensors = null;
         if (lowerLimitSwitch != null || upperLimitSwitch != null || encoder != null)
