@@ -47,6 +47,8 @@ public class FtcRobotDrive
     public static final int INDEX_RIGHT_FRONT = 1;
     public static final int INDEX_LEFT_BACK = 2;
     public static final int INDEX_RIGHT_BACK = 3;
+    public static final int INDEX_LEFT_CENTER = 4;
+    public static final int INDEX_RIGHT_CENTER = 5;
 
     /**
      * This class contains the Common Robot Info.
@@ -207,15 +209,13 @@ public class FtcRobotDrive
         pidCtrl.setRampRate(robotInfo.yDriveMaxPidRampRate);
 
         pidCtrl = pidDrive.getTurnPidCtrl();
-        // FTC robots generally have USB/I2C performance issues where the sampling rate of the gyro is not high enough.
-        // If the robot turns too fast, PID will cause oscillation. By limiting turn power, the robot turns slower.
         pidCtrl.setOutputLimit(robotInfo.turnPidPowerLimit);
         pidCtrl.setRampRate(robotInfo.turnMaxPidRampRate);
         pidCtrl.setAbsoluteSetPoint(true);
         // AbsoluteTargetMode eliminates cumulative errors on multi-segment runs because drive base is keeping track
         // of the absolute target position.
-        pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
         pidDrive.setAbsoluteTargetModeEnabled(true);
+        pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
 
         purePursuitDrive = new TrcPurePursuitDrive(
             "purePursuitDrive", driveBase,
