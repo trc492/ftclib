@@ -39,17 +39,17 @@ public class FtcGamepad extends TrcGameController
     private static final int GAMEPAD_B          = (1 << 1);
     private static final int GAMEPAD_X          = (1 << 2);
     private static final int GAMEPAD_Y          = (1 << 3);
-    private static final int GAMEPAD_BACK       = (1 << 4);
-    private static final int GAMEPAD_START      = (1 << 5);
-    private static final int GAMEPAD_LBUMPER    = (1 << 6);
-    private static final int GAMEPAD_RBUMPER    = (1 << 7);
-    private static final int GAMEPAD_LSTICK_BTN = (1 << 8);
-    private static final int GAMEPAD_RSTICK_BTN = (1 << 9);
-    private static final int GAMEPAD_DPAD_LEFT  = (1 << 10);
-    private static final int GAMEPAD_DPAD_RIGHT = (1 << 11);
-    private static final int GAMEPAD_DPAD_UP    = (1 << 12);
-    private static final int GAMEPAD_DPAD_DOWN  = (1 << 13);
-    private static final int GAMEPAD_GUIDE      = (1 << 14);
+    private static final int GAMEPAD_LBUMPER    = (1 << 4);
+    private static final int GAMEPAD_RBUMPER    = (1 << 5);
+    private static final int GAMEPAD_DPAD_UP    = (1 << 6);
+    private static final int GAMEPAD_DPAD_DOWN  = (1 << 7);
+    private static final int GAMEPAD_DPAD_LEFT  = (1 << 8);
+    private static final int GAMEPAD_DPAD_RIGHT = (1 << 9);
+    private static final int GAMEPAD_BACK       = (1 << 10);
+    private static final int GAMEPAD_START      = (1 << 11);
+    private static final int GAMEPAD_GUIDE      = (1 << 12);
+    private static final int GAMEPAD_LSTICK_BTN = (1 << 13);
+    private static final int GAMEPAD_RSTICK_BTN = (1 << 14);
 
     public enum ButtonType
     {
@@ -57,17 +57,17 @@ public class FtcGamepad extends TrcGameController
         B,
         X,
         Y,
-        Back,
-        Start,
         LeftBumper,
         RightBumper,
-        LeftStickButton,
-        RightStickButton,
-        DpadLeft,
-        DpadRight,
         DpadUp,
         DpadDown,
-        Guide
+        DpadLeft,
+        DpadRight,
+        Back,
+        Start,
+        Guide,
+        LeftStickButton,
+        RightStickButton
     }   //enum ButtonType
 
     /**
@@ -111,17 +111,17 @@ public class FtcGamepad extends TrcGameController
             buttonTypeMap.put(GAMEPAD_B, ButtonType.B);
             buttonTypeMap.put(GAMEPAD_X, ButtonType.X);
             buttonTypeMap.put(GAMEPAD_Y, ButtonType.Y);
-            buttonTypeMap.put(GAMEPAD_BACK, ButtonType.Back);
-            buttonTypeMap.put(GAMEPAD_START, ButtonType.Start);
             buttonTypeMap.put(GAMEPAD_LBUMPER, ButtonType.LeftBumper);
             buttonTypeMap.put(GAMEPAD_RBUMPER, ButtonType.RightBumper);
-            buttonTypeMap.put(GAMEPAD_LSTICK_BTN, ButtonType.LeftStickButton);
-            buttonTypeMap.put(GAMEPAD_RSTICK_BTN, ButtonType.RightStickButton);
-            buttonTypeMap.put(GAMEPAD_DPAD_LEFT, ButtonType.DpadLeft);
-            buttonTypeMap.put(GAMEPAD_DPAD_RIGHT, ButtonType.DpadRight);
             buttonTypeMap.put(GAMEPAD_DPAD_UP, ButtonType.DpadUp);
             buttonTypeMap.put(GAMEPAD_DPAD_DOWN, ButtonType.DpadDown);
+            buttonTypeMap.put(GAMEPAD_DPAD_LEFT, ButtonType.DpadLeft);
+            buttonTypeMap.put(GAMEPAD_DPAD_RIGHT, ButtonType.DpadRight);
+            buttonTypeMap.put(GAMEPAD_BACK, ButtonType.Back);
+            buttonTypeMap.put(GAMEPAD_START, ButtonType.Start);
             buttonTypeMap.put(GAMEPAD_GUIDE, ButtonType.Guide);
+            buttonTypeMap.put(GAMEPAD_LSTICK_BTN, ButtonType.LeftStickButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_BTN, ButtonType.RightStickButton);
         }
     }   //FtcGamepad
 
