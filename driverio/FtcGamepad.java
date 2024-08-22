@@ -24,6 +24,8 @@ package ftclib.driverio;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import java.util.HashMap;
+
 import trclib.driverio.TrcGameController;
 import trclib.dataprocessor.TrcUtil;
 
@@ -33,103 +35,63 @@ import trclib.dataprocessor.TrcUtil;
  */
 public class FtcGamepad extends TrcGameController
 {
-//    private enum GamepadButton
-//    {
-//        a("ButtonA", (int)1 << 0),
-//        b("ButtonB", (int)1 << 1),
-//        x("ButtonX", (int)1 << 2),
-//        y("ButtonY", (int)1 << 3),
-//        back("ButtonBack", (int)1 << 4),
-//        start("ButtonStart", (int)1 << 5),
-//        leftBumper("LeftBumper", (int)1 << 6),
-//        rightBumper("RightBumper", (int)1 << 7),
-//        leftStickButton("LeftStickButton", (int)1 << 8),
-//        rightStickButton("RightStickButton", (int)1 << 9),
-//        dpadLeft("DPadLeft", (int)1 << 10),
-//        dpadRight("DPadRight", (int)1 << 11),
-//        dpadUp("DPadUp", (int)1 << 12),
-//        dpadDown("DPadDown", (int)1 << 13),
-//        guide("Guide", (int)1 << 14);
-//
-//        private final String name;
-//        private final int value;
-//
-//        GamepadButton(String name, int value)
-//        {
-//            this.name = name;
-//            this.value = value;
-//        }   //GamepadButton
-//
-//        @NonNull
-//        @Override
-//        public String toString()
-//        {
-//            return name;
-//        }   //toString
-//
-//    }   //enum GamepadButtons
+    private static final int GAMEPAD_A          = (1);
+    private static final int GAMEPAD_B          = (1 << 1);
+    private static final int GAMEPAD_X          = (1 << 2);
+    private static final int GAMEPAD_Y          = (1 << 3);
+    private static final int GAMEPAD_BACK       = (1 << 4);
+    private static final int GAMEPAD_START      = (1 << 5);
+    private static final int GAMEPAD_LBUMPER    = (1 << 6);
+    private static final int GAMEPAD_RBUMPER    = (1 << 7);
+    private static final int GAMEPAD_LSTICK_BTN = (1 << 8);
+    private static final int GAMEPAD_RSTICK_BTN = (1 << 9);
+    private static final int GAMEPAD_DPAD_LEFT  = (1 << 10);
+    private static final int GAMEPAD_DPAD_RIGHT = (1 << 11);
+    private static final int GAMEPAD_DPAD_UP    = (1 << 12);
+    private static final int GAMEPAD_DPAD_DOWN  = (1 << 13);
+    private static final int GAMEPAD_GUIDE      = (1 << 14);
+
+    public enum ButtonType
+    {
+        A,
+        B,
+        X,
+        Y,
+        Back,
+        Start,
+        LeftBumper,
+        RightBumper,
+        LeftStickButton,
+        RightStickButton,
+        DpadLeft,
+        DpadRight,
+        DpadUp,
+        DpadDown,
+        Guide
+    }   //enum ButtonType
 
     /**
-     * This enum specifies different drive modes.
+     * This interface, if provided, will allow this class to do a notification callback when there are button
+     * activities.
      */
-    public enum DriveMode
+    public interface ButtonEventHandler
     {
-        TANK_MODE,
-        HOLONOMIC_MODE,
-        ARCADE_MODE
-    }   //enum DriveMode
+        /**
+         * This method is called when button event is detected.
+         *
+         * @param buttonType specifies the button type that generates the event.
+         * @param pressed specifies true if the button is pressed, false otherwise.
+         */
+        void buttonEvent(ButtonType buttonType, boolean pressed);
 
-    public static final int GAMEPAD_A           = ((int)1);
-    public static final int GAMEPAD_B           = ((int)1 << 1);
-    public static final int GAMEPAD_X           = ((int)1 << 2);
-    public static final int GAMEPAD_Y           = ((int)1 << 3);
-    public static final int GAMEPAD_BACK        = ((int)1 << 4);
-    public static final int GAMEPAD_START       = ((int)1 << 5);
-    public static final int GAMEPAD_LBUMPER     = ((int)1 << 6);
-    public static final int GAMEPAD_RBUMPER     = ((int)1 << 7);
-    public static final int GAMEPAD_LSTICK_BTN  = ((int)1 << 8);
-    public static final int GAMEPAD_RSTICK_BTN  = ((int)1 << 9);
-    public static final int GAMEPAD_DPAD_LEFT   = ((int)1 << 10);
-    public static final int GAMEPAD_DPAD_RIGHT  = ((int)1 << 11);
-    public static final int GAMEPAD_DPAD_UP     = ((int)1 << 12);
-    public static final int GAMEPAD_DPAD_DOWN   = ((int)1 << 13);
-    public static final int GAMEPAD_GUIDE       = ((int)1 << 14);
+    }   //interface ButtonEventHandler
 
-    private final Gamepad gamepad;
-    private int ySign;
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param gamepad specifies the gamepad associated with this instance.
-     * @param deadbandThreshold specifies the deadband of the gamepad analog sticks.
-     * @param buttonHandler specifies the object that will handle the button events. If none provided, it is set to
-     *        null.
-     */
-    public FtcGamepad(String instanceName, Gamepad gamepad, double deadbandThreshold, ButtonHandler buttonHandler)
-    {
-        super(instanceName, deadbandThreshold, buttonHandler);
-        this.gamepad = gamepad;
-        ySign = 1;
-        init();
-    }   //FtcGamepad
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param gamepad specifies the gamepad associated with this instance.
-     * @param buttonHandler specifies the object that will handle the button events. If none provided, it is set to
-     *        null.
-     */
-    public FtcGamepad(String instanceName, Gamepad gamepad, ButtonHandler buttonHandler)
-    {
-        super(instanceName, buttonHandler);
-        this.gamepad = gamepad;
-        ySign = 1;
-        init();
-    }   //FtcGamepad
+    private static final double DEF_DEADBAND_THRESHOLD = 0.15;
+    private static HashMap<Integer, ButtonType> buttonTypeMap = null;
+    public final Gamepad gamepad;
+    private ButtonEventHandler buttonEventHandler = null;
+    private int leftXSign = 1, leftYSign = 1;
+    private int rightXSign = 1, rightYSign = 1;
 
     /**
      * Constructor: Create an instance of the object.
@@ -140,7 +102,27 @@ public class FtcGamepad extends TrcGameController
      */
     public FtcGamepad(String instanceName, Gamepad gamepad, double deadbandThreshold)
     {
-        this(instanceName, gamepad, deadbandThreshold, null);
+        super(instanceName, deadbandThreshold);
+        this.gamepad = gamepad;
+        if (buttonTypeMap == null)
+        {
+            buttonTypeMap = new HashMap<>();
+            buttonTypeMap.put(GAMEPAD_A, ButtonType.A);
+            buttonTypeMap.put(GAMEPAD_B, ButtonType.B);
+            buttonTypeMap.put(GAMEPAD_X, ButtonType.X);
+            buttonTypeMap.put(GAMEPAD_Y, ButtonType.Y);
+            buttonTypeMap.put(GAMEPAD_BACK, ButtonType.Back);
+            buttonTypeMap.put(GAMEPAD_START, ButtonType.Start);
+            buttonTypeMap.put(GAMEPAD_LBUMPER, ButtonType.LeftBumper);
+            buttonTypeMap.put(GAMEPAD_RBUMPER, ButtonType.RightBumper);
+            buttonTypeMap.put(GAMEPAD_LSTICK_BTN, ButtonType.LeftStickButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_BTN, ButtonType.RightStickButton);
+            buttonTypeMap.put(GAMEPAD_DPAD_LEFT, ButtonType.DpadLeft);
+            buttonTypeMap.put(GAMEPAD_DPAD_RIGHT, ButtonType.DpadRight);
+            buttonTypeMap.put(GAMEPAD_DPAD_UP, ButtonType.DpadUp);
+            buttonTypeMap.put(GAMEPAD_DPAD_DOWN, ButtonType.DpadDown);
+            buttonTypeMap.put(GAMEPAD_GUIDE, ButtonType.Guide);
+        }
     }   //FtcGamepad
 
     /**
@@ -151,18 +133,43 @@ public class FtcGamepad extends TrcGameController
      */
     public FtcGamepad(String instanceName, Gamepad gamepad)
     {
-        this(instanceName, gamepad, null);
+        this(instanceName, gamepad, DEF_DEADBAND_THRESHOLD);
     }   //FtcGamepad
 
     /**
-     * This method inverts the y-axis of the analog sticks.
+     * This method sets the button event handler.
      *
-     * @param inverted specifies true if inverting the y-axis, false otherwise.
+     * @param buttonEventHandler specifies button event notification handler, null to disable event notification.
      */
-    public void setYInverted(boolean inverted)
+    public void setButtonEventHandler(ButtonEventHandler buttonEventHandler)
     {
-        ySign = inverted? -1: 1;
-    }   //setYInverted
+        this.buttonEventHandler = buttonEventHandler;
+        setButtonEventEnabled(buttonEventHandler != null);
+    }   //setButtonEventHandler
+
+    /**
+     * This method inverts the left analog stick axes.
+     *
+     * @param xInverted specifies true if inverting the x-axis, false otherwise.
+     * @param yInverted specifies true if inverting the y-axis, false otherwise.
+     */
+    public void setLeftStickInverted(boolean xInverted, boolean yInverted)
+    {
+        leftXSign = xInverted? -1: 1;
+        leftYSign = yInverted? -1: 1;
+    }   //setLeftStickInverted
+
+    /**
+     * This method inverts the right analog stick axes.
+     *
+     * @param xInverted specifies true if inverting the x-axis, false otherwise.
+     * @param yInverted specifies true if inverting the y-axis, false otherwise.
+     */
+    public void setRightStickInverted(boolean xInverted, boolean yInverted)
+    {
+        rightXSign = xInverted? -1: 1;
+        rightYSign = yInverted? -1: 1;
+    }   //setRightStickInverted
 
     /**
      * This method returns the x-axis value of the left stick using the cubic polynomial curve.
@@ -172,7 +179,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getLeftStickX(double cubicCoefficient)
     {
-        return adjustAnalogControl(gamepad.left_stick_x, cubicCoefficient);
+        return leftXSign * adjustAnalogControl(gamepad.left_stick_x, cubicCoefficient);
     }   //getLeftStickX
 
     /**
@@ -184,7 +191,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getLeftStickX(boolean doExp)
     {
-        return adjustAnalogControl(gamepad.left_stick_x, doExp);
+        return leftXSign * adjustAnalogControl(gamepad.left_stick_x, doExp);
     }   //getLeftStickX
 
     /**
@@ -205,7 +212,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getLeftStickY(double cubicCoefficient)
     {
-        return adjustAnalogControl(gamepad.left_stick_y, cubicCoefficient);
+        return leftYSign * adjustAnalogControl(gamepad.left_stick_y, cubicCoefficient);
     }   //getLeftStickY
 
     /**
@@ -217,7 +224,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getLeftStickY(boolean doExp)
     {
-        return ySign*adjustAnalogControl(gamepad.left_stick_y, doExp);
+        return leftYSign * adjustAnalogControl(gamepad.left_stick_y, doExp);
     }   //getLeftStickY
 
     /**
@@ -238,7 +245,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getRightStickX(double cubicCoefficient)
     {
-        return adjustAnalogControl(gamepad.right_stick_x, cubicCoefficient);
+        return rightXSign * adjustAnalogControl(gamepad.right_stick_x, cubicCoefficient);
     }   //getRightStickX
 
     /**
@@ -250,7 +257,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getRightStickX(boolean doExp)
     {
-        return adjustAnalogControl(gamepad.right_stick_x, doExp);
+        return rightXSign * adjustAnalogControl(gamepad.right_stick_x, doExp);
     }   //getRightStickX
 
     /**
@@ -271,7 +278,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getRightStickY(double cubicCoefficient)
     {
-        return adjustAnalogControl(gamepad.right_stick_y, cubicCoefficient);
+        return rightYSign * adjustAnalogControl(gamepad.right_stick_y, cubicCoefficient);
     }   //getRightStickY
 
     /**
@@ -283,7 +290,7 @@ public class FtcGamepad extends TrcGameController
      */
     public double getRightStickY(boolean doExp)
     {
-        return ySign*adjustAnalogControl(gamepad.right_stick_y, doExp);
+        return rightYSign * adjustAnalogControl(gamepad.right_stick_y, doExp);
     }   //getRightStickY
 
     /**
@@ -396,208 +403,6 @@ public class FtcGamepad extends TrcGameController
     }   //getTrigger
 
     /**
-     * This method returns the left stick magnitude combining the x and y axes and applying the cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return left stick magnitude.
-     */
-    public double getLeftStickMagnitude(double cubicCoefficient)
-    {
-        return getMagnitude(getLeftStickX(cubicCoefficient), getLeftStickY(cubicCoefficient));
-    }   //getLeftStickMagnitude
-
-    /**
-     * This method returns the left stick magnitude combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return left stick magnitude.
-     */
-    public double getLeftStickMagnitude(boolean doExp)
-    {
-        return getMagnitude(getLeftStickX(doExp), getLeftStickY(doExp));
-    }   //getLeftStickMagnitude
-
-    /**
-     * This method returns the left stick magnitude combining the x and y axes.
-     *
-     * @return left stick magnitude.
-     */
-    public double getLeftStickMagnitude()
-    {
-        return getLeftStickMagnitude(false);
-    }   //getLeftStickMagnitude
-
-    /**
-     * This method returns the right stick magnitude combining the x and y axes and applying the cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return right stick magnitude.
-     */
-    public double getRightStickMagnitude(double cubicCoefficient)
-    {
-        return getMagnitude(getRightStickX(cubicCoefficient), getRightStickY(cubicCoefficient));
-    }   //getRightStickMagnitude
-
-    /**
-     * This method returns the right stick magnitude combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return right stick magnitude.
-     */
-    public double getRightStickMagnitude(boolean doExp)
-    {
-        return getMagnitude(getRightStickX(doExp), getRightStickY(doExp));
-    }   //getRightStickMagnitude
-
-    /**
-     * This method returns the right stick magnitude combining the x and y axes.
-     *
-     * @return right stick magnitude.
-     */
-    public double getRightStickMagnitude()
-    {
-        return getRightStickMagnitude(false);
-    }   //getRightStickMagnitude
-
-    /**
-     * This method returns the left stick direction in radians combining the x and y axes and applying the
-     * cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return left stick direction in radians.
-     */
-    public double getLeftStickDirectionRadians(double cubicCoefficient)
-    {
-        return getDirectionRadians(getLeftStickX(cubicCoefficient), getLeftStickY(cubicCoefficient));
-    }   //getLeftStickDirectionRadians
-
-    /**
-     * This method returns the left stick direction in radians combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return left stick direction in radians.
-     */
-    public double getLeftStickDirectionRadians(boolean doExp)
-    {
-        return getDirectionRadians(getLeftStickX(doExp), getLeftStickY(doExp));
-    }   //getLeftStickDirectionRadians
-
-    /**
-     * This method returns the left stick direction in radians combining the x and y axes.
-     *
-     * @return left stick direction in radians.
-     */
-    public double getLeftStickDirectionRadians()
-    {
-        return getLeftStickDirectionRadians(false);
-    }   //getLeftStickDirectionRadians
-
-    /**
-     * This method returns the right stick direction in radians combining the x and y axes and applying the
-     * cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return right stick direction in radians.
-     */
-    public double getRightStickDirectionRadians(double cubicCoefficient)
-    {
-        return getDirectionRadians(getRightStickX(cubicCoefficient), getRightStickY(cubicCoefficient));
-    }   //getRightStickDirectionRadians
-
-    /**
-     * This method returns the right stick direction in radians combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return right stick direction in radians.
-     */
-    public double getRightStickDirectionRadians(boolean doExp)
-    {
-        return getDirectionRadians(getRightStickX(doExp), getRightStickY(doExp));
-    }   //getRightStickDirectionRadians
-
-    /**
-     * This method returns the right stick direction in radians combining the x and y axes.
-     *
-     * @return right stick direction in radians.
-     */
-    public double getRightStickDirectionRadians()
-    {
-        return getRightStickDirectionRadians(false);
-    }   //getRightStickDirectionRadians
-
-    /**
-     * This method returns the left stick direction in degrees combining the x and y axes and applying the
-     * cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return left stick direction in degrees.
-     */
-    public double getLeftStickDirectionDegrees(double cubicCoefficient)
-    {
-        return getDirectionDegrees(getLeftStickX(cubicCoefficient), getLeftStickY(cubicCoefficient));
-    }   //getLeftStickDirectionDegrees
-
-    /**
-     * This method returns the left stick direction in degrees combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return left stick direction in degrees.
-     */
-    public double getLeftStickDirectionDegrees(boolean doExp)
-    {
-        return getDirectionDegrees(getLeftStickX(doExp), getLeftStickY(doExp));
-    }   //getLeftStickDirectionDegrees
-
-    /**
-     * This method returns the left stick direction in degrees combining the x and y axes.
-     *
-     * @return left stick direction in degrees.
-     */
-    public double getLeftStickDirectionDegrees()
-    {
-        return getLeftStickDirectionDegrees(false);
-    }   //getLeftStickDirectionDegrees
-
-    /**
-     * This method returns the right stick direction in degrees combining the x and y axes and applying the
-     * cubic polynomial curve.
-     *
-     * @param cubicCoefficient specifies the cubic coefficient.
-     * @return right stick direction in degrees.
-     */
-    public double getRightStickDirectionDegrees(double cubicCoefficient)
-    {
-        return getDirectionDegrees(getRightStickX(cubicCoefficient), getRightStickY(cubicCoefficient));
-    }   //getRightStickDirectionDegrees
-
-    /**
-     * This method returns the right stick direction in degrees combining the x and y axes.
-     *
-     * @param doExp specifies true if the value should be raised exponentially, false otherwise. If the value is
-     *        raised exponentially, it gives you more precise control on the low end values.
-     * @return right stick direction in degrees.
-     */
-    public double getRightStickDirectionDegrees(boolean doExp)
-    {
-        return getDirectionDegrees(getRightStickX(doExp), getRightStickY(doExp));
-    }   //getRightStickDirectionDegrees
-
-    /**
-     * This method returns the right stick direction in degrees combining the x and y axes.
-     *
-     * @return right stick direction in degrees.
-     */
-    public double getRightStickDirectionDegrees()
-    {
-        return getRightStickDirectionDegrees(false);
-    }   //getRightStickDirectionDegrees
-
-    /**
      * This method reads various joystick/gamepad control values and returns the drive powers for all three degrees
      * of robot movement.
      *
@@ -615,21 +420,21 @@ public class FtcGamepad extends TrcGameController
 
         switch (driveMode)
         {
-            case HOLONOMIC_MODE:
+            case HolonomicMode:
                 x = getRightStickX(doExp);
                 y = getLeftStickY(doExp);
                 rot = getTrigger(doExp);
                 tracer.traceDebug(instanceName, driveMode + ":x=" + x + ",y=" + y + ",rot=" + rot);
                 break;
 
-            case ARCADE_MODE:
+            case ArcadeMode:
                 x = getLeftStickX(doExp);
                 y = getLeftStickY(doExp);
                 rot = getRightStickX(doExp);
                 tracer.traceDebug(instanceName, driveMode + ":x=" + x + ",y=" + y + ",rot=" + rot);
                 break;
 
-            case TANK_MODE:
+            case TankMode:
                 double leftPower = getLeftStickY(doExp);
                 double rightPower = getRightStickY(doExp);
                 x = 0.0;
@@ -679,21 +484,6 @@ public class FtcGamepad extends TrcGameController
     public int getButtons()
     {
         int buttons = 0;
-//        buttons |= gamepad.a? GamepadButton.a.value: 0;
-//        buttons |= gamepad.b? GamepadButton.b.value: 0;
-//        buttons |= gamepad.x? GamepadButton.x.value: 0;
-//        buttons |= gamepad.y? GamepadButton.y.value: 0;
-//        buttons |= gamepad.back? GamepadButton.back.value: 0;
-//        buttons |= gamepad.start? GamepadButton.start.value: 0;
-//        buttons |= gamepad.left_bumper? GamepadButton.leftBumper.value: 0;
-//        buttons |= gamepad.right_bumper? GamepadButton.rightBumper.value: 0;
-//        buttons |= gamepad.left_stick_button? GamepadButton.leftStickButton.value: 0;
-//        buttons |= gamepad.right_stick_button? GamepadButton.rightStickButton.value: 0;
-//        buttons |= gamepad.dpad_left? GamepadButton.dpadLeft.value: 0;
-//        buttons |= gamepad.dpad_right? GamepadButton.dpadRight.value: 0;
-//        buttons |= gamepad.dpad_up? GamepadButton.dpadUp.value: 0;
-//        buttons |= gamepad.dpad_down? GamepadButton.dpadDown.value: 0;
-//        buttons |= gamepad.guide? GamepadButton.guide.value: 0;
         buttons |= gamepad.a? GAMEPAD_A: 0;
         buttons |= gamepad.b? GAMEPAD_B: 0;
         buttons |= gamepad.x? GAMEPAD_X: 0;
@@ -713,5 +503,22 @@ public class FtcGamepad extends TrcGameController
 
         return buttons;
     }   //getButtons
+
+    /**
+     * This method is called when a button event is detected. It translates the button value into button type and
+     * calls the button event handler.
+     *
+     * @param buttonValue specifies the button value that generated the event.
+     * @param pressed specifies true if the button is pressed, false if it is released.
+     */
+    @Override
+    protected void notifyButtonEvent(int buttonValue, boolean pressed)
+    {
+        if (buttonEventHandler != null)
+        {
+            ButtonType buttonType = buttonTypeMap.get(buttonValue);
+            buttonEventHandler.buttonEvent(buttonType, pressed);
+        }
+    }   //notifyButtonEvent
 
 }   //class FtcGamepad

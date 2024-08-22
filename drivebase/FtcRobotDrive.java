@@ -26,10 +26,10 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-import ftclib.driverio.FtcGamepad;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import trclib.drivebase.TrcDriveBase;
+import trclib.driverio.TrcGameController;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
 import trclib.pathdrive.TrcPose2D;
@@ -98,7 +98,7 @@ public class FtcRobotDrive
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
         // Robot Drive
-        public FtcGamepad.DriveMode driveMode = FtcGamepad.DriveMode.ARCADE_MODE;
+        public TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.ArcadeMode;
         public TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.ROBOT;
         public double driveSlowScale = 0.5;
         public double driveNormalScale = 1.0;
