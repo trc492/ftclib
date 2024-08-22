@@ -489,17 +489,17 @@ public class FtcGamepad extends TrcGameController
         buttons |= gamepad.b? GAMEPAD_B: 0;
         buttons |= gamepad.x? GAMEPAD_X: 0;
         buttons |= gamepad.y? GAMEPAD_Y: 0;
-        buttons |= gamepad.back? GAMEPAD_BACK: 0;
-        buttons |= gamepad.start? GAMEPAD_START: 0;
         buttons |= gamepad.left_bumper? GAMEPAD_LBUMPER: 0;
         buttons |= gamepad.right_bumper? GAMEPAD_RBUMPER: 0;
-        buttons |= gamepad.left_stick_button? GAMEPAD_LSTICK_BTN: 0;
-        buttons |= gamepad.right_stick_button? GAMEPAD_RSTICK_BTN: 0;
         buttons |= gamepad.dpad_left? GAMEPAD_DPAD_LEFT: 0;
         buttons |= gamepad.dpad_right? GAMEPAD_DPAD_RIGHT: 0;
         buttons |= gamepad.dpad_up? GAMEPAD_DPAD_UP: 0;
         buttons |= gamepad.dpad_down? GAMEPAD_DPAD_DOWN: 0;
+        buttons |= gamepad.back? GAMEPAD_BACK: 0;
+        buttons |= gamepad.start? GAMEPAD_START: 0;
         buttons |= gamepad.guide? GAMEPAD_GUIDE: 0;
+        buttons |= gamepad.left_stick_button? GAMEPAD_LSTICK_BTN: 0;
+        buttons |= gamepad.right_stick_button? GAMEPAD_RSTICK_BTN: 0;
         tracer.traceDebug(instanceName, "buttons=0x" + Integer.toHexString(buttons));
 
         return buttons;
