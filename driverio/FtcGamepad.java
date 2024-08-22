@@ -123,6 +123,7 @@ public class FtcGamepad extends TrcGameController
             buttonTypeMap.put(GAMEPAD_LSTICK_BTN, ButtonType.LeftStickButton);
             buttonTypeMap.put(GAMEPAD_RSTICK_BTN, ButtonType.RightStickButton);
         }
+        super.init();
     }   //FtcGamepad
 
     /**
