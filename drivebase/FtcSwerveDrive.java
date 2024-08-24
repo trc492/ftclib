@@ -63,8 +63,6 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public double steerMotorPidTolerance = 0.0;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
-        public double wheelBaseWidth = 0.0;
-        public double wheelBaseLength = 0.0;
     }   //class SwerveInfo
 
     private static final String moduleName = FtcSwerveDrive.class.getSimpleName();

@@ -29,7 +29,6 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import trclib.drivebase.TrcDriveBase;
-import trclib.driverio.TrcGameController;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
 import trclib.pathdrive.TrcPose2D;
@@ -51,18 +50,33 @@ public class FtcRobotDrive
     public static final int INDEX_RIGHT_CENTER = 5;
 
     /**
+     * This class contains Vision parameters of a camera.
+     */
+    public static class VisionInfo
+    {
+        public String camName = null;
+        public int camImageWidth = 0, camImageHeight = 0;
+        public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0;
+        public double camPitch = 0.0, camYaw = 0.0, camRoll = 0.0;
+        public TrcPose2D camPose = null;
+        public OpenCvCameraRotation camOrientation = null;
+        public TrcHomographyMapper.Rectangle cameraRect = null;
+        public TrcHomographyMapper.Rectangle worldRect = null;
+    }   //class VisionInfo
+
+    /**
      * This class contains the Common Robot Info.
      */
     public static class RobotInfo
     {
         public String robotName = null;
+        // Robot Dimensions
+        public double robotLength = 0.0, robotWidth = 0.0;
+        public double wheelBaseLength = 0.0, wheelBaseWidth = 0.0;
         // IMU
         public String imuName = null;
         public RevHubOrientationOnRobot.LogoFacingDirection hubLogoDirection = null;
         public RevHubOrientationOnRobot.UsbFacingDirection hubUsbDirection = null;
-        // Robot Dimensions
-        public double robotLength = 0.0, robotWidth = 0.0;
-        public double wheelBaseLength = 0.0, wheelBaseWidth = 0.0;
         // Drive Motors
         public FtcMotorActuator.MotorType driveMotorType = null;
         public String[] driveMotorNames = null;
@@ -97,24 +111,10 @@ public class FtcRobotDrive
         // PurePursuit Parameters
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
-        // Robot Drive
-        public TrcGameController.DriveMode driveMode = TrcGameController.DriveMode.ArcadeMode;
-        public TrcDriveBase.DriveOrientation driveOrientation  = TrcDriveBase.DriveOrientation.ROBOT;
-        public double driveSlowScale = 0.5;
-        public double driveNormalScale = 1.0;
-        public double turnSlowScale = 0.5;
-        public double turnNormalScale = 1.0;
         // Vision
-        public String webCam1Name = null;
-        public String webCam2Name = null;
-        public int camImageWidth = 0, camImageHeight = 0;
-        public OpenCvCameraRotation camOrientation = null;
-        // Camera Location On Robot
-        public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0, camTiltDown = 0.0;
-        public TrcPose2D camPose = null;
-        // Homography
-        public TrcHomographyMapper.Rectangle cameraRect = null;
-        public TrcHomographyMapper.Rectangle worldRect = null;
+        public VisionInfo webCam1;
+        public VisionInfo webCam2;
+        // Miscellaneous
         public String blinkinName = null;
     }   //class RobotInfo
 
