@@ -52,7 +52,7 @@ public class FtcImu extends TrcGyro
     }   //class GyroData
 
     private final GyroData gyroData = new GyroData();
-    public IMU imu;
+    public final IMU imu;
     private final TrcTaskMgr.TaskObject gyroTaskObj;
     private boolean taskEnabled = false;
 

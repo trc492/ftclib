@@ -25,6 +25,7 @@ package ftclib.vision;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,7 +86,15 @@ public class FtcRawEocvVision
             @Override
             public void onOpened()
             {
-                openCvCamera.startStreaming(imageWidth, imageHeight, cameraRotation);
+                if (openCvCamera instanceof OpenCvWebcam)
+                {
+                    ((OpenCvWebcam) openCvCamera).startStreaming(
+                        imageWidth, imageHeight, cameraRotation, OpenCvWebcam.StreamFormat.MJPEG);
+                }
+                else
+                {
+                    openCvCamera.startStreaming(imageWidth, imageHeight, cameraRotation);
+                }
                 cameraStarted = true;
             }
 

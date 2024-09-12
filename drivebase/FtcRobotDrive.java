@@ -31,7 +31,7 @@ import ftclib.sensor.FtcImu;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
-import trclib.pathdrive.TrcPose2D;
+import trclib.pathdrive.TrcPose3D;
 import trclib.pathdrive.TrcPurePursuitDrive;
 import trclib.robotcore.TrcPidController;
 import trclib.sensor.TrcOdometryWheels;
@@ -58,7 +58,7 @@ public class FtcRobotDrive
         public int camImageWidth = 0, camImageHeight = 0;
         public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0;
         public double camPitch = 0.0, camYaw = 0.0, camRoll = 0.0;
-        public TrcPose2D camPose = null;
+        public TrcPose3D camPose = null;
         public OpenCvCameraRotation camOrientation = null;
         public TrcHomographyMapper.Rectangle cameraRect = null;
         public TrcHomographyMapper.Rectangle worldRect = null;
@@ -114,6 +114,7 @@ public class FtcRobotDrive
         // Vision
         public VisionInfo webCam1;
         public VisionInfo webCam2;
+        public VisionInfo limelight;
         // Miscellaneous
         public String blinkinName = null;
     }   //class RobotInfo
