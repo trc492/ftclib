@@ -82,7 +82,8 @@ public class FtcRobotDrive
         public String[] driveMotorNames = null;
         public boolean[] driveMotorInverted = null;
         // Odometry Wheels
-        public Double odWheelScale = null;
+        public Double odWheelXScale = null;
+        public Double odWheelYScale = null;
         public int[] xOdWheelIndices = null;
         public double[] xOdWheelXOffsets = null;
         public double[] xOdWheelYOffsets = null;
@@ -249,7 +250,7 @@ public class FtcRobotDrive
             }
             // Set the drive base to use the external odometry device overriding the built-in one.
             driveBase.setDriveBaseOdometry(new TrcOdometryWheels(xOdWheelSensors, yOdWheelSensors, gyro));
-            driveBase.setOdometryScales(robotInfo.odWheelScale, robotInfo.odWheelScale);
+            driveBase.setOdometryScales(robotInfo.odWheelXScale, robotInfo.odWheelYScale);
         }
         else
         {
