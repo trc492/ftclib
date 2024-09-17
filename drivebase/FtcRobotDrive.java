@@ -28,6 +28,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
+import ftclib.sensor.FtcOctoQuad;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
@@ -86,9 +87,11 @@ public class FtcRobotDrive
         // Odometry Wheels
         public Double odWheelXScale = null;
         public Double odWheelYScale = null;
+        public String[] xOdWheelSensorNames = null;             //OctoQuad sensor name
         public int[] xOdWheelIndices = null;
         public double[] xOdWheelXOffsets = null;
         public double[] xOdWheelYOffsets = null;
+        public String[] yOdWheelSensorNames = null;             //OctoQuad sensor names
         public int[] yOdWheelIndices = null;
         public double[] yOdWheelXOffsets = null;
         public double[] yOdWheelYOffsets = null;
@@ -239,17 +242,37 @@ public class FtcRobotDrive
                 new TrcOdometryWheels.AxisSensor[robotInfo.xOdWheelIndices.length];
             for (int i = 0; i < robotInfo.xOdWheelIndices.length; i++)
             {
-                xOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
-                    driveMotors[robotInfo.xOdWheelIndices[i]],
-                    robotInfo.xOdWheelXOffsets[i], robotInfo.xOdWheelYOffsets[i]);
+                if (robotInfo.xOdWheelSensorNames != null)
+                {
+                    // OdWheel is on an OctoQuad port.
+                    xOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
+                        new FtcOctoQuad(robotInfo.xOdWheelSensorNames[i], robotInfo.xOdWheelIndices[i]),
+                        robotInfo.xOdWheelXOffsets[i], robotInfo.xOdWheelYOffsets[i]);
+                }
+                else
+                {
+                    xOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
+                        driveMotors[robotInfo.xOdWheelIndices[i]],
+                        robotInfo.xOdWheelXOffsets[i], robotInfo.xOdWheelYOffsets[i]);
+                }
             }
             TrcOdometryWheels.AxisSensor[] yOdWheelSensors =
                 new TrcOdometryWheels.AxisSensor[robotInfo.yOdWheelIndices.length];
             for (int i = 0; i < robotInfo.yOdWheelIndices.length; i++)
             {
-                yOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
-                    driveMotors[robotInfo.yOdWheelIndices[i]],
-                    robotInfo.yOdWheelXOffsets[i], robotInfo.yOdWheelYOffsets[i]);
+                if (robotInfo.yOdWheelSensorNames != null)
+                {
+                    // OdWheel is on an OctoQuad port.
+                    yOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
+                        new FtcOctoQuad(robotInfo.yOdWheelSensorNames[i], robotInfo.yOdWheelIndices[i]),
+                        robotInfo.yOdWheelXOffsets[i], robotInfo.yOdWheelYOffsets[i]);
+                }
+                else
+                {
+                    yOdWheelSensors[i] = new TrcOdometryWheels.AxisSensor(
+                        driveMotors[robotInfo.yOdWheelIndices[i]],
+                        robotInfo.yOdWheelXOffsets[i], robotInfo.yOdWheelYOffsets[i]);
+                }
             }
             // Set the drive base to use the external odometry device overriding the built-in one.
             driveBase.setDriveBaseOdometry(new TrcOdometryWheels(xOdWheelSensors, yOdWheelSensors, gyro));
