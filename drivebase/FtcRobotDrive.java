@@ -34,6 +34,7 @@ import trclib.pathdrive.TrcPidDrive;
 import trclib.pathdrive.TrcPose3D;
 import trclib.pathdrive.TrcPurePursuitDrive;
 import trclib.robotcore.TrcPidController;
+import trclib.sensor.TrcDriveBaseOdometry;
 import trclib.sensor.TrcOdometryWheels;
 import trclib.vision.TrcHomographyMapper;
 
@@ -81,6 +82,7 @@ public class FtcRobotDrive
         public FtcMotorActuator.MotorType driveMotorType = null;
         public String[] driveMotorNames = null;
         public boolean[] driveMotorInverted = null;
+        public TrcDriveBase.OdometryType odometryType = null;
         // Odometry Wheels
         public Double odWheelXScale = null;
         public Double odWheelYScale = null;
@@ -90,6 +92,8 @@ public class FtcRobotDrive
         public int[] yOdWheelIndices = null;
         public double[] yOdWheelXOffsets = null;
         public double[] yOdWheelYOffsets = null;
+        // Absolute Odometry
+        public TrcDriveBaseOdometry absoluteOdometry = null;
         // Drive Motor Odometry
         public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // Robot Drive Characteristics
@@ -181,9 +185,8 @@ public class FtcRobotDrive
      * This method configures the rest of drive base after it has been created.
      *
      * @param driveBase specifies the created drive base.
-     * @param useExternalOdometry specifies true to use Odometry wheels, false to use drive motor odometry.
      */
-    protected void configDriveBase(TrcDriveBase driveBase, boolean useExternalOdometry)
+    protected void configDriveBase(TrcDriveBase driveBase)
     {
         boolean supportHolonomic = driveBase.supportsHolonomicDrive();
         TrcPidController pidCtrl;
@@ -230,7 +233,7 @@ public class FtcRobotDrive
         purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
         purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
 
-        if (useExternalOdometry)
+        if (robotInfo.odometryType == TrcDriveBase.OdometryType.OdometryWheels)
         {
             TrcOdometryWheels.AxisSensor[] xOdWheelSensors =
                 new TrcOdometryWheels.AxisSensor[robotInfo.xOdWheelIndices.length];
@@ -252,8 +255,15 @@ public class FtcRobotDrive
             driveBase.setDriveBaseOdometry(new TrcOdometryWheels(xOdWheelSensors, yOdWheelSensors, gyro));
             driveBase.setOdometryScales(robotInfo.odWheelXScale, robotInfo.odWheelYScale);
         }
-        else
+        else if (robotInfo.odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
         {
+            // SparkFun OTOS scales are already set when it was created.
+            driveBase.setDriveBaseOdometry(robotInfo.absoluteOdometry);
+        }
+        else if (robotInfo.odometryType == TrcDriveBase.OdometryType.MotorOdometry)
+        {
+            // Set drive base odometry to built-in motor odometry and reset their encoders.
+            driveBase.setDriveBaseOdometry(true);
             driveBase.setOdometryScales(robotInfo.xDrivePosScale, robotInfo.yDrivePosScale);
         }
     }   //configDriveBase

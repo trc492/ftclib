@@ -24,7 +24,11 @@ package ftclib.sensor;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.pathdrive.TrcPose2D;
@@ -38,15 +42,15 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
 {
     public static class Config
     {
-        private SparkFunOTOS.LinearUnit linearUnit = SparkFunOTOS.LinearUnit.INCHES;
-        private SparkFunOTOS.AngularUnit angularUnit = SparkFunOTOS.AngularUnit.DEGREES;
+        private DistanceUnit linearUnit = DistanceUnit.INCH;
+        private AngleUnit angularUnit = AngleUnit.DEGREES;
         private double xOffset = 0.0;
         private double yOffset = 0.0;
         private double angleOffset = 0.0;
         private double linearScale = 1.0;
         private double angularScale = 1.0;
 
-        public Config setUnits(SparkFunOTOS.LinearUnit linearUnit, SparkFunOTOS.AngularUnit angularUnit)
+        public Config setUnits(DistanceUnit linearUnit, AngleUnit angularUnit)
         {
             this.linearUnit = linearUnit;
             this.angularUnit = angularUnit;

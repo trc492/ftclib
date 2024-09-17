@@ -34,15 +34,14 @@ public class FtcMecanumDrive extends FtcRobotDrive
      * Constructor: Create an instance of the object.
      *
      * @param robotInfo specifies the Mecanum Robot Info.
-     * @param useExternalOdometry specifies true to use Odometry wheels, false to use drive motor odometry.
      */
-    public FtcMecanumDrive(RobotInfo robotInfo, boolean useExternalOdometry)
+    public FtcMecanumDrive(RobotInfo robotInfo)
     {
         super(robotInfo);
         TrcMecanumDriveBase driveBase = new TrcMecanumDriveBase(
             driveMotors[INDEX_LEFT_FRONT], driveMotors[INDEX_LEFT_BACK],
             driveMotors[INDEX_RIGHT_FRONT], driveMotors[INDEX_RIGHT_BACK], gyro);
-        configDriveBase(driveBase, useExternalOdometry);
+        configDriveBase(driveBase);
     }   //FtcMecanumDrive
 
 }   //class FtcMecanumDrive

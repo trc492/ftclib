@@ -34,9 +34,8 @@ public class FtcDifferentialDrive extends FtcRobotDrive
      * Constructor: Create an instance of the object.
      *
      * @param robotInfo specifies the Differential Robot Info.
-     * @param useExternalOdometry specifies true to use Odometry wheels, false to use drive motor odometry.
      */
-    public FtcDifferentialDrive(RobotInfo robotInfo, boolean useExternalOdometry)
+    public FtcDifferentialDrive(RobotInfo robotInfo)
     {
         super(robotInfo);
         TrcSimpleDriveBase driveBase;
@@ -65,7 +64,7 @@ public class FtcDifferentialDrive extends FtcRobotDrive
                 throw new IllegalArgumentException("Differential Drive only supports 2, 4 or 6 motors.");
         }
 
-        configDriveBase(driveBase, useExternalOdometry);
+        configDriveBase(driveBase);
     }   //FtcDifferentialDrive
 
 }   //class FtcDifferentDrive
