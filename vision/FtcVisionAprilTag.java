@@ -32,7 +32,6 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import trclib.robotcore.TrcDbgTrace;
@@ -314,16 +313,16 @@ public class FtcVisionAprilTag
     }   //getDetectedTargetInfo
 
     /**
-     * This method returns an array of target info on the filtered detected targets.
+     * This method returns an array list of target info on the filtered detected targets.
      *
      * @param id specifies the AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @return sorted target info array.
+     * @return sorted target info array list.
      */
-    public TrcVisionTargetInfo<DetectedObject>[] getDetectedTargetsInfo(
+    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
         Integer id, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
-        TrcVisionTargetInfo<DetectedObject>[] targetsInfo = null;
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
         ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
 
         if (targets != null)
@@ -341,11 +340,11 @@ public class FtcVisionAprilTag
 
             if (!targetsList.isEmpty())
             {
-                targetsInfo = (TrcVisionTargetInfo<DetectedObject>[]) targetsList.toArray();
-                if (comparator != null)
+                if (comparator != null && targetsList.size() > 1)
                 {
-                    Arrays.sort(targetsInfo, comparator);
+                    targetsList.sort(comparator);
                 }
+                targetsInfo = targetsList;
             }
         }
 
@@ -363,11 +362,11 @@ public class FtcVisionAprilTag
         Integer id, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        TrcVisionTargetInfo<DetectedObject>[] detectedTargets = getDetectedTargetsInfo(id, comparator);
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo(id, comparator);
 
-        if (detectedTargets != null && detectedTargets.length > 0)
+        if (detectedTargets != null && !detectedTargets.isEmpty())
         {
-            bestTarget = detectedTargets[0];
+            bestTarget = detectedTargets.get(0);
         }
 
         return bestTarget;

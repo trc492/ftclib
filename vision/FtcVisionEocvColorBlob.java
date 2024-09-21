@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import trclib.robotcore.TrcDbgTrace;
@@ -159,20 +158,20 @@ public class FtcVisionEocvColorBlob
     }   //getDetectedTargetInfo
 
     /**
-     * This method returns an array of target info on the filtered detected targets.
+     * This method returns an array list of target info on the filtered detected targets.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @param objHeightOffset specifies the object height offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
-     * @return filtered target info array.
+     * @return filtered target info array list.
      */
-    public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>[] getDetectedTargetsInfo(
+    public ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> getDetectedTargetsInfo(
         FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
         double objHeightOffset, double cameraHeight)
     {
-        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>[] targetsInfo = null;
+        ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> targetsInfo = null;
         TrcOpenCvColorBlobPipeline.DetectedObject[] detectedObjects = colorBlobProcessor.getDetectedObjects();
 
         if (detectedObjects != null)
@@ -197,11 +196,11 @@ public class FtcVisionEocvColorBlob
 
             if (!targets.isEmpty())
             {
-                targetsInfo = (TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>[]) targets.toArray();
-                if (comparator != null)
+                if (comparator != null && targets.size() > 1)
                 {
-                    Arrays.sort(targetsInfo, comparator);
+                    targets.sort(comparator);
                 }
+                targetsInfo = targets;
             }
         }
 
@@ -223,12 +222,12 @@ public class FtcVisionEocvColorBlob
         double objHeightOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> bestTarget = null;
-        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>[] detectedTargets = getDetectedTargetsInfo(
-            filter, comparator, objHeightOffset, cameraHeight);
+        ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> detectedTargets =
+            getDetectedTargetsInfo(filter, comparator, objHeightOffset, cameraHeight);
 
-        if (detectedTargets != null && detectedTargets.length > 0)
+        if (detectedTargets != null && !detectedTargets.isEmpty())
         {
-            bestTarget = detectedTargets[0];
+            bestTarget = detectedTargets.get(0);
         }
 
         return bestTarget;

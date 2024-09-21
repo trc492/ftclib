@@ -28,7 +28,6 @@ import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import trclib.robotcore.TrcDbgTrace;
@@ -167,20 +166,20 @@ public class FtcRawEocvVision
     }   //getPipeline
 
     /**
-     * This method returns an array of detected targets from EasyOpenCV vision.
+     * This method returns an array list of detected targets from EasyOpenCV vision.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @param objHeightOffset specifies the object height offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
-     * @return array of detected target info.
+     * @return array list of detected target info.
      */
-    public TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>[] getDetectedTargetsInfo(
+    public ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> getDetectedTargetsInfo(
         TrcOpenCvDetector.FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> comparator,
         double objHeightOffset, double cameraHeight)
     {
-        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>[] detectedTargets = null;
+        ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = null;
 
         // Do this only if the pipeline is set.
         if (openCvPipeline != null)
@@ -203,17 +202,17 @@ public class FtcRawEocvVision
 
                 if (!targetList.isEmpty())
                 {
-                    detectedTargets = (TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>[]) targetList.toArray();
-                    if (comparator != null && detectedTargets.length > 1)
+                    if (comparator != null && targetList.size() > 1)
                     {
-                        Arrays.sort(detectedTargets, comparator);
+                        targetList.sort(comparator);
                     }
+                    detectedTargets = targetList;
 
                     if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
                     {
-                        for (int i = 0; i < detectedTargets.length; i++)
+                        for (int i = 0; i < detectedTargets.size(); i++)
                         {
-                            tracer.traceDebug(instanceName, "[" + i + "] Target=" + detectedTargets[i]);
+                            tracer.traceDebug(instanceName, "[" + i + "] Target=" + detectedTargets.get(i));
                         }
                     }
                 }
@@ -238,12 +237,12 @@ public class FtcRawEocvVision
         double objHeightOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> bestTarget = null;
-        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>[] detectedTargets = getDetectedTargetsInfo(
+        ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = getDetectedTargetsInfo(
             filter, comparator, objHeightOffset, cameraHeight);
 
-        if (detectedTargets != null && detectedTargets.length > 0)
+        if (detectedTargets != null && !detectedTargets.isEmpty())
         {
-            bestTarget = detectedTargets[0];
+            bestTarget = detectedTargets.get(0);
         }
 
         return bestTarget;
