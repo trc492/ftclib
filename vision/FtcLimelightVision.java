@@ -33,6 +33,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.opencv.core.Rect;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import ftclib.robotcore.FtcOpMode;
@@ -59,14 +61,14 @@ public class FtcLimelightVision
 
     }   //interface TargetGroundOffset
 
-    public enum ObjectType
+    public enum ResultType
     {
         Barcode,
         Classifier,
         Detector,
         Fiducial,
         Color
-    }   //enum ObjectType
+    }   //enum ResultType
 
     /**
      * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
@@ -74,8 +76,9 @@ public class FtcLimelightVision
      */
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
-        public final ObjectType objType;
+        public final ResultType resultType;
         public final Object result;
+        public final String label;
         public final TargetGroundOffset targetGroundOffset;
         public final TrcPose2D targetPose;
         public final TrcPose2D robotPose;
@@ -85,16 +88,19 @@ public class FtcLimelightVision
         /**
          * Constructor: Creates an instance of the object.
          *
-         * @param objType specifies the detected object type.
+         * @param resultType specifies the detected object result type.
          * @param result specifies the detected object.
+         * @param label specifies the detected object label if there is one.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
          * @param cameraPose specifies the camera position on the robot.
          */
         public DetectedObject(
-            ObjectType objType, Object result, TargetGroundOffset targetGroundOffset, TrcPose3D cameraPose)
+            ResultType resultType, Object result, String label, TargetGroundOffset targetGroundOffset,
+            TrcPose3D cameraPose)
         {
-            this.objType = objType;
+            this.resultType = resultType;
             this.result = result;
+            this.label = label;
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
             this.robotPose = getRobotPose(((LLResult) result).getBotpose());
@@ -111,7 +117,8 @@ public class FtcLimelightVision
         @Override
         public String toString()
         {
-            return "{objType=" + objType +
+            return "{resultType=" + resultType +
+                   ",label=" + label +
                    ",targetPose=" + targetPose +
                    ",robotPose=" + robotPose +
                    ",area=" + targetArea +
@@ -328,12 +335,13 @@ public class FtcLimelightVision
     /**
      * This method returns the array of detected objects.
      *
-     * @param objType specifies the object type to detect.
-     * @return array of detected objects.
+     * @param resultType specifies the result type to detect for.
+     * @param label specifies the object label to look for, null if looking for any label.
+     * @return array list of detected objects.
      */
-    public DetectedObject[] getDetectedObjects(ObjectType objType)
+    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, String label)
     {
-        DetectedObject[] detectedObjs = null;
+        ArrayList<DetectedObject> detectedObjs = null;
         LLResult result = limelight.getLatestResult();
 
         if (result != null && result.isValid())
@@ -342,83 +350,75 @@ public class FtcLimelightVision
             // Process only fresh detection.
             if (lastResultTimestamp == null || resultTimestamp != lastResultTimestamp)
             {
+                List<?> resultList = null;
+                ArrayList<DetectedObject> detectedList = new ArrayList<>();
                 lastResultTimestamp = resultTimestamp;
-                switch (objType)
+
+                switch (resultType)
                 {
                     case Barcode:
-                        List<LLResultTypes.BarcodeResult> barcodeResults = result.getBarcodeResults();
-                        if (barcodeResults != null)
-                        {
-                            detectedObjs = new DetectedObject[barcodeResults.size()];
-                            for (int i = 0; i < barcodeResults.size(); i++)
-                            {
-                                detectedObjs[i] = new DetectedObject(
-                                    objType, barcodeResults.get(i), targetGroundOffset, cameraPose);
-                                tracer.traceInfo(
-                                    instanceName, "[" + i + "] " + objType + ": " + detectedObjs[i].toString());
-                            }
-                        }
+                        resultList = result.getBarcodeResults();
                         break;
 
                     case Classifier:
-                        List<LLResultTypes.ClassifierResult> classifierResults = result.getClassifierResults();
-                        if (classifierResults != null)
-                        {
-                            detectedObjs = new DetectedObject[classifierResults.size()];
-                            for (int i = 0; i < classifierResults.size(); i++)
-                            {
-                                detectedObjs[i] = new DetectedObject(
-                                    objType, classifierResults.get(i), targetGroundOffset, cameraPose);
-                                tracer.traceInfo(
-                                    instanceName, "[" + i + "] " + objType + ": " + detectedObjs[i].toString());
-                            }
-                        }
+                        resultList = result.getClassifierResults();
                         break;
 
                     case Detector:
-                        List<LLResultTypes.DetectorResult> detectorResults = result.getDetectorResults();
-                        if (detectorResults != null)
-                        {
-                            detectedObjs = new DetectedObject[detectorResults.size()];
-                            for (int i = 0; i < detectorResults.size(); i++)
-                            {
-                                detectedObjs[i] = new DetectedObject(
-                                    objType, detectorResults.get(i), targetGroundOffset, cameraPose);
-                                tracer.traceInfo(
-                                    instanceName, "[" + i + "] " + objType + ": " + detectedObjs[i].toString());
-                            }
-                        }
+                        resultList = result.getDetectorResults();
                         break;
 
                     case Fiducial:
-                        List<LLResultTypes.FiducialResult> aprilTagResults = result.getFiducialResults();
-                        if (aprilTagResults != null)
-                        {
-                            detectedObjs = new DetectedObject[aprilTagResults.size()];
-                            for (int i = 0; i < aprilTagResults.size(); i++)
-                            {
-                                detectedObjs[i] = new DetectedObject(
-                                    objType, aprilTagResults.get(i), targetGroundOffset, cameraPose);
-                                tracer.traceInfo(
-                                    instanceName, "[" + i + "] " + objType + ": " + detectedObjs[i].toString());
-                            }
-                        }
+                        resultList = result.getFiducialResults();
                         break;
 
                     case Color:
-                        List<LLResultTypes.ColorResult> colorResults = result.getColorResults();
-                        if (colorResults != null)
-                        {
-                            detectedObjs = new DetectedObject[colorResults.size()];
-                            for (int i = 0; i < colorResults.size(); i++)
-                            {
-                                detectedObjs[i] = new DetectedObject(
-                                    objType, colorResults.get(i), targetGroundOffset, cameraPose);
-                                tracer.traceInfo(
-                                    instanceName, "[" + i + "] " + objType + ": " + detectedObjs[i].toString());
-                            }
-                        }
+                        resultList = result.getColorResults();
                         break;
+                }
+
+                if (resultList != null)
+                {
+                    for (Object obj: resultList)
+                    {
+                        String objLabel;
+
+                        switch (resultType)
+                        {
+                            case Barcode:
+                                objLabel = ((LLResultTypes.BarcodeResult) obj).getData();
+                                break;
+
+                            case Classifier:
+                                objLabel = ((LLResultTypes.ClassifierResult) obj).getClassName();
+                                break;
+
+                            case Detector:
+                                objLabel = ((LLResultTypes.DetectorResult) obj).getClassName();
+                                break;
+
+                            case Fiducial:
+                                objLabel = ((Integer) ((LLResultTypes.FiducialResult) obj).getFiducialId()).toString();
+                                break;
+
+                            case Color:
+                            default:
+                                objLabel = null;
+                                break;
+                        }
+
+                        if (label == null || label.equals(objLabel))
+                        {
+                            DetectedObject detectedObj =
+                                new DetectedObject(resultType, obj, objLabel, targetGroundOffset, cameraPose);
+                            detectedList.add(detectedObj);
+                        }
+                    }
+
+                    if (!detectedList.isEmpty())
+                    {
+                        detectedObjs = detectedList;
+                    }
                 }
             }
         }
@@ -427,24 +427,74 @@ public class FtcLimelightVision
     }   //getDetectedObjects
 
     /**
-     * This method returns the detected AprilTag object.
+     * This method returns the target info of the given detected target.
      *
-     * @param aprilTagId specifies the AprilTag ID to look for, -1 if looking for any AprilTag.
-     * @return detected AprilTag object.
+     * @param target specifies the detected target
+     * @return information about the detected target.
      */
-    public DetectedObject getDetectedAprilTag(int aprilTagId)
+    public TrcVisionTargetInfo<DetectedObject> getDetectedTargetInfo(DetectedObject target)
     {
-        DetectedObject[] detectedObjs = getDetectedObjects(ObjectType.Fiducial);
+        TrcVisionTargetInfo<DetectedObject> targetInfo = new TrcVisionTargetInfo<>(target, null, 0.0, 0.0);
+        tracer.traceDebug(instanceName, "TargetInfo=" + targetInfo);
+        return targetInfo;
+    }   //getDetectedTargetInfo
 
-        for (DetectedObject obj : detectedObjs)
+    /**
+     * This method returns an array list of target info on the filtered detected targets.
+     *
+     * @param resultType specifies the result type to detect for.
+     * @param label specifies the object label to look for, null if looking for any label.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+     * @return filtered target info array list.
+     */
+    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
+        ResultType resultType, String label, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    {
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
+        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label);
+
+        if (detectedObjects != null)
         {
-            if (aprilTagId == -1 || aprilTagId == ((LLResultTypes.FiducialResult) obj.result).getFiducialId())
+            ArrayList<TrcVisionTargetInfo<DetectedObject>> targets = new ArrayList<>();
+            for (DetectedObject obj : detectedObjects)
             {
-                return obj;
+                targets.add(getDetectedTargetInfo(obj));
+            }
+
+            if (!targets.isEmpty())
+            {
+                if (comparator != null && targets.size() > 1)
+                {
+                    targets.sort(comparator);
+                }
+                targetsInfo = targets;
             }
         }
 
-        return null;
-    }   //getDetectedAprilTag
+        return targetsInfo;
+    }   //getDetectedTargetsInfo
+
+    /**
+     * This method returns the target info of the best detected target.
+     *
+     * @param resultType specifies the result type to detect for.
+     * @param label specifies the object label to look for, null if looking for any label.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+     * @return information about the best detected target.
+     */
+    public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
+        ResultType resultType, String label, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    {
+        TrcVisionTargetInfo<DetectedObject> bestTarget = null;
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets =
+            getDetectedTargetsInfo(resultType, label, comparator);
+
+        if (detectedTargets != null && !detectedTargets.isEmpty())
+        {
+            bestTarget = detectedTargets.get(0);
+        }
+
+        return bestTarget;
+    }   //getBestDetectedTargetInfo
 
 }   //class FtcLimelightVision
