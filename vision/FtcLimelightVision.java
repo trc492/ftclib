@@ -54,10 +54,10 @@ public class FtcLimelightVision
          * This method is called to get the target offset from ground so that vision can accurately calculate the
          * target position from the camera.
          *
-         * @param llResult specifies the detection result.
+         * @param resultType specifies the detected object result type.
          * @return target ground offset in inches.
          */
-        double getOffset(LLResult llResult);
+        double getOffset(ResultType resultType);
 
     }   //interface TargetGroundOffset
 
@@ -272,7 +272,7 @@ public class FtcLimelightVision
             double targetYawRadians = Math.toRadians(targetYawDegrees);
 
             targetDepth =
-                (targetGroundOffset.getOffset(llResult) - cameraPose.z) /
+                (targetGroundOffset.getOffset(resultType) - cameraPose.z) /
                 Math.tan(camPitchRadians + targetPitchRadians);
             targetPose = new TrcPose2D(
                 targetDepth * Math.sin(targetYawRadians), targetDepth * Math.cos(targetYawRadians), targetYawDegrees);
