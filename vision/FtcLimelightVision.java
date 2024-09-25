@@ -54,10 +54,10 @@ public class FtcLimelightVision
          * This method is called to get the target offset from ground so that vision can accurately calculate the
          * target position from the camera.
          *
-         * @param result specifies the detection result.
+         * @param llResult specifies the detection result.
          * @return target ground offset in inches.
          */
-        double getOffset(LLResult result);
+        double getOffset(LLResult llResult);
 
     }   //interface TargetGroundOffset
 
@@ -76,18 +76,21 @@ public class FtcLimelightVision
      */
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
+        public final LLResult llResult;
         public final ResultType resultType;
         public final Object result;
         public final String label;
         public final TargetGroundOffset targetGroundOffset;
         public final TrcPose2D targetPose;
         public final TrcPose2D robotPose;
+        public final Rect targetRect;
         public final double targetArea;
         public double targetDepth;
 
         /**
          * Constructor: Creates an instance of the object.
          *
+         * @param llResult specifies the Limelight detection result.
          * @param resultType specifies the detected object result type.
          * @param result specifies the detected object.
          * @param label specifies the detected object label if there is one.
@@ -95,15 +98,17 @@ public class FtcLimelightVision
          * @param cameraPose specifies the camera position on the robot.
          */
         public DetectedObject(
-            ResultType resultType, Object result, String label, TargetGroundOffset targetGroundOffset,
-            TrcPose3D cameraPose)
+            LLResult llResult, ResultType resultType, Object result, String label,
+            TargetGroundOffset targetGroundOffset, TrcPose3D cameraPose)
         {
+            this.llResult = llResult;
             this.resultType = resultType;
             this.result = result;
             this.label = label;
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
-            this.robotPose = getRobotPose(((LLResult) result).getBotpose());
+            this.robotPose = getRobotPose(llResult.getBotpose());
+            this.targetRect = getObjectRect();
             this.targetArea = getObjectArea();
             // getTargetPose call above will also set targetDepth.
         }   //DetectedObject
@@ -121,6 +126,7 @@ public class FtcLimelightVision
                    ",label=" + label +
                    ",targetPose=" + targetPose +
                    ",robotPose=" + robotPose +
+                   ",rect=" + targetRect +
                    ",area=" + targetArea +
                    ",depth=" + targetDepth + "}";
         }   //toString
@@ -133,7 +139,58 @@ public class FtcLimelightVision
         @Override
         public Rect getObjectRect()
         {
-            throw new UnsupportedOperationException("LimeLight vision does not provide object rectangle.");
+            Rect rect;
+            List<List<Double>> corners;
+
+            switch (resultType)
+            {
+                case Barcode:
+                    corners = ((LLResultTypes.BarcodeResult) result).getTargetCorners();
+                    break;
+
+                case Detector:
+                    corners = ((LLResultTypes.DetectorResult) result).getTargetCorners();
+                    break;
+
+                case Fiducial:
+                    corners = ((LLResultTypes.FiducialResult) result).getTargetCorners();
+                    break;
+
+                case Color:
+                    corners = ((LLResultTypes.ColorResult) result).getTargetCorners();
+                    break;
+
+                case Classifier:
+                default:
+                    corners = null;
+                    break;
+            }
+
+            if (corners != null && !corners.isEmpty())
+            {
+                double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
+                double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
+                for (List<Double> point: corners)
+                {
+                    double x = point.get(0), y = point.get(1);
+                    if (x < xMin) xMin = x;
+                    if (x > xMax) xMax = x;
+                    if (y < yMin) yMin = y;
+                    if (y > yMax) yMax = y;
+                    TrcDbgTrace.globalTraceInfo("Limelight", "Point=(" + x + ", " + y + ")");
+                }
+                rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
+                TrcDbgTrace.globalTraceInfo(
+                    "Limelight",
+                    "Rect(x=" + rect.x + ",y=" + rect.y + ",width=" + rect.width + ",height=" + rect.height + ")");
+            }
+            else
+            {
+                rect = null;
+            }
+
+            return rect;
         }   //getObjectRect
 
         /**
@@ -144,7 +201,35 @@ public class FtcLimelightVision
         @Override
         public double getObjectArea()
         {
-            return ((LLResult)result).getTa();
+            return llResult.getTa();
+//            double area;
+//
+//            switch (resultType)
+//            {
+//                case Barcode:
+//                    area = ((LLResultTypes.BarcodeResult) result).getTargetArea();
+//                    break;
+//
+//                case Detector:
+//                    area = ((LLResultTypes.DetectorResult) result).getTargetArea();
+//                    break;
+//
+//                case Fiducial:
+//                    area = ((LLResultTypes.FiducialResult) result).getTargetArea();
+//                    break;
+//
+//                case Color:
+//                    area = ((LLResultTypes.ColorResult) result).getTargetArea();
+//                    break;
+//
+//                case Classifier:
+//                default:
+//                    area = llResult.getTa();
+//                    break;
+//            }
+//            TrcDbgTrace.globalTraceInfo("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
+//
+//            return area;
         }   //getObjectArea
 
         /**
@@ -190,12 +275,12 @@ public class FtcLimelightVision
         {
             TrcPose2D targetPose;
             double camPitchRadians = Math.toRadians(cameraPose.pitch);
-            double targetPitchRadians = Math.toRadians(((LLResult) result).getTy());
-            double targetYawDegrees = ((LLResult) result).getTx();
+            double targetPitchRadians = Math.toRadians(llResult.getTy());
+            double targetYawDegrees = llResult.getTx();
             double targetYawRadians = Math.toRadians(targetYawDegrees);
 
             targetDepth =
-                (targetGroundOffset.getOffset((LLResult) result) - cameraPose.z) /
+                (targetGroundOffset.getOffset(llResult) - cameraPose.z) /
                 Math.tan(camPitchRadians + targetPitchRadians);
             targetPose = new TrcPose2D(
                 targetDepth * Math.sin(targetYawRadians), targetDepth * Math.cos(targetYawRadians), targetYawDegrees);
@@ -342,11 +427,11 @@ public class FtcLimelightVision
     public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, String label)
     {
         ArrayList<DetectedObject> detectedObjs = null;
-        LLResult result = limelight.getLatestResult();
+        LLResult llResult = limelight.getLatestResult();
 
-        if (result != null && result.isValid())
+        if (llResult != null && llResult.isValid())
         {
-            double resultTimestamp = result.getTimestamp();
+            double resultTimestamp = llResult.getTimestamp();
             // Process only fresh detection.
             if (lastResultTimestamp == null || resultTimestamp != lastResultTimestamp)
             {
@@ -357,23 +442,23 @@ public class FtcLimelightVision
                 switch (resultType)
                 {
                     case Barcode:
-                        resultList = result.getBarcodeResults();
+                        resultList = llResult.getBarcodeResults();
                         break;
 
                     case Classifier:
-                        resultList = result.getClassifierResults();
+                        resultList = llResult.getClassifierResults();
                         break;
 
                     case Detector:
-                        resultList = result.getDetectorResults();
+                        resultList = llResult.getDetectorResults();
                         break;
 
                     case Fiducial:
-                        resultList = result.getFiducialResults();
+                        resultList = llResult.getFiducialResults();
                         break;
 
                     case Color:
-                        resultList = result.getColorResults();
+                        resultList = llResult.getColorResults();
                         break;
                 }
 
@@ -410,7 +495,7 @@ public class FtcLimelightVision
                         if (label == null || label.equals(objLabel))
                         {
                             DetectedObject detectedObj =
-                                new DetectedObject(resultType, obj, objLabel, targetGroundOffset, cameraPose);
+                                new DetectedObject(llResult, resultType, obj, objLabel, targetGroundOffset, cameraPose);
                             detectedList.add(detectedObj);
                         }
                     }
