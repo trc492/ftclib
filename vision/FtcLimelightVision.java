@@ -139,7 +139,7 @@ public class FtcLimelightVision
         @Override
         public Rect getObjectRect()
         {
-            Rect rect;
+            Rect rect = null;
             List<List<Double>> corners;
 
             switch (resultType)
@@ -178,16 +178,8 @@ public class FtcLimelightVision
                     if (x > xMax) xMax = x;
                     if (y < yMin) yMin = y;
                     if (y > yMax) yMax = y;
-                    TrcDbgTrace.globalTraceInfo("Limelight", "Point=(" + x + ", " + y + ")");
                 }
                 rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
-                TrcDbgTrace.globalTraceInfo(
-                    "Limelight",
-                    "Rect(x=" + rect.x + ",y=" + rect.y + ",width=" + rect.width + ",height=" + rect.height + ")");
-            }
-            else
-            {
-                rect = null;
             }
 
             return rect;

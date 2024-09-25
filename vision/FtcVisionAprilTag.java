@@ -29,10 +29,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.pathdrive.TrcPose2D;
@@ -70,13 +72,24 @@ public class FtcVisionAprilTag
          */
         public static Rect getDetectedRect(AprilTagDetection at)
         {
-            double width =
-                (Math.abs(at.corners[0].x - at.corners[1].x) + Math.abs(at.corners[2].x - at.corners[3].x))/2.0;
-            double height =
-                (Math.abs(at.corners[1].y - at.corners[2].y) + Math.abs(at.corners[0].y - at.corners[3].y))/2.0;
+            Rect rect = null;
 
-            return new Rect((int) (
-                at.center.x - width/2.0), (int) (at.center.y - height/2.0), (int) width, (int) height);
+            if (at.corners != null && at.corners.length > 0)
+            {
+                double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
+                double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
+                for (Point point: at.corners)
+                {
+                    if (point.x < xMin) xMin = point.x;
+                    if (point.x > xMax) xMax = point.x;
+                    if (point.y < yMin) yMin = point.y;
+                    if (point.y > yMax) yMax = point.y;
+                }
+                rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
+            }
+
+            return rect;
         }   //getDetectedRect
 
         /**
