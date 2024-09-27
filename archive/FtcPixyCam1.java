@@ -37,7 +37,6 @@ import trclib.archive.TrcPixyCam1;
  */
 public class FtcPixyCam1 extends TrcPixyCam1
 {
-    private static final String moduleName = FtcPixyCam1.class.getSimpleName();
     private static final int DEF_I2C_ADDRESS = 0x54;
     private static final boolean USE_BUFFERED_READ = false;
     private final FtcI2cDevice pixyCam;
@@ -127,7 +126,7 @@ public class FtcPixyCam1 extends TrcPixyCam1
     @Override
     public void asyncReadData(RequestId requestId, int length)
     {
-        TrcEvent callbackEvent = new TrcEvent(moduleName + ".callbackHandler");
+        TrcEvent callbackEvent = new TrcEvent(instanceName + ".callbackHandler");
         callbackEvent.setCallback(this::requestHandler, null);
         pixyCam.asyncRead(requestId, length, callbackEvent);
     }   //asyncReadData

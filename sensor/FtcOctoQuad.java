@@ -44,7 +44,7 @@ import trclib.timer.TrcTimer;
  */
 public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
 {
-    private static final String moduleName = FtcOctoQuad.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
     private static final ArrayList<FtcOctoQuad> odometrySensors = new ArrayList<>();
     private static CachingOctoQuad octoQuad = null;
 

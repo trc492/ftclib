@@ -65,7 +65,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public String[] swerveModuleNames = null;
     }   //class SwerveInfo
 
-    private static final String moduleName = FtcSwerveDrive.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
 
     public final TrcDbgTrace tracer;
     public final SwerveInfo swerveInfo;

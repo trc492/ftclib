@@ -48,7 +48,7 @@ import trclib.timer.TrcTimer;
  */
 public class FtcVision
 {
-    private static final String moduleName = FtcVision.class.getSimpleName();
+    private final String moduleName = getClass().getSimpleName();
     private static final long LOOP_INTERVAL_MS = 10;
     private static final long MAX_LOOP_TIME_MS = 5000;
 
