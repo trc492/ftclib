@@ -97,6 +97,7 @@ public class FtcRobotDrive
         public double[] yOdWheelYOffsets = null;
         // Absolute Odometry
         public TrcDriveBaseOdometry absoluteOdometry = null;
+        public Double headingWrapRangeLow = null, headingWrapRangeHigh = null;
         // Drive Motor Odometry
         public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // Robot Drive Characteristics
@@ -281,7 +282,8 @@ public class FtcRobotDrive
         else if (robotInfo.odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
         {
             // SparkFun OTOS scales are already set when it was created.
-            driveBase.setDriveBaseOdometry(robotInfo.absoluteOdometry);
+            driveBase.setDriveBaseOdometry(
+                robotInfo.absoluteOdometry, robotInfo.headingWrapRangeLow, robotInfo.headingWrapRangeHigh);
         }
         else if (robotInfo.odometryType == TrcDriveBase.OdometryType.MotorOdometry)
         {

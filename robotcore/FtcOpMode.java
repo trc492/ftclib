@@ -47,7 +47,7 @@ import trclib.robotcore.TrcWatchdogMgr;
  */
 public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMode
 {
-    private final String moduleName = getClass().getSimpleName();
+    private static final String moduleName = FtcOpMode.class.getSimpleName();
 
     protected final static int NUM_DASHBOARD_LINES = 16;
     private final static long SLOW_LOOP_INTERVAL_NANO = 50000000;   // 50 msec (20 Hz)
