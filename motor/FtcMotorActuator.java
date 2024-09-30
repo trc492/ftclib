@@ -327,22 +327,19 @@ public class FtcMotorActuator
         {
             case DcMotor:
                 motor = new FtcDcMotor(name, sensors);
+                motor.resetFactoryDefault();
+                motor.setBrakeModeEnabled(true);
+                motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
                 break;
 
             case CRServo:
                 motor = new FtcCRServo(name, sensors);
+                motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
                 break;
 
             default:
                 motor = null;
                 break;
-        }
-
-        if (motor != null)
-        {
-            motor.resetFactoryDefault();
-            motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
-            motor.setBrakeModeEnabled(true);
         }
 
         return motor;
