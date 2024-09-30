@@ -87,7 +87,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void resetFactoryDefault()
     {
-        throw new UnsupportedOperationException("CRServo does not support resetFactoryDefault.");
+        // PWM Motor Controllers don't have configuration to reset. There is nothing to do.
     }   //resetFactoryDefault
 
     /**

@@ -337,9 +337,13 @@ public class FtcMotorActuator
                 motor = null;
                 break;
         }
-        motor.resetFactoryDefault();
-        motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
-        motor.setBrakeModeEnabled(true);
+
+        if (motor != null)
+        {
+            motor.resetFactoryDefault();
+            motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
+            motor.setBrakeModeEnabled(true);
+        }
 
         return motor;
     }   //createMotor
