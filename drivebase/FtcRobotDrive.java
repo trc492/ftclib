@@ -146,7 +146,8 @@ public class FtcRobotDrive
     public FtcRobotDrive(RobotInfo robotInfo)
     {
         this.robotInfo = robotInfo;
-        gyro = new FtcImu(robotInfo.imuName, robotInfo.hubLogoDirection, robotInfo.hubUsbDirection);
+        gyro = robotInfo.imuName != null?
+            new FtcImu(robotInfo.imuName, robotInfo.hubLogoDirection, robotInfo.hubUsbDirection): null;
         driveMotors = new TrcMotor[robotInfo.driveMotorNames.length];
         for (int i = 0; i < driveMotors.length; i++)
         {
@@ -281,7 +282,7 @@ public class FtcRobotDrive
         }
         else if (robotInfo.odometryType == TrcDriveBase.OdometryType.AbsoluteOdometry)
         {
-            // SparkFun OTOS scales are already set when it was created.
+            // SparkFun OTOS and GoBilda Pinpoint Odometry scales are already set when it was created.
             driveBase.setDriveBaseOdometry(
                 robotInfo.absoluteOdometry, robotInfo.headingWrapRangeLow, robotInfo.headingWrapRangeHigh);
         }

@@ -24,31 +24,29 @@ package ftclib.sensor;
 
 import androidx.annotation.NonNull;
 
-import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
+import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.sensor.TrcDriveBaseOdometry;
 
 /**
- * This class implements a DriveBase Odometry device using the SparkFun Optical Tracking Odometry Sensor.
+ * This class implements a wrapper to the GoBilda Pinpoint Odometry Computer that supports two Odometry wheels and
+ * a built-in IMU.
  */
-public class FtcSparkFunOtos implements TrcDriveBaseOdometry
+public class FtcPinpointOdometry implements TrcDriveBaseOdometry
 {
     public static class Config
     {
-        private DistanceUnit linearUnit = DistanceUnit.INCH;
-        private AngleUnit angularUnit = AngleUnit.DEGREES;
-        private double xOffset = 0.0;
-        private double yOffset = 0.0;
-        private double angleOffset = 0.0;
-        private double linearScale = 1.0;
-        private double angularScale = 1.0;
+        private double xOffset = 0.0, yOffset = 0.0;
+        private double encoderCountsPerMm = 1.0;
+        private boolean xEncoderInverted = false, yEncoderInverted = false;
 
         /**
          * This method returns the string format of the Params info.
@@ -59,63 +57,58 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
         @Override
         public String toString()
         {
-            return "{linearUnit=" + linearUnit +
-                   ",angularUnit=" + angularUnit +
-                   ",offset=(" + xOffset + "," + yOffset + "," + angleOffset +
-                   "),linearScale=" + linearScale +
-                   ",angularScale=" + angularScale + "}";
+            return "{xOffset=" + xOffset +
+                   ",yOffset=" + yOffset +
+                   ",encRes=" + encoderCountsPerMm +
+                   ",xInverted=" + xEncoderInverted +
+                   ",yInverted=" + yEncoderInverted + "}";
         }   //toString
 
         /**
-         * This method sets distance and angular units being reported.
+         * This method sets the Odometry pod offsets from the robot center.
          *
-         * @param linearUnit specifies the distance unit.
-         * @param angularUnit specifies the angular unit.
+         * @param forwardPodOffset specifies the forward odo pod offset form robot center in mm, right positive.
+         * @param strafePodOffset specifies the strafe pod offset from robot center in mm, forward positive.
          * @return this object for chaining.
          */
-        public Config setUnits(DistanceUnit linearUnit, AngleUnit angularUnit)
+        public Config setPodOffsets(double forwardPodOffset, double strafePodOffset)
         {
-            this.linearUnit = linearUnit;
-            this.angularUnit = angularUnit;
+            this.xOffset = strafePodOffset;
+            this.yOffset = forwardPodOffset;
             return this;
-        }   //setUnits
+        }   //setPodOffsets
 
         /**
-         * This method sets the offset of the OTOS form the robot center.
+         * This method sets the Odometry pod encoder resolution.
          *
-         * @param xOffset specifies the xOffset from robot center, right positive.
-         * @param yOffset specifies the yOffset from robot center, forward positive.
-         * @param angleOffset specifes the angular offset from robot forward, clockwise positive.
+         * @param encCountsPerMm specifies encoder resolution in counts per mm.
          * @return this object for chaining.
          */
-        public Config setOffset(double xOffset, double yOffset, double angleOffset)
+        public Config setEncoderResolution(double encCountsPerMm)
         {
-            this.xOffset = xOffset;
-            this.yOffset = yOffset;
-            this.angleOffset = angleOffset;
+            this.encoderCountsPerMm = encCountsPerMm;
             return this;
-        }   //setOffset
+        }   //setEncoderResolution
 
         /**
-         * This methods sets the linear and angular scales used by the OTOS for compensating scaling issues with
-         * sensor measurements.
+         * This method sets the Odometry pod encoder directions.
          *
-         * @param linearScale specifies linear scale, must be between 0.872 and 1.127.
-         * @param angularScale specifies angular scale.
+         * @param forwardPodInverted specifies true to invert the forward odo pod encoder direction, false otherwise.
+         * @param strafePodInverted specifies true to invert the strafe odo pod encoder direction, false otherwise.
          * @return this object for chaining.
          */
-        public Config setScale(double linearScale, double angularScale)
+        public Config setEncodersInverted(boolean forwardPodInverted, boolean strafePodInverted)
         {
-            this.linearScale = linearScale;
-            this.angularScale = angularScale;
+            this.xEncoderInverted = strafePodInverted;
+            this.yEncoderInverted = forwardPodInverted;
             return this;
-        }   //setScale
+        }   //setEncodersInverted
 
     }   //class Config
 
     public final TrcDbgTrace tracer;
     private final String instanceName;
-    private final SparkFunOTOS otos;
+    private final GoBildaPinpointDriver ppOdo;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -124,20 +117,20 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
      * @param instanceName specifies the instance name.
      * @param config specifies the sensor configuration.
      */
-    public FtcSparkFunOtos(HardwareMap hardwareMap, String instanceName, Config config)
+    public FtcPinpointOdometry(HardwareMap hardwareMap, String instanceName, Config config)
     {
         this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
-        otos = hardwareMap.get(SparkFunOTOS.class, instanceName);
-
-        otos.setLinearUnit(config.linearUnit);
-        otos.setAngularUnit(config.angularUnit);
-        otos.setOffset(new SparkFunOTOS.Pose2D(config.xOffset, config.yOffset, config.angleOffset));
-        otos.setLinearScalar(config.linearScale);
-        otos.setAngularScalar(config.angularScale);
-        otos.calibrateImu();
-        otos.resetTracking();
-    }   //FtcSparkFunOtos
+        this.ppOdo = hardwareMap.get(GoBildaPinpointDriver.class, instanceName);
+        ppOdo.setOffsets(-config.yOffset, config.xOffset);
+        ppOdo.setEncoderResolution(config.encoderCountsPerMm);
+        ppOdo.setEncoderDirections(
+            config.yEncoderInverted?
+                GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD,
+            config.xEncoderInverted?
+                GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD);
+        ppOdo.resetPosAndIMU();
+    }   //FtcPinpointOdometry
 
     /**
      * Constructor: Creates an instance of the object.
@@ -145,20 +138,10 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
      * @param instanceName specifies the instance name.
      * @param config specifies the sensor configuration.
      */
-    public FtcSparkFunOtos(String instanceName, Config config)
+    public FtcPinpointOdometry(String instanceName, Config config)
     {
         this(FtcOpMode.getInstance().hardwareMap, instanceName, config);
-    }   //FtcSparkFunOtos
-
-    /**
-     * Constructor: Creates an instance of the object with default configuration.
-     *
-     * @param instanceName specifies the instance name.
-     */
-    public FtcSparkFunOtos(String instanceName)
-    {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, new Config());
-    }   //FtcSparkFunOtos
+    }   //FtcPinpointOdometry
 
     /**
      * This method returns the instance name.
@@ -183,6 +166,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public void updateCache()
     {
+        ppOdo.update();
     }   //updateCache
 
     /**
@@ -191,7 +175,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public void reset()
     {
-        otos.resetTracking();
+        ppOdo.setPosition(new Pose2D(DistanceUnit.INCH, 0.0, 0.0, AngleUnit.DEGREES, 0.0));
     }   //reset
 
     /**
@@ -202,8 +186,14 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public TrcPose2D getPosition()
     {
-        SparkFunOTOS.Pose2D pose = otos.getPosition();
-        return new TrcPose2D(pose.x, pose.y, -pose.h);
+        Pose2D pose = ppOdo.getPosition();
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        dashboard.displayPrintf(4, "ppOdoX=%.3f (%d)", pose.getX(DistanceUnit.INCH), ppOdo.getEncoderX());
+        dashboard.displayPrintf(5, "ppOdoX=%.3f", pose.getY(DistanceUnit.INCH), ppOdo.getEncoderY());
+        dashboard.displayPrintf(6, "ppOdoHeading=%.3f", pose.getHeading(AngleUnit.DEGREES));
+        return new TrcPose2D(
+            -pose.getY(DistanceUnit.INCH), pose.getX(DistanceUnit.INCH),
+            -pose.getHeading(AngleUnit.DEGREES));
     }   //getPosition
 
     /**
@@ -214,7 +204,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public void setPosition(TrcPose2D pose)
     {
-        otos.setPosition(new SparkFunOTOS.Pose2D(pose.x, pose.y, -pose.angle));
+        ppOdo.setPosition(new Pose2D(DistanceUnit.INCH, pose.y, -pose.x, AngleUnit.DEGREES, -pose.angle));
     }   //setPosition
 
     /**
@@ -225,8 +215,10 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
     @Override
     public TrcPose2D getVelocity()
     {
-        SparkFunOTOS.Pose2D pose = otos.getVelocity();
-        return new TrcPose2D(pose.x, pose.y, -pose.h);
+        Pose2D pose = ppOdo.getVelocity();
+        return new TrcPose2D(
+            -pose.getY(DistanceUnit.INCH), pose.getX(DistanceUnit.INCH),
+            -pose.getHeading(AngleUnit.DEGREES));
     }   //getVelocity
 
-}   //class FtcSparkFunOtos
+}   //class FtcPinpointOdometry
