@@ -58,6 +58,7 @@ public class FtcServoGrabber
         private Double triggerThreshold = null;
         private Double hasObjectThreshold = null;
         private TrcEvent.Callback triggerCallback = null;
+        private boolean noGrab = false;
 
         /**
          * This method returns the string format of the Params info.
@@ -79,7 +80,8 @@ public class FtcServoGrabber
                    ",triggerInverted=" + triggerInverted +
                    ",triggerThreshold=" + triggerThreshold +
                    ",hasObjectThreshold=" + hasObjectThreshold +
-                   ",triggerCallback=" + (triggerCallback != null);
+                   ",triggerCallback=" + (triggerCallback != null) +
+                   ",noGrab=" + noGrab;
         }   //toString
 
         /**
@@ -137,14 +139,19 @@ public class FtcServoGrabber
          * @param name specifies the name of the sensor.
          * @param triggerInverted specifies true if the trigger polarity is inverted.
          * @param triggerCallback specifies the callback when trigger event occurred, null if not provided.
+         * @param noGrab specifies true to tell sensor trigger not to grab the object. This parameter is only
+         *        applicable if triggerCallback is not null. This is useful for trigger callback to do object
+         *        validation so it can decide if it needs to grab that object.
          * @return this object for chaining.
          */
-        public Params setDigitalInputTrigger(String name, boolean triggerInverted, TrcEvent.Callback triggerCallback)
+        public Params setDigitalInputTrigger(
+            String name, boolean triggerInverted, TrcEvent.Callback triggerCallback, boolean noGrab)
         {
             this.sensorType = FtcSensorTrigger.SensorType.DigitalInput;
             this.sensorName = name;
             this.triggerInverted = triggerInverted;
             this.triggerCallback = triggerCallback;
+            this.noGrab = triggerCallback != null && noGrab;
             return this;
         }   //setDigitalInputTrigger
 
@@ -156,11 +163,14 @@ public class FtcServoGrabber
          * @param triggerThreshold specifies the trigger threshold value.
          * @param hasObjectThreshold specifies the threshold value to detect object possession.
          * @param triggerCallback specifies the callback when trigger event occurred, null if not provided.
+         * @param noGrab specifies true to tell sensor trigger not to grab the object. This parameter is only
+         *        applicable if triggerCallback is not null. This is useful for trigger callback to do object
+         *        validation so it can decide if it needs to grab that object.
          * @return this object for chaining.
          */
         public Params setAnalogInputTrigger(
             String name, boolean triggerInverted, double triggerThreshold, double hasObjectThreshold,
-            TrcEvent.Callback triggerCallback)
+            TrcEvent.Callback triggerCallback, boolean noGrab)
         {
             this.sensorType = FtcSensorTrigger.SensorType.AnalogInput;
             this.sensorName = name;
@@ -168,6 +178,7 @@ public class FtcServoGrabber
             this.triggerThreshold = triggerThreshold;
             this.hasObjectThreshold = hasObjectThreshold;
             this.triggerCallback = triggerCallback;
+            this.noGrab = triggerCallback != null && noGrab;
             return this;
         }   //setAnalogInputTrigger
 
@@ -179,11 +190,14 @@ public class FtcServoGrabber
          * @param triggerThreshold specifies the trigger threshold value.
          * @param hasObjectThreshold specifies the threshold value to detect object possession.
          * @param triggerCallback specifies the callback when trigger event occurred, null if not provided.
+         * @param noGrab specifies true to tell sensor trigger not to grab the object. This parameter is only
+         *        applicable if triggerCallback is not null. This is useful for trigger callback to do object
+         *        validation so it can decide if it needs to grab that object.
          * @return this object for chaining.
          */
         public Params setAnalogSensorTrigger(
             TrcAnalogSensor.AnalogDataSource analogSensorData, boolean triggerInverted, double triggerThreshold,
-            double hasObjectThreshold, TrcEvent.Callback triggerCallback)
+            double hasObjectThreshold, TrcEvent.Callback triggerCallback, boolean noGrab)
         {
             this.sensorType = FtcSensorTrigger.SensorType.AnalogSensor;
             this.analogSensorData = analogSensorData;
@@ -191,6 +205,7 @@ public class FtcServoGrabber
             this.triggerThreshold = triggerThreshold;
             this.hasObjectThreshold = hasObjectThreshold;
             this.triggerCallback = triggerCallback;
+            this.noGrab = triggerCallback != null && noGrab;
             return this;
         }   //setAnalogSensorTrigger
 
@@ -218,7 +233,7 @@ public class FtcServoGrabber
         {
             grabberParams.setSensorTrigger(
                 sensorTrigger, params.triggerInverted, params.triggerThreshold, params.hasObjectThreshold,
-                params.triggerCallback);
+                params.triggerCallback, params.noGrab);
         }
 
         grabber = new TrcServoGrabber(instanceName, grabberParams);
