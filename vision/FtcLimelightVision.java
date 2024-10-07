@@ -31,6 +31,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
@@ -140,44 +141,19 @@ public class FtcLimelightVision
         public Rect getObjectRect()
         {
             Rect rect = null;
-            List<List<Double>> corners;
+            Point[] vertices = getRotatedRectVertices();
 
-            switch (resultType)
-            {
-                case Barcode:
-                    corners = ((LLResultTypes.BarcodeResult) result).getTargetCorners();
-                    break;
-
-                case Detector:
-                    corners = ((LLResultTypes.DetectorResult) result).getTargetCorners();
-                    break;
-
-                case Fiducial:
-                    corners = ((LLResultTypes.FiducialResult) result).getTargetCorners();
-                    break;
-
-                case Color:
-                    corners = ((LLResultTypes.ColorResult) result).getTargetCorners();
-                    break;
-
-                case Classifier:
-                default:
-                    corners = null;
-                    break;
-            }
-
-            if (corners != null && !corners.isEmpty())
+            if (vertices != null)
             {
                 double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
                 double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
 
-                for (List<Double> point: corners)
+                for (Point vertex: vertices)
                 {
-                    double x = point.get(0), y = point.get(1);
-                    if (x < xMin) xMin = x;
-                    if (x > xMax) xMax = x;
-                    if (y < yMin) yMin = y;
-                    if (y > yMax) yMax = y;
+                    if (vertex.x < xMin) xMin = vertex.x;
+                    if (vertex.x > xMax) xMax = vertex.x;
+                    if (vertex.y < yMin) yMin = vertex.y;
+                    if (vertex.y > yMax) yMax = vertex.y;
                 }
                 rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
             }
@@ -256,6 +232,55 @@ public class FtcLimelightVision
         {
             return targetDepth;
         }   //getObjectDepth
+
+        /**
+         * This method returns the rotated rect vertices of the detected object.
+         *
+         * @return rotated rect vertices.
+         */
+        @Override
+        public Point[] getRotatedRectVertices()
+        {
+            Point[] vertices = null;
+            List<List<Double>> corners;
+
+            switch (resultType)
+            {
+                case Barcode:
+                    corners = ((LLResultTypes.BarcodeResult) result).getTargetCorners();
+                    break;
+
+                case Detector:
+                    corners = ((LLResultTypes.DetectorResult) result).getTargetCorners();
+                    break;
+
+                case Fiducial:
+                    corners = ((LLResultTypes.FiducialResult) result).getTargetCorners();
+                    break;
+
+                case Color:
+                    corners = ((LLResultTypes.ColorResult) result).getTargetCorners();
+                    break;
+
+                case Classifier:
+                default:
+                    corners = null;
+                    break;
+            }
+
+            if (corners != null && !corners.isEmpty())
+            {
+                vertices = new Point[corners.size()];
+                for (int i = 0; i < vertices.length; i++)
+                {
+                    List<Double> vertex = corners.get(i);
+                    vertices[i].x = vertex.get(0);
+                    vertices[i].y = vertex.get(1);
+                }
+            }
+
+            return vertices;
+        }   //getRotatedRectVertices
 
         /**
          * This method calculates the target pose of the detected object.

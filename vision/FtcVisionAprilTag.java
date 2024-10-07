@@ -25,6 +25,8 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -159,6 +161,33 @@ public class FtcVisionAprilTag
             // AprilTag detection does not provide detected object depth.
             return null;
         }   //getObjectDepth
+
+        /**
+         * This method returns the rotated rect vertices of the detected object.
+         *
+         * @return rotated rect vertices.
+         */
+        @Override
+        public Point[] getRotatedRectVertices()
+        {
+            Point[] vertices = null;
+
+            if (aprilTagDetection.corners != null)
+            {
+                if (aprilTagDetection.corners.length == 4)
+                {
+                    vertices = aprilTagDetection.corners;
+                }
+                else
+                {
+                    throw new RuntimeException(
+                        "Object rectangle should have only 4 corners but found " + aprilTagDetection.corners.length +
+                        "corners.");
+                }
+            }
+
+            return vertices;
+        }   //getRotatedRectVertices
 
         /**
          * This method returns the string form of the target info.
