@@ -31,6 +31,8 @@ import androidx.annotation.NonNull;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -297,19 +299,40 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
 
             for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
             {
-                org.opencv.core.Rect objRect = object.getObjectRect();
-                // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
-                // scale the rect to canvas resolution.
-                float left = objRect.x * scaleBmpPxToCanvasPx;
-                float right = (objRect.x + objRect.width) * scaleBmpPxToCanvasPx;
-                float top = objRect.y * scaleBmpPxToCanvasPx;
-                float bottom = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
+                Point[] vertices = object.getRotatedRectVertices();
+                if (vertices != null)
+                {
+                    for (int start = 0; start < vertices.length; start++)
+                    {
+                        int end = (start + 1) % vertices.length;
+                        canvas.drawLine(
+                            (float) (vertices[start].x * scaleBmpPxToCanvasPx),
+                            (float) (vertices[start].y * scaleBmpPxToCanvasPx),
+                            (float) (vertices[end].x * scaleBmpPxToCanvasPx),
+                            (float) (vertices[end].y * scaleBmpPxToCanvasPx),
+                            linePaint);
+                    }
+                    canvas.drawText(
+                        colorBlobPipeline.toString(),
+                        (float) (vertices[0].x * scaleBmpPxToCanvasPx), (float) (vertices[0].y * scaleBmpPxToCanvasPx),
+                        textPaint);
+                }
+                else
+                {
+                    Rect objRect = object.getObjectRect();
+                    // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
+                    // scale the rect to canvas resolution.
+                    float left = objRect.x * scaleBmpPxToCanvasPx;
+                    float right = (objRect.x + objRect.width) * scaleBmpPxToCanvasPx;
+                    float top = objRect.y * scaleBmpPxToCanvasPx;
+                    float bottom = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
 
-                canvas.drawLine(left, top, right, top, linePaint);
-                canvas.drawLine(right, top, right, bottom, linePaint);
-                canvas.drawLine(right, bottom, left, bottom, linePaint);
-                canvas.drawLine(left, bottom, left, top, linePaint);
-                canvas.drawText(colorBlobPipeline.toString(), left, bottom, textPaint);
+                    canvas.drawLine(left, top, right, top, linePaint);
+                    canvas.drawLine(right, top, right, bottom, linePaint);
+                    canvas.drawLine(right, bottom, left, bottom, linePaint);
+                    canvas.drawLine(left, bottom, left, top, linePaint);
+                    canvas.drawText(colorBlobPipeline.toString(), left, bottom, textPaint);
+                }
             }
         }
     }   //onDrawFrame
