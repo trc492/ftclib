@@ -31,6 +31,7 @@ import org.firstinspires.ftc.robotcore.external.function.Consumer;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
+import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -52,6 +53,7 @@ public class FtcCameraStreamProcessor implements VisionProcessor, CameraStreamSo
 
     private final Paint linePaint;
     private final Paint textPaint;
+    private boolean processorEnabled = false;
 
     private static class RectInfo
     {
@@ -102,6 +104,45 @@ public class FtcCameraStreamProcessor implements VisionProcessor, CameraStreamSo
     }   //FtcCameraStreamProcessor
 
     /**
+     * This method enables/disables camera stream.
+     *
+     * @param vision specifies the FtcVision object.
+     * @param enabled specifies true to enable camera stream, false to disable.
+     */
+    public void setCameraStreamEnabled(FtcVision vision, boolean enabled)
+    {
+        synchronized (detectedRects)
+        {
+            VisionPortal visionPortal = vision.getVisionPortal();
+            boolean isEnabled = visionPortal.getProcessorEnabled(this);
+
+            if (!isEnabled && enabled)
+            {
+                // Enabling camera stream.
+                detectedRects.clear();
+                visionPortal.setProcessorEnabled(this, true);
+            }
+            else if (isEnabled && !enabled)
+            {
+                // Disabling camera stream.
+                visionPortal.setProcessorEnabled(this, false);
+                detectedRects.clear();
+            }
+            processorEnabled = enabled;
+        }
+    }   //setCameraStreamEnabled
+
+    /**
+     * This method checks if the camera stream is enabled.
+     *
+     * @return true if the camera stream is enabled, false otherwise.
+     */
+    public boolean isCameraStreamEnabled()
+    {
+        return processorEnabled;
+    }   //isCameraStreamEnabled
+
+    /**
      * This method adds info about a detected object so that we can annotate a rectangle around the object in the
      * video stream.
      *
@@ -112,7 +153,10 @@ public class FtcCameraStreamProcessor implements VisionProcessor, CameraStreamSo
     {
         synchronized (detectedRects)
         {
-            detectedRects.add(new RectInfo(label, vertices));
+            if (processorEnabled)
+            {
+                detectedRects.add(new RectInfo(label, vertices));
+            }
         }
     }   //addRectInfo
 

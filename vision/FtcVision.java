@@ -218,6 +218,14 @@ public class FtcVision
     }   //getVisionPortal
 
     /**
+     * This method shuts down VisionPortal.
+     */
+    public void close()
+    {
+        visionPortal.close();
+    }   //close
+
+    /**
      * This method returns the OpenCvCamera object.
      *
      * @return OpenCvCamera object.
