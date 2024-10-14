@@ -188,8 +188,9 @@ public class FtcCameraStreamProcessor implements VisionProcessor, CameraStreamSo
         // camera stream).
         synchronized (detectedRects)
         {
-            for (RectInfo rectInfo: detectedRects)
+            for (int i = detectedRects.size() - 1; i >= 0; i--)
             {
+                RectInfo rectInfo = detectedRects.get(i);
                 for (int start = 0; start < rectInfo.vertices.length; start++)
                 {
                     int end = (start + 1) % rectInfo.vertices.length;
@@ -205,7 +206,7 @@ public class FtcCameraStreamProcessor implements VisionProcessor, CameraStreamSo
                     (float) (rectInfo.vertices[0].x * scaleBmpPxToCanvasPx),
                     (float) (rectInfo.vertices[0].y * scaleBmpPxToCanvasPx),
                     textPaint);
-                detectedRects.remove(rectInfo);
+                detectedRects.remove(i);
             }
         }
     }   //onDrawFrame
