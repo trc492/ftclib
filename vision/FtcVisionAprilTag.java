@@ -349,7 +349,7 @@ public class FtcVisionAprilTag
     public TrcVisionTargetInfo<DetectedObject> getDetectedTargetInfo(AprilTagDetection detection)
     {
         TrcVisionTargetInfo<DetectedObject> targetInfo = new TrcVisionTargetInfo<>(new DetectedObject(detection));
-        tracer.traceDebug(instanceName, "TargetInfo=" + targetInfo);
+        tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
 
         return targetInfo;
     }   //getDetectedTargetInfo
