@@ -134,6 +134,42 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
         return colorBlobPipeline.toString();
     }   //toString
 
+    /**
+     * This method sets the annotation rectangle and text attributes such as rectangle line width/color and label
+     * text color/size.
+     *
+     * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
+     *        case default color or previously set color is used.
+     * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
+     *        case default width or previously set width is used.
+     * @param textColor specifies the text color to draw the label text, can be null if not provided in which case
+     *        default color or previously set color is used.
+     * @param textSize specifies the text size to draw the label text, can be null if not provided in which case
+     *        default text size or previously set size is used.
+     */
+    public void setAnnotationAttributes(Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
+    {
+        if (lineColor != null)
+        {
+            linePaint.setColor(lineColor);
+        }
+
+        if (lineWidth != null)
+        {
+            linePaint.setStrokeWidth(lineWidth);
+        }
+
+        if (textColor != null)
+        {
+            textPaint.setColor(textColor);
+        }
+
+        if (textSize != null)
+        {
+            textPaint.setTextSize(textSize);
+        }
+    }   //setAnnotationAttributes
+
     //
     // Implements TrcOpenCvPipeline interface.
     //
