@@ -43,9 +43,9 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
 {
     public static class Config
     {
-        private double xOffset = 0.0, yOffset = 0.0;
+        private double forwardPodOffset = 0.0, strafePodOffset = 0.0;
         private double encoderCountsPerMm = 1.0;
-        private boolean xEncoderInverted = false, yEncoderInverted = false;
+        private boolean forwardEncoderInverted = false, strafeEncoderInverted = false;
 
         /**
          * This method returns the string format of the Params info.
@@ -56,11 +56,11 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         @Override
         public String toString()
         {
-            return "{xOffset=" + xOffset +
-                   ",yOffset=" + yOffset +
+            return "{forwardPodOffset=" + forwardPodOffset +
+                   ",strafePodOffset=" + strafePodOffset +
                    ",encRes=" + encoderCountsPerMm +
-                   ",xInverted=" + xEncoderInverted +
-                   ",yInverted=" + yEncoderInverted + "}";
+                   ",forwardEncoderInverted=" + forwardEncoderInverted +
+                   ",strafeEncoderInverted=" + strafeEncoderInverted + "}";
         }   //toString
 
         /**
@@ -72,8 +72,8 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
          */
         public Config setPodOffsets(double forwardPodOffset, double strafePodOffset)
         {
-            this.xOffset = strafePodOffset;
-            this.yOffset = forwardPodOffset;
+            this.forwardPodOffset = forwardPodOffset;
+            this.strafePodOffset = strafePodOffset;
             return this;
         }   //setPodOffsets
 
@@ -98,8 +98,8 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
          */
         public Config setEncodersInverted(boolean forwardPodInverted, boolean strafePodInverted)
         {
-            this.xEncoderInverted = strafePodInverted;
-            this.yEncoderInverted = forwardPodInverted;
+            this.forwardEncoderInverted = forwardPodInverted;
+            this.strafeEncoderInverted = strafePodInverted;
             return this;
         }   //setEncodersInverted
 
@@ -121,12 +121,12 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         this.ppOdo = hardwareMap.get(GoBildaPinpointDriver.class, instanceName);
-        ppOdo.setOffsets(-config.yOffset, config.xOffset);
+        ppOdo.setOffsets(-config.forwardPodOffset, config.strafePodOffset);
         ppOdo.setEncoderResolution(config.encoderCountsPerMm);
         ppOdo.setEncoderDirections(
-            config.yEncoderInverted?
+            config.forwardEncoderInverted?
                 GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD,
-            config.xEncoderInverted?
+            config.strafeEncoderInverted?
                 GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD);
         ppOdo.resetPosAndIMU();
     }   //FtcPinpointOdometry
