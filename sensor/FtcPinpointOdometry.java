@@ -30,7 +30,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.pathdrive.TrcPose2D;
 import trclib.robotcore.TrcDbgTrace;
@@ -187,10 +186,6 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
     public TrcPose2D getPosition()
     {
         Pose2D pose = ppOdo.getPosition();
-        FtcDashboard dashboard = FtcDashboard.getInstance();
-        dashboard.displayPrintf(4, "ppOdoX=%.3f (%d)", pose.getX(DistanceUnit.INCH), ppOdo.getEncoderX());
-        dashboard.displayPrintf(5, "ppOdoX=%.3f", pose.getY(DistanceUnit.INCH), ppOdo.getEncoderY());
-        dashboard.displayPrintf(6, "ppOdoHeading=%.3f", pose.getHeading(AngleUnit.DEGREES));
         return new TrcPose2D(
             -pose.getY(DistanceUnit.INCH), pose.getX(DistanceUnit.INCH),
             -pose.getHeading(AngleUnit.DEGREES));
