@@ -129,6 +129,7 @@ public class FtcRobotDrive
         public VisionInfo limelight;
         // Miscellaneous
         public String blinkinName = null;
+        public String gobildaLEDName = null;
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
