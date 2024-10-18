@@ -222,9 +222,6 @@ public class FtcVisionAprilTag
                 return "{id=" + aprilTagDetection.id +
                        ",center=" + aprilTagDetection.center +
                        ",rect=" + getObjectRect() +
-                       ",fieldPos=" + aprilTagDetection.metadata.fieldPosition +
-                       ",hamming=" + aprilTagDetection.hamming +
-                       ",decisionMargin=" + aprilTagDetection.decisionMargin +
                        "}";
             }
         }   //toString

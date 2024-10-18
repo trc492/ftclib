@@ -128,7 +128,7 @@ public class FtcRobotDrive
         public VisionInfo webCam2;
         public VisionInfo limelight;
         // Miscellaneous
-        public String blinkinName = null;
+        public String indicatorName = null;
         public String gobildaLEDName = null;
     }   //class RobotInfo
 
