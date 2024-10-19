@@ -124,12 +124,11 @@ public class FtcRobotDrive
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
         // Vision
-        public VisionInfo webCam1;
-        public VisionInfo webCam2;
-        public VisionInfo limelight;
+        public VisionInfo webCam1 = null;
+        public VisionInfo webCam2 = null;
+        public VisionInfo limelight = null;
         // Miscellaneous
         public String indicatorName = null;
-        public String gobildaLEDName = null;
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
