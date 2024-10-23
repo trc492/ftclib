@@ -39,6 +39,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import ftclib.robotcore.FtcOpMode;
+import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
@@ -274,8 +275,7 @@ public class FtcLimelightVision
                 for (int i = 0; i < vertices.length; i++)
                 {
                     List<Double> vertex = corners.get(i);
-                    vertices[i].x = vertex.get(0);
-                    vertices[i].y = vertex.get(1);
+                    vertices[i] = new Point(vertex.get(0), vertex.get(1));
                 }
             }
 
@@ -318,7 +318,9 @@ public class FtcLimelightVision
             if (botpose != null)
             {
                 Position botPosition = botpose.getPosition();
-                robotPose = new TrcPose2D(botPosition.x, botPosition.y, botpose.getOrientation().getYaw());
+                robotPose = new TrcPose2D(
+                    botPosition.x*TrcUtil.INCHES_PER_METER, botPosition.y*TrcUtil.INCHES_PER_METER,
+                    -(botpose.getOrientation().getYaw() - 90.0));
             }
 
             return robotPose;
