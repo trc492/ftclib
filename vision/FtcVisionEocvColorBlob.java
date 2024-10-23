@@ -67,6 +67,7 @@ public class FtcVisionEocvColorBlob
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
@@ -74,11 +75,12 @@ public class FtcVisionEocvColorBlob
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
+        boolean doWatershed, TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect,
+        boolean annotate)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed);
         tracer = colorBlobProcessor.tracer;
         this.instanceName = instanceName;
 
@@ -107,12 +109,14 @@ public class FtcVisionEocvColorBlob
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        boolean doWatershed)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed,
              null, null, true);
     }   //FtcVisionEocvColorBlob
 

@@ -69,6 +69,7 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -81,10 +82,10 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
+        boolean doWatershed, Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed);
 
         this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
@@ -113,12 +114,14 @@ public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDet
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        boolean doWatershed)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed,
              null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 

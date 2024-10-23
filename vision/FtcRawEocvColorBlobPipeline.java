@@ -55,13 +55,15 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      */
     public FtcRawEocvColorBlobPipeline(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        boolean doWatershed)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed);
         this.tracer = colorBlobPipeline.tracer;
     }   //FtcRawEocvColorBlobPipeline
 
