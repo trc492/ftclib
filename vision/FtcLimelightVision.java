@@ -327,7 +327,7 @@ public class FtcLimelightVision
                     -(botpose.getOrientation().getYaw() - 90.0));
                 robotPose = cameraFieldPose.subtractRelativePose(cameraPose2D);
                 TrcDbgTrace.globalTraceDebug(
-                    moduleName, "cameraFieldPose=" + cameraFieldPose + ",robotPose=" + robotPose);
+                    moduleName, "cameraFieldPose=%s, robotPose=%s", cameraFieldPose, robotPose);
             }
 
             return robotPose;
