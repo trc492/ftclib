@@ -50,6 +50,8 @@ import trclib.vision.TrcVisionTargetInfo;
  */
 public class FtcLimelightVision
 {
+    private static final String moduleName = FtcLimelightVision.class.getSimpleName();
+
     public interface TargetGroundOffset
     {
         /**
@@ -109,7 +111,7 @@ public class FtcLimelightVision
             this.label = label;
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
-            this.robotPose = getRobotPose(llResult.getBotpose());
+            this.robotPose = getRobotPose(llResult.getBotpose(), cameraPose);
             this.targetRect = getObjectRect();
             this.targetArea = getObjectArea();
             // getTargetPose call above will also set targetDepth.
@@ -309,18 +311,23 @@ public class FtcLimelightVision
          * This method returns the robot's field position as a TrcPose2D.
          *
          * @param botpose specifies the robot's field position in 3D space.
+         * @param cameraPose specifies the camera position relative to robot ground center.
          * @return robot's 2D field position.
          */
-        private TrcPose2D getRobotPose(Pose3D botpose)
+        private TrcPose2D getRobotPose(Pose3D botpose, TrcPose3D cameraPose)
         {
             TrcPose2D robotPose = null;
 
-            if (botpose != null)
+            if (botpose != null && cameraPose != null)
             {
                 Position botPosition = botpose.getPosition();
-                robotPose = new TrcPose2D(
+                TrcPose2D cameraPose2D = new TrcPose2D(cameraPose.x, cameraPose.y, cameraPose.yaw);
+                TrcPose2D cameraFieldPose = new TrcPose2D(
                     botPosition.x*TrcUtil.INCHES_PER_METER, botPosition.y*TrcUtil.INCHES_PER_METER,
                     -(botpose.getOrientation().getYaw() - 90.0));
+                robotPose = cameraFieldPose.subtractRelativePose(cameraPose2D);
+                TrcDbgTrace.globalTraceDebug(
+                    moduleName, "cameraFieldPose=" + cameraFieldPose + ",robotPose=" + robotPose);
             }
 
             return robotPose;
