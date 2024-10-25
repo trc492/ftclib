@@ -24,38 +24,34 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
-import ftclib.motor.FtcServoActuator;
+import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
-import trclib.motor.TrcServo;
+import trclib.motor.TrcMotor;
 import trclib.sensor.TrcAnalogSensor;
 import trclib.sensor.TrcTrigger;
-import trclib.subsystem.TrcServoGrabber;
+import trclib.subsystem.TrcMotorGrabber;
 
 /**
- * This class implements a platform dependent Servo Grabber Subsystem. A Servo Grabber consists of one or two servos.
+ * This class implements a platform dependent Motor Grabber Subsystem. A Motor Grabber consists of one or two motors.
  * Optionally, it may have a sensor to detect the game element entering the proximity of the grabber to activate the
  * grabbing action.
  */
-public class FtcServoGrabber
+public class FtcMotorGrabber
 {
     /**
-     * This class contains all the parameters of the Servo Grabber.
+     * This class contains all the parameters of the Motor Grabber.
      */
     public static class Params
     {
-        private FtcServoActuator.Params servoParams = null;
-
-        private double openPos = 1.0;
-        private double openTime = 0.5;
-        private double closePos = 0.0;
-        private double closeTime = 0.5;
-
+        private FtcMotorActuator.Params motorParams = null;
         private FtcSensorTrigger.SensorType sensorType = null;
         private String sensorName = null;
-        private TrcAnalogSensor.AnalogDataSource analogSensorData = null;
+        private TrcAnalogSensor.AnalogDataSource analogSensorSource = null;
         private boolean triggerInverted = false;
         private Double triggerThreshold = null;
-        private Double hasObjectThreshold = null;
+        private double intakePower = 0.0;
+        private double ejectPower = 0.0;
+        private double retainPower = 0.0;
 
         /**
          * This method returns the string format of the Params info.
@@ -66,67 +62,65 @@ public class FtcServoGrabber
         @Override
         public String toString()
         {
-            return "servoParams=" + servoParams +
-                   ",openPos=" + openPos +
-                   ",openTime=" + openTime +
-                   ",closePos=" + closePos +
-                   ",closeTime=" + closeTime +
+            return "motorParams=" + motorParams +
                    ",sensorType=" + sensorType +
                    ",sensorName=" + sensorName +
-                   ",analogData=" + (analogSensorData != null) +
+                   ",analogSource=" + (analogSensorSource != null) +
                    ",triggerInverted=" + triggerInverted +
                    ",triggerThreshold=" + triggerThreshold +
-                   ",hasObjectThreshold=" + hasObjectThreshold;
+                   ",intakePower=" + intakePower +
+                   ",ejectPower=" + ejectPower +
+                   ",retainPower=" + retainPower;
         }   //toString
 
         /**
-         * This methods sets the parameters of the primary servo.
+         * This methods sets the parameters of the primary motor.
          *
-         * @param name specifies the name of the servo.
-         * @param inverted specifies true if the servo is inverted, false otherwise.
+         * @param name specifies the name of the motor.
+         * @param motorType specifies the type of the motor.
+         * @param inverted specifies true if the motor is inverted, false otherwise.
          * @return this object for chaining.
          */
-        public Params setPrimaryServo(String name, boolean inverted)
+        public Params setPrimaryMotor(String name, FtcMotorActuator.MotorType motorType, boolean inverted)
         {
-            this.servoParams = new FtcServoActuator.Params().setPrimaryServo(name, inverted);
+            this.motorParams = new FtcMotorActuator.Params().setPrimaryMotor(name, motorType, inverted);
             return this;
-        }   //setPrimaryServo
+        }   //setPrimaryMotor
 
         /**
-         * This methods sets the parameter of the follower servo if there is one.
+         * This methods sets the parameter of the follower motor if there is one.
          *
-         * @param name specifies the name of the servo.
-         * @param inverted specifies true if the servo is inverted, false otherwise.
+         * @param name specifies the name of the motor.
+         * @param motorType specifies the type of the motor.
+         * @param inverted specifies true if the motor is inverted, false otherwise.
          * @return this object for chaining.
          */
-        public Params setFollowerServo(String name, boolean inverted)
+        public Params setFollowerMotor(String name, FtcMotorActuator.MotorType motorType, boolean inverted)
         {
-            if (servoParams == null)
+            if (motorParams == null)
             {
-                throw new IllegalStateException("Must set the primary servo parameters first.");
+                throw new IllegalStateException("Must set the primary motor parameters first.");
             }
 
-            servoParams.setFollowerServo(name, inverted);
+            motorParams.setFollowerMotor(name, motorType, inverted);
             return this;
-        }   //setFollowerServo
+        }   //setFollowerMotor
 
         /**
-         * This method sets the open/close parameters of the servo grabber.
+         * This method sets all the different power level for the operation.
          *
-         * @param openPos specifies the open position in physical unit.
-         * @param openTime specifies the time in seconds required to open from fully close position.
-         * @param closePos specifies the close position in physical unit.
-         * @param closeTime specifies the time in seconds required to close from fully open position.
+         * @param intakePower specifies the power level for intaking the object.
+         * @param ejectPower specifies the power level for ejecting the object.
+         * @param retainPower specifies the power level for retaining the object.
          * @return this parameter object.
          */
-        public Params setOpenCloseParams(double openPos, double openTime, double closePos, double closeTime)
+        public Params setPowerParams(double intakePower, double ejectPower, double retainPower)
         {
-            this.openPos = openPos;
-            this.openTime = openTime;
-            this.closePos = closePos;
-            this.closeTime = closeTime;
+            this.intakePower = intakePower;
+            this.ejectPower = ejectPower;
+            this.retainPower = retainPower;
             return this;
-        }   //setOpenCloseParams
+        }   //setPowerParams
 
         /**
          * This method specifies the digital input trigger parameters.
@@ -159,69 +153,65 @@ public class FtcServoGrabber
             this.sensorName = name;
             this.triggerInverted = triggerInverted;
             this.triggerThreshold = triggerThreshold;
-            this.hasObjectThreshold = hasObjectThreshold;
             return this;
         }   //setAnalogInputTrigger
 
         /**
          * This method specifies the analog sensor trigger parameters.
          *
-         * @param analogSensorData specifies the method to call to get the analog sensor data.
+         * @param analogSensorSource specifies the method to call to get the analog sensor data.
          * @param triggerInverted specifies true if the trigger polarity is inverted.
          * @param triggerThreshold specifies the trigger threshold value.
-         * @param hasObjectThreshold specifies the threshold value to detect object possession.
          * @return this object for chaining.
          */
         public Params setAnalogSensorTrigger(
-            TrcAnalogSensor.AnalogDataSource analogSensorData, boolean triggerInverted, double triggerThreshold,
-            double hasObjectThreshold)
+            TrcAnalogSensor.AnalogDataSource analogSensorSource, boolean triggerInverted, double triggerThreshold)
         {
             this.sensorType = FtcSensorTrigger.SensorType.AnalogSensor;
-            this.analogSensorData = analogSensorData;
+            this.analogSensorSource = analogSensorSource;
             this.triggerInverted = triggerInverted;
             this.triggerThreshold = triggerThreshold;
-            this.hasObjectThreshold = hasObjectThreshold;
             return this;
         }   //setAnalogSensorTrigger
 
     }   //class Params
 
-    private final TrcServoGrabber grabber;
+    private final TrcMotorGrabber grabber;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param params specifies the servo grabber parameters.
+     * @param params specifies the motor grabber parameters.
      */
-    public FtcServoGrabber(String instanceName, Params params)
+    public FtcMotorGrabber(String instanceName, Params params)
     {
-        TrcServo servo = new FtcServoActuator(params.servoParams).getServo();
-        // Sensor inverted is taken care in TrcServoGrabber, so don't double invert in FtcSensorTrigger.
+        TrcMotor motor = new FtcMotorActuator(params.motorParams).getMotor();
+        // Sensor inverted is taken care in TrcMotorGrabber, so don't double invert in FtcSensorTrigger.
         TrcTrigger sensorTrigger = params.sensorType == null? null:
             new FtcSensorTrigger(
-                instanceName, params.sensorType, params.analogSensorData, false, params.triggerThreshold).getTrigger();
-        TrcServoGrabber.Params grabberParams = new TrcServoGrabber.Params()
-            .setServo(servo)
-            .setOpenCloseParams(params.openPos, params.openTime, params.closePos, params.closeTime);
+                params.sensorName, params.sensorType, params.analogSensorSource, false, params.triggerThreshold)
+                .getTrigger();
+        TrcMotorGrabber.Params grabberParams = new TrcMotorGrabber.Params()
+            .setMotor(motor)
+            .setPowerParams(params.intakePower, params.ejectPower, params.retainPower);
 
         if (sensorTrigger != null)
         {
-            grabberParams.setSensorTrigger(
-                sensorTrigger, params.triggerInverted, params.triggerThreshold);
+            grabberParams.setSensorTrigger(sensorTrigger, params.triggerInverted, params.triggerThreshold);
         }
 
-        grabber = new TrcServoGrabber(instanceName, grabberParams);
-    }   //FtcServoGrabber
+        grabber = new TrcMotorGrabber(instanceName, grabberParams);
+    }   //FtcMotorGrabber
 
     /**
-     * This method returns the created servo grabber.
+     * This method returns the created motor grabber.
      *
-     * @return servo grabber.
+     * @return motor grabber.
      */
-    public TrcServoGrabber getGrabber()
+    public TrcMotorGrabber getGrabber()
     {
         return grabber;
     }   //getGrabber
 
-}   //class FtcServoGrabber
+}   //class FtcMotorGrabber
