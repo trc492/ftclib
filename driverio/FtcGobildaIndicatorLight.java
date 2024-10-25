@@ -34,7 +34,7 @@ import trclib.driverio.TrcGobildaIndicatorLight;
  */
 public class FtcGobildaIndicatorLight extends TrcGobildaIndicatorLight
 {
-    private static final Pattern offPattern = new Pattern("Off", Color.Off);
+    private static final Pattern offPattern = new Pattern("Off", Color.Black);
 
     private final Servo led;
     private Pattern currPattern = null;
@@ -62,6 +62,15 @@ public class FtcGobildaIndicatorLight extends TrcGobildaIndicatorLight
         this(FtcOpMode.getInstance().hardwareMap, instanceName);
     }   //FtcGobildaIndicatorLight
 
+//    public void setColor(int red, int green, int blue)
+//    {
+//        float[] hsvValues = {0.0f, 0.0f, 0.0f};
+//        android.graphics.Color.RGBToHSV(red & 0xff, green & 0xff, blue & 0xff, hsvValues);
+//        double value = hsvValues[0]/360.0;
+//        tracer.traceInfo(instanceName, "red=%d, green=%d, blue=%d, value=%.3f", red, green, blue, value);
+//        led.setPosition(value);
+//    }   //setColor
+//
     /**
      * This method sets the LED to the specifies color value.
      *
