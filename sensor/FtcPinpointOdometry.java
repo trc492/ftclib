@@ -121,7 +121,7 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         this.ppOdo = hardwareMap.get(GoBildaPinpointDriver.class, instanceName);
-        ppOdo.setOffsets(-config.forwardPodOffset, config.strafePodOffset);
+        ppOdo.setOffsets(config.forwardPodOffset, -config.strafePodOffset);
         ppOdo.setEncoderResolution(config.encoderCountsPerMm);
         ppOdo.setEncoderDirections(
             config.forwardEncoderInverted?
