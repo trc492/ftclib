@@ -43,9 +43,9 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
 {
     public static class Config
     {
-        private double forwardPodOffset = 0.0, strafePodOffset = 0.0;
+        private double yPodXOffset = 0.0, xPodYOffset = 0.0;
         private double encoderCountsPerMm = 1.0;
-        private boolean forwardEncoderInverted = false, strafeEncoderInverted = false;
+        private boolean yPodEncoderInverted = false, xPodEncoderInverted = false;
 
         /**
          * This method returns the string format of the Params info.
@@ -56,24 +56,24 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         @Override
         public String toString()
         {
-            return "{forwardPodOffset=" + forwardPodOffset +
-                   ",strafePodOffset=" + strafePodOffset +
+            return "{yPodXOffset=" + yPodXOffset +
+                   ",xPodYOffset=" + xPodYOffset +
                    ",encRes=" + encoderCountsPerMm +
-                   ",forwardEncoderInverted=" + forwardEncoderInverted +
-                   ",strafeEncoderInverted=" + strafeEncoderInverted + "}";
+                   ",yPodEncoderInverted=" + yPodEncoderInverted +
+                   ",xPodEncoderInverted=" + xPodEncoderInverted + "}";
         }   //toString
 
         /**
          * This method sets the Odometry pod offsets from the robot center.
          *
-         * @param forwardPodOffset specifies the forward odo pod offset form robot center in mm, right positive.
-         * @param strafePodOffset specifies the strafe pod offset from robot center in mm, forward positive.
+         * @param yPodXOffset specifies the forward odo pod offset form robot center in mm, right positive.
+         * @param xPodYOffset specifies the strafe pod offset from robot center in mm, forward positive.
          * @return this object for chaining.
          */
-        public Config setPodOffsets(double forwardPodOffset, double strafePodOffset)
+        public Config setPodOffsets(double yPodXOffset, double xPodYOffset)
         {
-            this.forwardPodOffset = forwardPodOffset;
-            this.strafePodOffset = strafePodOffset;
+            this.yPodXOffset = yPodXOffset;
+            this.xPodYOffset = xPodYOffset;
             return this;
         }   //setPodOffsets
 
@@ -92,14 +92,14 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         /**
          * This method sets the Odometry pod encoder directions.
          *
-         * @param forwardPodInverted specifies true to invert the forward odo pod encoder direction, false otherwise.
-         * @param strafePodInverted specifies true to invert the strafe odo pod encoder direction, false otherwise.
+         * @param yPodInverted specifies true to invert the forward odo pod encoder direction, false otherwise.
+         * @param xPodInverted specifies true to invert the strafe odo pod encoder direction, false otherwise.
          * @return this object for chaining.
          */
-        public Config setEncodersInverted(boolean forwardPodInverted, boolean strafePodInverted)
+        public Config setEncodersInverted(boolean yPodInverted, boolean xPodInverted)
         {
-            this.forwardEncoderInverted = forwardPodInverted;
-            this.strafeEncoderInverted = strafePodInverted;
+            this.yPodEncoderInverted = yPodInverted;
+            this.xPodEncoderInverted = xPodInverted;
             return this;
         }   //setEncodersInverted
 
@@ -121,12 +121,12 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         this.ppOdo = hardwareMap.get(GoBildaPinpointDriver.class, instanceName);
-        ppOdo.setOffsets(-config.forwardPodOffset, config.strafePodOffset);
+        ppOdo.setOffsets(-config.yPodXOffset, config.xPodYOffset);
         ppOdo.setEncoderResolution(config.encoderCountsPerMm);
         ppOdo.setEncoderDirections(
-            config.forwardEncoderInverted?
+            config.yPodEncoderInverted?
                 GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD,
-            config.strafeEncoderInverted?
+            config.xPodEncoderInverted?
                 GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD);
         ppOdo.resetPosAndIMU();
     }   //FtcPinpointOdometry
