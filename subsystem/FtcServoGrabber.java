@@ -55,7 +55,6 @@ public class FtcServoGrabber
         private TrcAnalogSensor.AnalogDataSource analogSensorData = null;
         private boolean triggerInverted = false;
         private Double triggerThreshold = null;
-        private Double hasObjectThreshold = null;
 
         /**
          * This method returns the string format of the Params info.
@@ -75,8 +74,7 @@ public class FtcServoGrabber
                    ",sensorName=" + sensorName +
                    ",analogData=" + (analogSensorData != null) +
                    ",triggerInverted=" + triggerInverted +
-                   ",triggerThreshold=" + triggerThreshold +
-                   ",hasObjectThreshold=" + hasObjectThreshold;
+                   ",triggerThreshold=" + triggerThreshold;
         }   //toString
 
         /**
@@ -149,17 +147,14 @@ public class FtcServoGrabber
          * @param name specifies the name of the sensor.
          * @param triggerInverted specifies true if the trigger polarity is inverted.
          * @param triggerThreshold specifies the trigger threshold value.
-         * @param hasObjectThreshold specifies the threshold value to detect object possession.
          * @return this object for chaining.
          */
-        public Params setAnalogInputTrigger(
-            String name, boolean triggerInverted, double triggerThreshold, double hasObjectThreshold)
+        public Params setAnalogInputTrigger(String name, boolean triggerInverted, double triggerThreshold)
         {
             this.sensorType = FtcSensorTrigger.SensorType.AnalogInput;
             this.sensorName = name;
             this.triggerInverted = triggerInverted;
             this.triggerThreshold = triggerThreshold;
-            this.hasObjectThreshold = hasObjectThreshold;
             return this;
         }   //setAnalogInputTrigger
 
@@ -169,18 +164,15 @@ public class FtcServoGrabber
          * @param analogSensorData specifies the method to call to get the analog sensor data.
          * @param triggerInverted specifies true if the trigger polarity is inverted.
          * @param triggerThreshold specifies the trigger threshold value.
-         * @param hasObjectThreshold specifies the threshold value to detect object possession.
          * @return this object for chaining.
          */
         public Params setAnalogSensorTrigger(
-            TrcAnalogSensor.AnalogDataSource analogSensorData, boolean triggerInverted, double triggerThreshold,
-            double hasObjectThreshold)
+            TrcAnalogSensor.AnalogDataSource analogSensorData, boolean triggerInverted, double triggerThreshold)
         {
             this.sensorType = FtcSensorTrigger.SensorType.AnalogSensor;
             this.analogSensorData = analogSensorData;
             this.triggerInverted = triggerInverted;
             this.triggerThreshold = triggerThreshold;
-            this.hasObjectThreshold = hasObjectThreshold;
             return this;
         }   //setAnalogSensorTrigger
 
@@ -207,8 +199,7 @@ public class FtcServoGrabber
 
         if (sensorTrigger != null)
         {
-            grabberParams.setSensorTrigger(
-                sensorTrigger, params.triggerInverted, params.triggerThreshold);
+            grabberParams.setSensorTrigger(sensorTrigger, params.triggerInverted, params.triggerThreshold);
         }
 
         grabber = new TrcServoGrabber(instanceName, grabberParams);
