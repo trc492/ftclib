@@ -60,7 +60,7 @@ public class FtcRobotDrive
         public int camImageWidth = 0, camImageHeight = 0;
         public Double camHFov = null, camVFov = null;
         public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0;
-        public double camPitch = 0.0, camYaw = 0.0, camRoll = 0.0;
+        public double camYaw = 0.0, camPitch = 0.0, camRoll = 0.0;
         public TrcPose3D camPose = null;
         public OpenCvCameraRotation camOrientation = null;
         public TrcHomographyMapper.Rectangle cameraRect = null;
