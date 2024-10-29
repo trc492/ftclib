@@ -52,6 +52,7 @@ public class FtcMotorGrabber
         private double intakePower = 0.0;
         private double ejectPower = 0.0;
         private double retainPower = 0.0;
+        private double finishDelay = 0.0;
 
         /**
          * This method returns the string format of the Params info.
@@ -70,7 +71,8 @@ public class FtcMotorGrabber
                    ",triggerThreshold=" + triggerThreshold +
                    ",intakePower=" + intakePower +
                    ",ejectPower=" + ejectPower +
-                   ",retainPower=" + retainPower;
+                   ",retainPower=" + retainPower +
+                   ",finishDelay=" + finishDelay;
         }   //toString
 
         /**
@@ -112,13 +114,17 @@ public class FtcMotorGrabber
          * @param intakePower specifies the power level for intaking the object.
          * @param ejectPower specifies the power level for ejecting the object.
          * @param retainPower specifies the power level for retaining the object.
+         * @param finishDelay specifies the delay in seconds between sensor trigger and finishing the operation, can
+         *        be 0.0 for no delay. This is useful to make sure the grabber has a good grasp of the object before
+         *        we turn off the motor.
          * @return this parameter object.
          */
-        public Params setPowerParams(double intakePower, double ejectPower, double retainPower)
+        public Params setPowerParams(double intakePower, double ejectPower, double retainPower, double finishDelay)
         {
             this.intakePower = intakePower;
             this.ejectPower = ejectPower;
             this.retainPower = retainPower;
+            this.finishDelay = finishDelay;
             return this;
         }   //setPowerParams
 
@@ -194,7 +200,7 @@ public class FtcMotorGrabber
                 .getTrigger();
         TrcMotorGrabber.Params grabberParams = new TrcMotorGrabber.Params()
             .setMotor(motor)
-            .setPowerParams(params.intakePower, params.ejectPower, params.retainPower);
+            .setPowerParams(params.intakePower, params.ejectPower, params.retainPower, params.finishDelay);
 
         if (sensorTrigger != null)
         {
