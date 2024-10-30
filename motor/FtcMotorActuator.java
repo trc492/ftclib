@@ -319,7 +319,7 @@ public class FtcMotorActuator
      * @param sensors specifies external sensors, can be null if none.
      * @return created motor.
      */
-    private TrcMotor createMotor(String name, MotorType motorType, TrcMotor.ExternalSensors sensors)
+    public TrcMotor createMotor(String name, MotorType motorType, TrcMotor.ExternalSensors sensors)
     {
         TrcMotor motor;
 
