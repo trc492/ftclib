@@ -43,8 +43,8 @@ import trclib.vision.TrcOpenCvPipeline;
  * This class implements a vision processor on top of an EOCV color blob pipeline.
  */
 
-public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>,
-                                                  VisionProcessor
+public class FtcEocvColorBlobProcessor
+    implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>, VisionProcessor
 {
     private static final int DEF_LINE_COLOR = Color.GREEN;
     private static final float DEF_LINE_WIDTH = 4.0f;
