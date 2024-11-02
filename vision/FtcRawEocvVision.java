@@ -170,14 +170,14 @@ public class FtcRawEocvVision
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objHeightOffset specifies the object height offset above the floor.
+     * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return array list of detected target info.
      */
     public ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> getDetectedTargetsInfo(
         TrcOpenCvDetector.FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> comparator,
-        double objHeightOffset, double cameraHeight)
+        double objGroundOffset, double cameraHeight)
     {
         ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = null;
 
@@ -195,7 +195,7 @@ public class FtcRawEocvVision
                     if (filter == null || filter.validateTarget(obj))
                     {
                         TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> targetInfo =
-                            new TrcVisionTargetInfo<>(obj, homographyMapper, objHeightOffset, cameraHeight);
+                            new TrcVisionTargetInfo<>(obj, homographyMapper, objGroundOffset, cameraHeight);
                         targetList.add(targetInfo);
                     }
                 }
@@ -227,18 +227,18 @@ public class FtcRawEocvVision
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objHeightOffset specifies the object height offset above the floor.
+     * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> getBestDetectedTargetInfo(
         TrcOpenCvDetector.FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> comparator,
-        double objHeightOffset, double cameraHeight)
+        double objGroundOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = getDetectedTargetsInfo(
-            filter, comparator, objHeightOffset, cameraHeight);
+            filter, comparator, objGroundOffset, cameraHeight);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {

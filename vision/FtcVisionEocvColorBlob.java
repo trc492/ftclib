@@ -146,15 +146,15 @@ public class FtcVisionEocvColorBlob
      * This method returns the target info of the given detected target.
      *
      * @param target specifies the detected target
-     * @param objHeightOffset specifies the object height offset above the floor.
+     * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return information about the detected target.
      */
     public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> getDetectedTargetInfo(
-        TrcOpenCvColorBlobPipeline.DetectedObject target, double objHeightOffset, double cameraHeight)
+        TrcOpenCvColorBlobPipeline.DetectedObject target, double objGroundOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> targetInfo = new TrcVisionTargetInfo<>(
-            target, homographyMapper, objHeightOffset, cameraHeight);
+            target, homographyMapper, objGroundOffset, cameraHeight);
 
         tracer.traceDebug(instanceName, "TargetInfo=" + targetInfo);
 
@@ -166,14 +166,14 @@ public class FtcVisionEocvColorBlob
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objHeightOffset specifies the object height offset above the floor.
+     * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return filtered target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> getDetectedTargetsInfo(
         FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
-        double objHeightOffset, double cameraHeight)
+        double objGroundOffset, double cameraHeight)
     {
         ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> targetsInfo = null;
         TrcOpenCvColorBlobPipeline.DetectedObject[] detectedObjects = colorBlobProcessor.getDetectedObjects();
@@ -184,7 +184,7 @@ public class FtcVisionEocvColorBlob
             for (int i = 0; i < detectedObjects.length; i++)
             {
                 TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> objInfo =
-                    getDetectedTargetInfo(detectedObjects[i], objHeightOffset, cameraHeight);
+                    getDetectedTargetInfo(detectedObjects[i], objGroundOffset, cameraHeight);
                 boolean rejected = false;
 
                 if (filter == null || filter.validateTarget(objInfo))
@@ -216,18 +216,18 @@ public class FtcVisionEocvColorBlob
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objHeightOffset specifies the object height offset above the floor.
+     * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> getBestDetectedTargetInfo(
         FilterTarget filter,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
-        double objHeightOffset, double cameraHeight)
+        double objGroundOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(filter, comparator, objHeightOffset, cameraHeight);
+            getDetectedTargetsInfo(filter, comparator, objGroundOffset, cameraHeight);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
