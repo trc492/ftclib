@@ -48,7 +48,7 @@ public class FtcEocvColorBlobProcessor
 {
     private static final int DEF_LINE_COLOR = Color.GREEN;
     private static final float DEF_LINE_WIDTH = 4.0f;
-    private static final int DEF_TEXT_COLOR = Color.RED;
+    private static final int DEF_TEXT_COLOR = Color.CYAN;
     private static final float DEF_TEXT_SIZE = 20.0f;
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
@@ -69,7 +69,6 @@ public class FtcEocvColorBlobProcessor
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
-     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -82,10 +81,10 @@ public class FtcEocvColorBlobProcessor
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        boolean doWatershed, Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
+        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
 
         this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
@@ -114,15 +113,13 @@ public class FtcEocvColorBlobProcessor
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
-     * @param doWatershed specifies true to apply Watershed processing, false otherwise.
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        boolean doWatershed)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, doWatershed,
-             null, null, null, null);
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, null, null,
+             null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -339,6 +336,7 @@ public class FtcEocvColorBlobProcessor
             for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
             {
                 Point[] vertices = object.getRotatedRectVertices();
+                Rect objRect = object.getObjectRect();
                 if (vertices != null)
                 {
                     for (int start = 0; start < vertices.length; start++)
@@ -353,12 +351,11 @@ public class FtcEocvColorBlobProcessor
                     }
                     canvas.drawText(
                         colorBlobPipeline.toString(),
-                        (float) (vertices[0].x * scaleBmpPxToCanvasPx), (float) (vertices[0].y * scaleBmpPxToCanvasPx),
+                        (float) (objRect.x * scaleBmpPxToCanvasPx), (float) (objRect.y * scaleBmpPxToCanvasPx),
                         textPaint);
                 }
                 else
                 {
-                    Rect objRect = object.getObjectRect();
                     // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
                     // scale the rect to canvas resolution.
                     float left = objRect.x * scaleBmpPxToCanvasPx;
@@ -370,7 +367,7 @@ public class FtcEocvColorBlobProcessor
                     canvas.drawLine(right, top, right, bottom, linePaint);
                     canvas.drawLine(right, bottom, left, bottom, linePaint);
                     canvas.drawLine(left, bottom, left, top, linePaint);
-                    canvas.drawText(colorBlobPipeline.toString(), left, bottom, textPaint);
+                    canvas.drawText(colorBlobPipeline.toString(), left, top, textPaint);
                 }
             }
         }

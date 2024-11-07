@@ -428,6 +428,8 @@ public class FtcLimelightVision
         if (success)
         {
             pipelineIndex = index;
+            tracer.traceDebug(
+                instanceName, "Pipeline %d is %s.", index, limelight.isRunning()? "running": "not running");
         }
 
         return success;
@@ -487,6 +489,10 @@ public class FtcLimelightVision
                         resultList = llResult.getColorResults();
                         break;
                 }
+                tracer.traceDebug(
+                    instanceName, "Tx=%.3f, Ty=%.3f, Ta=%.3f, BotPose=%s, ResultList(%s)=%d",
+                    llResult.getTx(), llResult.getTy(), llResult.getTa(), llResult.getBotpose(), resultType,
+                    resultList != null? resultList.size(): 0);
 
                 if (resultList != null)
                 {
@@ -523,6 +529,7 @@ public class FtcLimelightVision
                             DetectedObject detectedObj =
                                 new DetectedObject(llResult, resultType, obj, objLabel, targetGroundOffset, cameraPose);
                             detectedList.add(detectedObj);
+                            tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objLabel);
                         }
                     }
 
