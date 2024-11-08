@@ -280,6 +280,8 @@ public class FtcMotorActuator
             if (encoder != null)
             {
                 sensors.setEncoder(encoder, params.externalEncoderInverted);
+                // Enable cartesian converter for absolute encoder.
+                ((FtcAnalogEncoder) encoder).setEnabled(true);
             }
         }
 
