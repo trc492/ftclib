@@ -35,6 +35,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -71,7 +72,8 @@ public class FtcLimelightVision
         Classifier,
         Detector,
         Fiducial,
-        Color
+        Color,
+        Python
     }   //enum ResultType
 
     /**
@@ -98,11 +100,12 @@ public class FtcLimelightVision
          * @param resultType specifies the detected object result type.
          * @param result specifies the detected object.
          * @param label specifies the detected object label if there is one.
+         * @param robotPose specifies the robot's 3D position.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
          * @param cameraPose specifies the camera position on the robot.
          */
         public DetectedObject(
-            LLResult llResult, ResultType resultType, Object result, String label,
+            LLResult llResult, ResultType resultType, Object result, String label, Pose3D robotPose,
             TargetGroundOffset targetGroundOffset, TrcPose3D cameraPose)
         {
             this.llResult = llResult;
@@ -111,7 +114,7 @@ public class FtcLimelightVision
             this.label = label;
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
-            this.robotPose = getRobotPose(llResult.getBotpose(), cameraPose);
+            this.robotPose = getRobotPose(robotPose, cameraPose);
             this.targetRect = getObjectRect();
             this.targetArea = getObjectArea();
             // getTargetPose call above will also set targetDepth.
@@ -393,14 +396,16 @@ public class FtcLimelightVision
      */
     public void setVisionEnabled(boolean enabled)
     {
-        boolean running = limelight.isRunning();
+        boolean isActive = isVisionEnabled();
 
-        if (!running && enabled)
+        if (!isActive && enabled)
         {
+            tracer.traceDebug(instanceName, "Enabling LimelightVision.");
             limelight.start();
         }
-        else if (running && !enabled)
+        else if (isActive && !enabled)
         {
+            tracer.traceDebug(instanceName, "Disabling LimelightVision.");
             limelight.pause();
         }
     }   //setVisionEnabled
@@ -412,7 +417,7 @@ public class FtcLimelightVision
      */
     public boolean isVisionEnabled()
     {
-        return limelight.isRunning();
+        return limelight.isConnected() && limelight.isRunning();
     }   //isVisionEnabled
 
     /**
@@ -428,8 +433,7 @@ public class FtcLimelightVision
         if (success)
         {
             pipelineIndex = index;
-            tracer.traceDebug(
-                instanceName, "Pipeline %d is %s.", index, limelight.isRunning()? "running": "not running");
+            tracer.traceDebug(instanceName, "Successfully set to pipeline %d.", index);
         }
 
         return success;
@@ -450,21 +454,29 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param label specifies the object label to look for, null if looking for any label.
+     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @return array list of detected objects.
      */
-    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, String label)
+    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, String label, Double robotHeading)
     {
         ArrayList<DetectedObject> detectedObjs = null;
-        LLResult llResult = limelight.getLatestResult();
+        if (robotHeading != null)
+        {
+            limelight.updateRobotOrientation(-robotHeading);
+        }
 
-        if (llResult != null && llResult.isValid())
+        LLResult llResult = limelight.getLatestResult();
+        // For some reason if the pipeline is Python script, llResult.isValid always returns false.
+        if (llResult != null && (resultType == ResultType.Python || llResult.isValid()))
         {
             double resultTimestamp = llResult.getTimestamp();
             // Process only fresh detection.
             if (lastResultTimestamp == null || resultTimestamp != lastResultTimestamp)
             {
                 List<?> resultList = null;
+                double[] pythonOutput = null;
                 ArrayList<DetectedObject> detectedList = new ArrayList<>();
+                Pose3D robotPose = robotHeading != null? llResult.getBotpose_MT2(): llResult.getBotpose();
                 lastResultTimestamp = resultTimestamp;
 
                 switch (resultType)
@@ -488,11 +500,16 @@ public class FtcLimelightVision
                     case Color:
                         resultList = llResult.getColorResults();
                         break;
+
+                    case Python:
+                        pythonOutput = llResult.getPythonOutput();
+                        break;
                 }
                 tracer.traceDebug(
-                    instanceName, "Tx=%.3f, Ty=%.3f, Ta=%.3f, BotPose=%s, ResultList(%s)=%d",
-                    llResult.getTx(), llResult.getTy(), llResult.getTa(), llResult.getBotpose(), resultType,
-                    resultList != null? resultList.size(): 0);
+                    instanceName, "Tx=%.3f, Ty=%.3f, Ta=%.3f, BotPose=%s, ResultListLen(%s)=%d, PythonOutput=%s",
+                    llResult.getTx(), llResult.getTy(), llResult.getTa(), robotPose, resultType,
+                    resultList != null? resultList.size(): 0,
+                    pythonOutput != null? Arrays.toString(pythonOutput): "null");
 
                 if (resultList != null)
                 {
@@ -527,7 +544,8 @@ public class FtcLimelightVision
                         if (label == null || label.equals(objLabel))
                         {
                             DetectedObject detectedObj =
-                                new DetectedObject(llResult, resultType, obj, objLabel, targetGroundOffset, cameraPose);
+                                new DetectedObject(
+                                    llResult, resultType, obj, objLabel, robotPose, targetGroundOffset, cameraPose);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objLabel);
                         }
@@ -537,6 +555,15 @@ public class FtcLimelightVision
                     {
                         detectedObjs = detectedList;
                     }
+                }
+                else if (pythonOutput != null)
+                {
+                    DetectedObject detectedObj =
+                        new DetectedObject(
+                            llResult, resultType, pythonOutput, llResult.getPipelineType(), robotPose, targetGroundOffset,
+                            cameraPose);
+                    detectedList.add(detectedObj);
+                    detectedObjs = detectedList;
                 }
             }
         }
@@ -562,14 +589,16 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param label specifies the object label to look for, null if looking for any label.
+     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return filtered target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        ResultType resultType, String label, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        ResultType resultType, String label, Double robotHeading,
+        Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label);
+        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label, robotHeading);
 
         if (detectedObjects != null)
         {
@@ -597,15 +626,17 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param label specifies the object label to look for, null if looking for any label.
+     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
-        ResultType resultType, String label, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        ResultType resultType, String label, Double robotHeading,
+        Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(resultType, label, comparator);
+            getDetectedTargetsInfo(resultType, label, robotHeading, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
