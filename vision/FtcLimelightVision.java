@@ -297,15 +297,22 @@ public class FtcLimelightVision
         {
             TrcPose2D targetPose;
             double camPitchRadians = Math.toRadians(cameraPose.pitch);
-            double targetPitchRadians = Math.toRadians(llResult.getTy());
+            double targetPitchDegrees = llResult.getTy();
             double targetYawDegrees = llResult.getTx();
+            double targetPitchRadians = Math.toRadians(targetPitchDegrees);
             double targetYawRadians = Math.toRadians(targetYawDegrees);
+            double groundOffset = targetGroundOffset.getOffset(resultType);
 
             targetDepth =
-                (targetGroundOffset.getOffset(resultType) - cameraPose.z) /
-                Math.tan(camPitchRadians + targetPitchRadians);
+                (groundOffset - cameraPose.z) / Math.tan(camPitchRadians + targetPitchRadians);
             targetPose = new TrcPose2D(
                 targetDepth * Math.sin(targetYawRadians), targetDepth * Math.cos(targetYawRadians), targetYawDegrees);
+            TrcDbgTrace.globalTraceDebug(
+                "LimelightObject." + resultType,
+                "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetPitch=%.1f, targetDepth=%.1f, targetYaw=%.1f, " +
+                "targetPose=%s",
+                groundOffset, cameraPose.z, cameraPose.pitch, targetPitchDegrees, targetDepth, targetYawDegrees,
+                targetPose);
 
             return targetPose;
         }   //getTargetPose
