@@ -46,7 +46,6 @@ public class FtcServoActuator
 
         private double logicalPosMin = 0.0;
         private double logicalPosMax = 1.0;
-
         private double physicalPosMin = 0.0;
         private double physicalPosMax = 1.0;
 
