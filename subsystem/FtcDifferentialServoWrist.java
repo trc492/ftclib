@@ -43,6 +43,9 @@ public class FtcDifferentialServoWrist
     {
         private FtcServoActuator.Params servo1Params = null;
         private FtcServoActuator.Params servo2Params = null;
+        private double presetTolerance = 0.0;
+        private double[] tiltPosPresets = null;
+        private double[] rotatePosPresets = null;
 
         /**
          * This method returns the string format of the Params info.
@@ -137,6 +140,22 @@ public class FtcDifferentialServoWrist
             return this;
         }   //setServo2
 
+        /**
+         * This method sets the position preset parameters for both tilt and rotate.
+         *
+         * @param presetTolerance specifies the preset tolerance.
+         * @param tiltPosPresets specifies the tilt position preset array.
+         * @param rotatePosPresets specifies the rotate position preset array.
+         * @return this object for chaining.
+         */
+        public Params setPosPresets(double presetTolerance, double[] tiltPosPresets, double[] rotatePosPresets)
+        {
+            this.presetTolerance = presetTolerance;
+            this.tiltPosPresets = tiltPosPresets;
+            this.rotatePosPresets = rotatePosPresets;
+            return this;
+        }   //setPosPresets
+
     }   //class Params
 
     private final TrcDifferentialServoWrist wrist;
@@ -152,7 +171,12 @@ public class FtcDifferentialServoWrist
         TrcServo servo1 = new FtcServoActuator(params.servo1Params).getServo();
         TrcServo servo2 = new FtcServoActuator(params.servo2Params).getServo();
 
-        wrist = new TrcDifferentialServoWrist(instanceName, servo1, servo2);
+        TrcDifferentialServoWrist.Params wristParams = new TrcDifferentialServoWrist.Params().setServos(servo1, servo2);
+        if (params.tiltPosPresets != null && params.rotatePosPresets != null)
+        {
+            wristParams.setPosPresets(params.presetTolerance, params.tiltPosPresets, params.rotatePosPresets);
+        }
+        wrist = new TrcDifferentialServoWrist(instanceName, wristParams);
     }   //FtcDifferentialServoWrist
 
     /**
