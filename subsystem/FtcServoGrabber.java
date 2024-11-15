@@ -65,8 +65,8 @@ public class FtcServoGrabber
         @Override
         public String toString()
         {
-            return "servoParams=" + servoParams +
-                   ",openPos=" + openPos +
+            return "servoParams=(" + servoParams +
+                   "),openPos=" + openPos +
                    ",openTime=" + openTime +
                    ",closePos=" + closePos +
                    ",closeTime=" + closeTime +

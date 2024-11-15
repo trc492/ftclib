@@ -45,10 +45,11 @@ public class FtcServo extends TrcServo
      *
      * @param hardwareMap specifies the global hardware map.
      * @param instanceName specifies the instance name.
+     * @param params specifies the parameters of the servo.
      */
-    public FtcServo(HardwareMap hardwareMap, String instanceName)
+    public FtcServo(HardwareMap hardwareMap, String instanceName, TrcServo.Params params)
     {
-        super(instanceName);
+        super(instanceName, params);
         servo = hardwareMap.get(Servo.class, instanceName);
         controller = servo.getController();
         timer = new TrcTimer(instanceName);
@@ -58,10 +59,21 @@ public class FtcServo extends TrcServo
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
+     * @param params specifies the parameters of the servo.
+     */
+    public FtcServo(String instanceName, Params params)
+    {
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, params);
+    }   //FtcServo
+
+    /**
+     * Constructor: Creates an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
      */
     public FtcServo(String instanceName)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, null);
     }   //FtcServo
 
     /**
@@ -77,9 +89,11 @@ public class FtcServo extends TrcServo
     /**
      * This method cancels the holdTimer and stops the state machine if it is running.
      */
+    @Override
     public void cancel()
     {
         timer.cancel();
+        super.cancel();
     }   //cancel
 
     /**
