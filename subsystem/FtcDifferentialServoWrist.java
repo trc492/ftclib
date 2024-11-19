@@ -24,6 +24,8 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
+
 import ftclib.motor.FtcServoActuator;
 import trclib.motor.TrcServo;
 import trclib.subsystem.TrcDifferentialServoWrist;
@@ -43,6 +45,12 @@ public class FtcDifferentialServoWrist
     {
         private FtcServoActuator.Params servo1Params = null;
         private FtcServoActuator.Params servo2Params = null;
+        private double logicalMin = 0.0;
+        private double logicalMax = 1.0;
+        private double physicalPosRange = 1.0;
+        private double tiltPosOffset = 0.5;
+        private double rotatePosOffset = 0.5;
+        private double maxStepRate = 0.0;
         private double presetTolerance = 0.0;
         private double[] tiltPosPresets = null;
         private double[] rotatePosPresets = null;
@@ -57,88 +65,72 @@ public class FtcDifferentialServoWrist
         public String toString()
         {
             return "servo1Params=" + servo1Params +
-                   ",servo2Params=" + servo2Params;
+                   ",servo2Params=" + servo2Params +
+                   ",logRangeMin=" + logicalMin +
+                   ",logRangeMax=" + logicalMax +
+                   ",phyRange=" + physicalPosRange +
+                   ",tiltOffset=" + tiltPosOffset +
+                   ",rotateOffset=" + rotatePosOffset +
+                   ",maxStepRate=" + maxStepRate +
+                   ",presetTolerance=" + presetTolerance +
+                   ",tiltPresets=" + Arrays.toString(tiltPosPresets) +
+                   ",rotatePresets=" + Arrays.toString(rotatePosPresets);
         }   //toString
 
         /**
-         * This methods sets the parameters of servo 1.
+         * This methods sets the parameters of the two servos.
          *
-         * @param servoName specifies the name of servo.
-         * @param servoInverted specifies true if servo is inverted, false otherwise.
-         * @param logicalMin specifies the minimum value of the logical range.
-         * @param logicalMax specifies the maximum value of the logical range.
-         * @param physicalMin specifies the minimum value of the physical range.
-         * @param physicalMax specifies the maximum value of the physical range.
-         * @param maxStepRate specifies the maximum stepping rate (physicalPos/sec).
+         * @param servo1Name specifies the name of servo1.
+         * @param servo1Inverted specifies true if servo1 is inverted, false otherwise.
+         * @param servo2Name specifies the name of servo2.
+         * @param servo2Inverted specifies true if servo2 is inverted, false otherwise.
          * @return this object for chaining.
          */
-        public Params setServo1(
-            String servoName, boolean servoInverted, double logicalMin, double logicalMax,
-            double physicalMin, double physicalMax, double maxStepRate)
+        public Params setServos(String servo1Name, boolean servo1Inverted, String servo2Name, boolean servo2Inverted)
         {
-            this.servo1Params = new FtcServoActuator.Params()
-                .setPrimaryServo(servoName, servoInverted)
-                .setLogicalPosRange(logicalMin, logicalMax)
-                .setPhysicalPosRange(physicalMin, physicalMax)
-                .setMaxStepRate(maxStepRate);
+            this.servo1Params = new FtcServoActuator.Params().setPrimaryServo(servo1Name, servo1Inverted);
+            this.servo2Params = new FtcServoActuator.Params().setPrimaryServo(servo2Name, servo2Inverted);
             return this;
-        }   //setServo1
+        }   //setServos
 
         /**
-         * This methods sets the parameters of servo 1.
+         * This method sets the position range of the servos. Because of the nature of differential wrist, tilt
+         * position range must be the same as rotate position range.
          *
-         * @param servoName specifies the name of servo.
-         * @param servoInverted specifies true if servo is inverted, false otherwise.
-         * @param maxStepRate specifies the maximum stepping rate (physicalPos/sec).
+         * @param logicalMin specifies the logical minimum value of the servos. Typically 0.0.
+         * @param logicalMax specifies the logical maximum value of the servos. Typically 1.0.
+         * @param physicalRange specifies the physical position range, typically the servo movement range in degrees.
+         *        For example, for 180-degree servo, physicalPosRange will be 180.0.
+         * @param tiltOffset specifies the tilt position offset. This is the offset from physical zero position to
+         *        the tilt range center position. For example, if the tilt range center is 45 degrees below physical
+         *        zero position, tiltPosOffset will be -45.0.
+         * @param rotateOffset specifies the rotate position offset. This is the offset from physical zero position
+         *        to the rotate range center position. For example, if the rotate range center is exactly physical
+         *        zero position, rotatePosOffset will be 0.0.
          * @return this object for chaining.
          */
-        public Params setServo1(String servoName, boolean servoInverted, double maxStepRate)
+        public Params setPosRange(
+            double logicalMin, double logicalMax, double physicalRange, double tiltOffset, double rotateOffset)
         {
-            this.servo1Params = new FtcServoActuator.Params()
-                .setPrimaryServo(servoName, servoInverted)
-                .setMaxStepRate(maxStepRate);
+            this.logicalMin = logicalMin;
+            this.logicalMax = logicalMax;
+            this.physicalPosRange = physicalRange;
+            this.tiltPosOffset = tiltOffset;
+            this.rotatePosOffset = rotateOffset;
             return this;
-        }   //setServo1
+        }   //setPosRange
 
         /**
-         * This methods sets the parameters of servo 2.
+         * This method sets the maximum speed of the servo.
          *
-         * @param servoName specifies the name of servo.
-         * @param servoInverted specifies true if servo is inverted, false otherwise.
-         * @param logicalMin specifies the minimum value of the logical range.
-         * @param logicalMax specifies the maximum value of the logical range.
-         * @param physicalMin specifies the minimum value of the physical range.
-         * @param physicalMax specifies the maximum value of the physical range.
-         * @param maxStepRate specifies the maximum stepping rate (physicalPos/sec).
+         * @param maxStepRate specifies the maximum speed of the servo in degrees per second.
          * @return this object for chaining.
          */
-        public Params setServo2(
-            String servoName, boolean servoInverted, double logicalMin, double logicalMax,
-            double physicalMin, double physicalMax, double maxStepRate)
+        public Params setMaxStepRate(double maxStepRate)
         {
-            this.servo2Params = new FtcServoActuator.Params()
-                .setPrimaryServo(servoName, servoInverted)
-                .setLogicalPosRange(logicalMin, logicalMax)
-                .setPhysicalPosRange(physicalMin, physicalMax)
-                .setMaxStepRate(maxStepRate);
+            this.maxStepRate = maxStepRate;
             return this;
-        }   //setServo2
-
-        /**
-         * This methods sets the parameters of servo 2.
-         *
-         * @param servoName specifies the name of servo.
-         * @param servoInverted specifies true if servo is inverted, false otherwise.
-         * @param maxStepRate specifies the maximum stepping rate (physicalPos/sec).
-         * @return this object for chaining.
-         */
-        public Params setServo2(String servoName, boolean servoInverted, double maxStepRate)
-        {
-            this.servo2Params = new FtcServoActuator.Params()
-                .setPrimaryServo(servoName, servoInverted)
-                .setMaxStepRate(maxStepRate);
-            return this;
-        }   //setServo2
+        }   //setMaxStepRate
 
         /**
          * This method sets the position preset parameters for both tilt and rotate.
@@ -170,12 +162,14 @@ public class FtcDifferentialServoWrist
     {
         TrcServo servo1 = new FtcServoActuator(params.servo1Params).getServo();
         TrcServo servo2 = new FtcServoActuator(params.servo2Params).getServo();
+        TrcDifferentialServoWrist.Params wristParams = new TrcDifferentialServoWrist.Params()
+            .setServos(servo1, servo2)
+            .setPosRange(
+                params.logicalMin, params.logicalMax, params.physicalPosRange, params.tiltPosOffset,
+                params.rotatePosOffset)
+            .setMaxStepRate(params.maxStepRate)
+            .setPosPresets(params.presetTolerance, params.tiltPosPresets, params.rotatePosPresets);
 
-        TrcDifferentialServoWrist.Params wristParams = new TrcDifferentialServoWrist.Params().setServos(servo1, servo2);
-        if (params.tiltPosPresets != null && params.rotatePosPresets != null)
-        {
-            wristParams.setPosPresets(params.presetTolerance, params.tiltPosPresets, params.rotatePosPresets);
-        }
         wrist = new TrcDifferentialServoWrist(instanceName, wristParams);
     }   //FtcDifferentialServoWrist
 
