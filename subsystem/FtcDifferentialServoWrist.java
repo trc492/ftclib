@@ -48,9 +48,13 @@ public class FtcDifferentialServoWrist
         private double logicalMin = 0.0;
         private double logicalMax = 1.0;
         private double physicalPosRange = 1.0;
-        private double tiltPosOffset = 0.5;
-        private double rotatePosOffset = 0.5;
+        private double tiltPosOffset = 0.0;
+        private double rotatePosOffset = 0.0;
         private double maxStepRate = 0.0;
+        private double tiltPosLowLimit = 0.0;
+        private double tiltPosHighLimit = 1.0;
+        private double rotatePosLowLimit = 0.0;
+        private double rotatePosHighLimit = 1.0;
         private double presetTolerance = 0.0;
         private double[] tiltPosPresets = null;
         private double[] rotatePosPresets = null;
@@ -72,6 +76,10 @@ public class FtcDifferentialServoWrist
                    ",tiltOffset=" + tiltPosOffset +
                    ",rotateOffset=" + rotatePosOffset +
                    ",maxStepRate=" + maxStepRate +
+                   ",tiltPosLowLimit=" + tiltPosLowLimit +
+                   ",tiltPosHighLimit=" + tiltPosHighLimit +
+                   ",rotatePosLowLimit=" + rotatePosLowLimit +
+                   ",rotatePosHighLimit=" + rotatePosHighLimit +
                    ",presetTolerance=" + presetTolerance +
                    ",tiltPresets=" + Arrays.toString(tiltPosPresets) +
                    ",rotatePresets=" + Arrays.toString(rotatePosPresets);
@@ -133,6 +141,25 @@ public class FtcDifferentialServoWrist
         }   //setMaxStepRate
 
         /**
+         * This method sets the tilt and rotate position limits.
+         *
+         * @param tiltPosLowLimit specifies the tilt position low limit in physical unit.
+         * @param tiltPosHighLimit specifies the tilt position high limit in physical unit.
+         * @param rotatePosLowLimit specifies the rotate position low limit in physical unit.
+         * @param rotatePosHighLimit specifies the rotate position high limit in physical unit.
+         * @return this object for chaining.
+         */
+        public Params setPositionLimits(
+            double tiltPosLowLimit, double tiltPosHighLimit, double rotatePosLowLimit, double rotatePosHighLimit)
+        {
+            this.tiltPosLowLimit = tiltPosLowLimit;
+            this.tiltPosHighLimit = tiltPosHighLimit;
+            this.rotatePosLowLimit = rotatePosLowLimit;
+            this.rotatePosHighLimit = rotatePosHighLimit;
+            return this;
+        }   //setPositionLimits
+
+        /**
          * This method sets the position preset parameters for both tilt and rotate.
          *
          * @param presetTolerance specifies the preset tolerance.
@@ -168,6 +195,8 @@ public class FtcDifferentialServoWrist
                 params.logicalMin, params.logicalMax, params.physicalPosRange, params.tiltPosOffset,
                 params.rotatePosOffset)
             .setMaxStepRate(params.maxStepRate)
+            .setPositionLimits(
+                params.tiltPosLowLimit, params.tiltPosHighLimit, params.rotatePosLowLimit, params.rotatePosHighLimit)
             .setPosPresets(params.presetTolerance, params.tiltPosPresets, params.rotatePosPresets);
 
         wrist = new TrcDifferentialServoWrist(instanceName, wristParams);
