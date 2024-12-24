@@ -32,8 +32,7 @@ public class FtcMatchInfo
     {
         PRACTICE,
         QUALIFICATION,
-        SEMI_FINAL,
-        FINAL
+        PLAYOFF
     }   //enum MatchType
 
     public Date matchDate;
@@ -82,8 +81,7 @@ public class FtcMatchInfo
         //
         matchTypeMenu.addChoice("Practice", MatchType.PRACTICE, true, matchNumberMenu);
         matchTypeMenu.addChoice("Qualification", MatchType.QUALIFICATION, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Semi-final", MatchType.SEMI_FINAL, false, matchNumberMenu);
-        matchTypeMenu.addChoice("Final", MatchType.FINAL, false, matchNumberMenu);
+        matchTypeMenu.addChoice("Playoff", MatchType.PLAYOFF, false, matchNumberMenu);
         //
         // Traverse menus.
         //
