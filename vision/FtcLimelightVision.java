@@ -89,6 +89,8 @@ public class FtcLimelightVision
         public final TargetGroundOffset targetGroundOffset;
         public final TrcPose2D targetPose;
         public final TrcPose2D robotPose;
+        public final Point[] vertices;
+        public final double pixelWidth, pixelHeight, rotatedAngle;
         public final Rect targetRect;
         public final double targetArea;
         public double targetDepth;
@@ -115,6 +117,23 @@ public class FtcLimelightVision
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
             this.robotPose = getRobotPose(robotPose, cameraPose);
+            this.vertices = getRotatedRectVertices();
+            double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
+            double side2 = TrcUtil.magnitude(vertices[2].x - vertices[1].x, vertices[2].y - vertices[1].y);
+            if (side1 > side2)
+            {
+                pixelWidth = side1;
+                pixelHeight = side2;
+                rotatedAngle = Math.toDegrees(Math.atan(
+                    (vertices[1].y - vertices[0].y) / (vertices[1].x - vertices[0].x)));
+            }
+            else
+            {
+                pixelWidth = side2;
+                pixelHeight = side1;
+                rotatedAngle = Math.toDegrees(Math.atan(
+                    (vertices[2].y - vertices[1].y) / (vertices[2].x - vertices[1].x)));
+            }
             this.targetRect = getObjectRect();
             this.targetArea = getObjectArea();
             // getTargetPose call above will also set targetDepth.
@@ -135,7 +154,10 @@ public class FtcLimelightVision
                    ",robotPose=" + robotPose +
                    ",rect=" + targetRect +
                    ",area=" + targetArea +
-                   ",depth=" + targetDepth + "}";
+                   ",depth=" + targetDepth +
+                   "},rotatedRect=(width=" + getPixelWidth() +
+                   ",height=" + getPixelHeight() +
+                   ",angle=" + getRotatedAngle();
         }   //toString
 
         /**
@@ -147,7 +169,6 @@ public class FtcLimelightVision
         public Rect getObjectRect()
         {
             Rect rect = null;
-            Point[] vertices = getRotatedRectVertices();
 
             if (vertices != null)
             {
@@ -205,6 +226,39 @@ public class FtcLimelightVision
 //
 //            return area;
         }   //getObjectArea
+
+        /**
+         * This method returns the object's pixel width.
+         *
+         * @return object pixel width, null if not supported.
+         */
+        @Override
+        public Double getPixelWidth()
+        {
+            return pixelWidth;
+        }   //getPixelWidth
+
+        /**
+         * This method returns the object's pixel height.
+         *
+         * @return object pixel height, null if not supported.
+         */
+        @Override
+        public Double getPixelHeight()
+        {
+            return pixelHeight;
+        }   //getPixelHeight
+
+        /**
+         * This method returns the object's rotated rectangle angle.
+         *
+         * @return rotated rectangle angle.
+         */
+        @Override
+        public Double getRotatedAngle()
+        {
+            return rotatedAngle;
+        }   //getRotatedAngle
 
         /**
          * This method returns the pose of the detected object relative to the camera.

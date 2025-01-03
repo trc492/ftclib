@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import trclib.dataprocessor.TrcUtil;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.pathdrive.TrcPose2D;
 import trclib.vision.TrcVisionTargetInfo;
@@ -55,6 +56,7 @@ public class FtcVisionAprilTag
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public AprilTagDetection aprilTagDetection;
+        public double pixelWidth, pixelHeight, rotatedAngle;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -64,6 +66,28 @@ public class FtcVisionAprilTag
         public DetectedObject(AprilTagDetection aprilTagDetection)
         {
             this.aprilTagDetection = aprilTagDetection;
+            double side1 = TrcUtil.magnitude(
+                aprilTagDetection.corners[1].x - aprilTagDetection.corners[0].x,
+                aprilTagDetection.corners[1].y - aprilTagDetection.corners[0].y);
+            double side2 = TrcUtil.magnitude(
+                aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x,
+                aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y);
+            if (side1 > side2)
+            {
+                pixelWidth = side1;
+                pixelHeight = side2;
+                rotatedAngle = Math.toDegrees(Math.atan(
+                    (aprilTagDetection.corners[1].y - aprilTagDetection.corners[0].y) /
+                    (aprilTagDetection.corners[1].x - aprilTagDetection.corners[0].x)));
+            }
+            else
+            {
+                pixelWidth = side2;
+                pixelHeight = side1;
+                rotatedAngle = Math.toDegrees(Math.atan(
+                    (aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y) /
+                    (aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x)));
+            }
         }   //DetectedObject
 
         /**
@@ -117,6 +141,39 @@ public class FtcVisionAprilTag
             // AprilTag detection does not provide area, just calculate it from rect.
             return getDetectedRect(aprilTagDetection).area();
         }   //getObjectArea
+
+        /**
+         * This method returns the object's pixel width.
+         *
+         * @return object pixel width, null if not supported.
+         */
+        @Override
+        public Double getPixelWidth()
+        {
+            return pixelWidth;
+        }   //getPixelWidth
+
+        /**
+         * This method returns the object's pixel height.
+         *
+         * @return object pixel height, null if not supported.
+         */
+        @Override
+        public Double getPixelHeight()
+        {
+            return pixelHeight;
+        }   //getPixelHeight
+
+        /**
+         * This method returns the object's rotated rectangle angle.
+         *
+         * @return rotated rectangle angle.
+         */
+        @Override
+        public Double getRotatedAngle()
+        {
+            return rotatedAngle;
+        }   //getRotatedAngle
 
         /**
          * This method returns the pose of the detected object relative to the camera.
@@ -215,14 +272,18 @@ public class FtcVisionAprilTag
                        ",fieldPos=" + aprilTagDetection.metadata.fieldPosition +
                        ",hamming=" + aprilTagDetection.hamming +
                        ",decisionMargin=" + aprilTagDetection.decisionMargin +
-                       "}";
+                       "},rotatedRect=(width=" + getPixelWidth() +
+                       ",height=" + getPixelHeight() +
+                       ",angle=" + getRotatedAngle();
             }
             else
             {
                 return "{id=" + aprilTagDetection.id +
                        ",center=" + aprilTagDetection.center +
                        ",rect=" + getObjectRect() +
-                       "}";
+                       "},rotatedRect=(width=" + getPixelWidth() +
+                       ",height=" + getPixelHeight() +
+                       ",angle=" + getRotatedAngle();
             }
         }   //toString
 
