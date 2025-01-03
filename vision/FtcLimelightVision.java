@@ -120,7 +120,7 @@ public class FtcLimelightVision
             this.vertices = getRotatedRectVertices();
             double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
             double side2 = TrcUtil.magnitude(vertices[2].x - vertices[1].x, vertices[2].y - vertices[1].y);
-            if (side1 > side2)
+            if (side2 > side1)
             {
                 pixelWidth = side1;
                 pixelHeight = side2;

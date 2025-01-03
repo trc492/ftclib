@@ -72,7 +72,7 @@ public class FtcVisionAprilTag
             double side2 = TrcUtil.magnitude(
                 aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x,
                 aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y);
-            if (side1 > side2)
+            if (side2 > side1)
             {
                 pixelWidth = side1;
                 pixelHeight = side2;
