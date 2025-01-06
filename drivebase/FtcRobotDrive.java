@@ -102,12 +102,13 @@ public class FtcRobotDrive
         // Drive Motor Odometry
         public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // Robot Drive Characteristics
-        public double robotMaxVelocity = 0.0;
-        public double robotMaxAcceleration = 0.0;
-        public double robotMaxTurnRate = 0.0;
-        public double profiledMaxVelocity = robotMaxVelocity;
-        public double profiledMaxAcceleration = robotMaxAcceleration;
-        public double profiledMaxTurnRate = robotMaxTurnRate;
+        public Double robotMaxVelocity = null;
+        public Double robotMaxAcceleration = null;
+        public Double robotMaxTurnRate = null;
+        public Double profiledMaxVelocity = robotMaxVelocity;
+        public Double profiledMaxAcceleration = robotMaxAcceleration;
+        public Double profiledMaxDeceleration = robotMaxAcceleration;
+        public Double profiledMaxTurnRate = robotMaxTurnRate;
         // DriveBase PID Parameters
         public double drivePidTolerance = 0.0, turnPidTolerance = 0.0;
         public TrcPidController.PidCoefficients xDrivePidCoeffs = null;
