@@ -104,10 +104,11 @@ public class FtcRobotDrive
         // Robot Drive Characteristics
         public Double robotMaxVelocity = null;
         public Double robotMaxAcceleration = null;
+        public Double robotMaxDeceleration = null;
         public Double robotMaxTurnRate = null;
         public Double profiledMaxVelocity = robotMaxVelocity;
         public Double profiledMaxAcceleration = robotMaxAcceleration;
-        public Double profiledMaxDeceleration = robotMaxAcceleration;
+        public Double profiledMaxDeceleration = robotMaxDeceleration;
         public Double profiledMaxTurnRate = robotMaxTurnRate;
         // DriveBase PID Parameters
         public double drivePidTolerance = 0.0, turnPidTolerance = 0.0;
