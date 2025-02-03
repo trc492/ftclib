@@ -111,6 +111,10 @@ public class FtcRobotDrive
         public Double profiledMaxDeceleration = robotMaxDeceleration;
         public Double profiledMaxTurnRate = robotMaxTurnRate;
         // DriveBase PID Parameters
+        public boolean usePidDrive = false;
+        public boolean enablePidDriveSquareRootPid = false;
+        public boolean usePurePursuitDrive = false;
+        public boolean enablePurePursuitDriveSquareRootPid = false;
         public double drivePidTolerance = 0.0, turnPidTolerance = 0.0;
         public TrcPidController.PidCoefficients xDrivePidCoeffs = null;
         public double xDrivePidPowerLimit = 1.0;
@@ -201,45 +205,52 @@ public class FtcRobotDrive
 
         this.driveBase = driveBase;
         // Create and initialize PID controllers.
-        if (supportHolonomic)
+        if (robotInfo.usePidDrive)
         {
-            pidDrive = new TrcPidDrive(
-                "pidDrive", driveBase,
-                robotInfo.xDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getXPosition,
-                robotInfo.yDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getYPosition,
-                robotInfo.turnPidCoeffs, robotInfo.turnPidTolerance, driveBase::getHeading);
-            pidCtrl = pidDrive.getXPidCtrl();
-            pidCtrl.setOutputLimit(robotInfo.xDrivePidPowerLimit);
-            pidCtrl.setRampRate(robotInfo.xDriveMaxPidRampRate);
+            if (supportHolonomic)
+            {
+                pidDrive = new TrcPidDrive(
+                    "pidDrive", driveBase,
+                    robotInfo.xDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getXPosition,
+                    robotInfo.yDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getYPosition,
+                    robotInfo.turnPidCoeffs, robotInfo.turnPidTolerance, driveBase::getHeading);
+                pidCtrl = pidDrive.getXPidCtrl();
+                pidCtrl.setOutputLimit(robotInfo.xDrivePidPowerLimit);
+                pidCtrl.setRampRate(robotInfo.xDriveMaxPidRampRate);
+            }
+            else
+            {
+                pidDrive = new TrcPidDrive(
+                    "pidDrive", driveBase,
+                    robotInfo.yDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getYPosition,
+                    robotInfo.turnPidCoeffs, robotInfo.turnPidTolerance, driveBase::getHeading);
+            }
+            pidCtrl = pidDrive.getYPidCtrl();
+            pidCtrl.setOutputLimit(robotInfo.yDrivePidPowerLimit);
+            pidCtrl.setRampRate(robotInfo.yDriveMaxPidRampRate);
+
+            pidCtrl = pidDrive.getTurnPidCtrl();
+            pidCtrl.setOutputLimit(robotInfo.turnPidPowerLimit);
+            pidCtrl.setRampRate(robotInfo.turnMaxPidRampRate);
+            pidCtrl.setAbsoluteSetPoint(true);
+            // AbsoluteTargetMode eliminates cumulative errors on multi-segment runs because drive base is keeping track
+            // of the absolute target position.
+            pidDrive.setAbsoluteTargetModeEnabled(true);
+            pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
+            pidDrive.setSquareRootPidEnabled(robotInfo.enablePidDriveSquareRootPid);
         }
-        else
+
+        if (robotInfo.usePurePursuitDrive)
         {
-            pidDrive = new TrcPidDrive(
-                "pidDrive", driveBase,
-                robotInfo.yDrivePidCoeffs, robotInfo.drivePidTolerance, driveBase::getYPosition,
-                robotInfo.turnPidCoeffs, robotInfo.turnPidTolerance, driveBase::getHeading);
+            purePursuitDrive = new TrcPurePursuitDrive(
+                "purePursuitDrive", driveBase,
+                robotInfo.ppdFollowingDistance, robotInfo.drivePidTolerance, robotInfo.turnPidTolerance,
+                robotInfo.xDrivePidCoeffs, robotInfo.yDrivePidCoeffs, robotInfo.turnPidCoeffs, robotInfo.velPidCoeffs);
+            purePursuitDrive.setMoveOutputLimit(robotInfo.yDrivePidPowerLimit);
+            purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
+            purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
+            purePursuitDrive.setSquareRootPidEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
         }
-
-        pidCtrl = pidDrive.getYPidCtrl();
-        pidCtrl.setOutputLimit(robotInfo.yDrivePidPowerLimit);
-        pidCtrl.setRampRate(robotInfo.yDriveMaxPidRampRate);
-
-        pidCtrl = pidDrive.getTurnPidCtrl();
-        pidCtrl.setOutputLimit(robotInfo.turnPidPowerLimit);
-        pidCtrl.setRampRate(robotInfo.turnMaxPidRampRate);
-        pidCtrl.setAbsoluteSetPoint(true);
-        // AbsoluteTargetMode eliminates cumulative errors on multi-segment runs because drive base is keeping track
-        // of the absolute target position.
-        pidDrive.setAbsoluteTargetModeEnabled(true);
-        pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
-
-        purePursuitDrive = new TrcPurePursuitDrive(
-            "purePursuitDrive", driveBase,
-            robotInfo.ppdFollowingDistance, robotInfo.drivePidTolerance, robotInfo.turnPidTolerance,
-            robotInfo.xDrivePidCoeffs, robotInfo.yDrivePidCoeffs, robotInfo.turnPidCoeffs, robotInfo.velPidCoeffs);
-        purePursuitDrive.setMoveOutputLimit(robotInfo.yDrivePidPowerLimit);
-        purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
-        purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
 
         if (robotInfo.odometryType == TrcDriveBase.OdometryType.OdometryWheels)
         {
