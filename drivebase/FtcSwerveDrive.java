@@ -32,11 +32,11 @@ import java.util.Scanner;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcAnalogEncoder;
+import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcSwerveDriveBase;
 import trclib.drivebase.TrcSwerveModule;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcDbgTrace;
-import trclib.robotcore.TrcPidController;
 import trclib.sensor.TrcEncoder;
 
 /**
