@@ -586,4 +586,42 @@ public class FtcDashboard extends TrcDashboard
         telemetry.addData(key, value);
     }   //putString
 
+    /**
+     * This method returns the value of the named object data read from the Telemetry class. If the named data does
+     * not exist, it is created and assigned the given default value. Then it is sent to the Driver Station.
+     *
+     * @param key specifies the name associated with the object data.
+     * @param defaultValue specifies the default value if it does not exist.
+     * @return object data value.
+     */
+    @Override
+    public Object getObject(String key, Object defaultValue)
+    {
+        Object value;
+
+        try
+        {
+            value = getValue(key);
+        }
+        catch (NoSuchElementException e)
+        {
+            putObject(key, defaultValue);
+            value = defaultValue;
+        }
+
+        return value;
+    }   //getObject
+
+    /**
+     * This method sets the named object data with the given value and also sends it to the Driver Station.
+     *
+     * @param key specifies the name associated with the object data.
+     * @param value specifies the data value.
+     */
+    @Override
+    public void putObject(String key, Object value)
+    {
+        telemetry.addData(key, value);
+    }   //putObject
+
 }   //class FtcDashboard
