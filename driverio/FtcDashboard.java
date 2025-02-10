@@ -123,6 +123,16 @@ public class FtcDashboard extends TrcDashboard
     }   //FtcDashboard
 
     /**
+     * This method returns the telemetry object for direct telemetry access.
+     *
+     * @return telemetry object.
+     */
+    public Telemetry getTelemetry()
+    {
+        return telemetry;
+    }   //getTelemetry
+
+    /**
      * This method returns the value of the named boolean data read from the Telemetry class.
      *
      * @param key specifies the name associated with the boolean data.
