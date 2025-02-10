@@ -25,6 +25,8 @@ package ftclib.driverio;
 import android.graphics.Paint;
 import android.widget.TextView;
 
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import java.util.Locale;
@@ -106,7 +108,8 @@ public class FtcDashboard extends TrcDashboard
         super(numLines);
 
         instance = this;
-        this.telemetry = telemetry;
+        this.telemetry = new MultipleTelemetry(
+            telemetry, com.acmerobotics.dashboard.FtcDashboard.getInstance().getTelemetry());
         telemetry.clearAll();
         telemetry.setAutoClear(false);
         display = new Telemetry.Item[numLines];
