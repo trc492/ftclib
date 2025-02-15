@@ -111,10 +111,6 @@ public class FtcRobotDrive
         public Double profiledMaxDeceleration = robotMaxDeceleration;
         public Double profiledMaxTurnRate = robotMaxTurnRate;
         // DriveBase PID Parameters
-        public boolean usePidDrive = false;
-        public boolean enablePidDriveSquareRootPid = false;
-        public boolean usePurePursuitDrive = false;
-        public boolean enablePurePursuitDriveSquareRootPid = false;
         public double drivePidTolerance = 0.0, turnPidTolerance = 0.0;
         public TrcPidController.PidCoefficients xDrivePidCoeffs = null;
         public double xDrivePidPowerLimit = 1.0;
@@ -127,9 +123,15 @@ public class FtcRobotDrive
         public Double turnMaxPidRampRate = null;
         // PID Stall Detection
         public boolean pidStallDetectionEnabled = false;
+        // PidDrive Parameters
+        public boolean usePidDrive = false;
+        public boolean enablePidDriveSquareRootPid = false;
         // PurePursuit Parameters
+        public boolean usePurePursuitDrive = false;
+        public boolean enablePurePursuitDriveSquareRootPid = false;
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
+        public boolean fastModeEnabled = true;
         // Vision
         public VisionInfo webCam1 = null;
         public VisionInfo webCam2 = null;
@@ -250,6 +252,7 @@ public class FtcRobotDrive
             purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
             purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
             purePursuitDrive.setSquareRootPidEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
+            purePursuitDrive.setFastModeEnabled(robotInfo.fastModeEnabled);
         }
 
         if (robotInfo.odometryType == TrcDriveBase.OdometryType.OdometryWheels)
