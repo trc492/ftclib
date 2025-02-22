@@ -25,8 +25,6 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
-
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -36,7 +34,6 @@ import org.opencv.core.Rect;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
 import trclib.dataprocessor.TrcUtil;
 import trclib.robotcore.TrcDbgTrace;
@@ -56,7 +53,7 @@ public class FtcVisionAprilTag
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public AprilTagDetection aprilTagDetection;
-        public double pixelWidth, pixelHeight, rotatedAngle;
+        public double pixelWidth, pixelHeight, rotatedRectAngle;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -76,7 +73,7 @@ public class FtcVisionAprilTag
             {
                 pixelWidth = side1;
                 pixelHeight = side2;
-                rotatedAngle = Math.toDegrees(Math.atan(
+                rotatedRectAngle = Math.toDegrees(Math.atan(
                     (aprilTagDetection.corners[1].y - aprilTagDetection.corners[0].y) /
                     (aprilTagDetection.corners[1].x - aprilTagDetection.corners[0].x)));
             }
@@ -84,7 +81,7 @@ public class FtcVisionAprilTag
             {
                 pixelWidth = side2;
                 pixelHeight = side1;
-                rotatedAngle = Math.toDegrees(Math.atan(
+                rotatedRectAngle = Math.toDegrees(Math.atan(
                     (aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y) /
                     (aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x)));
             }
@@ -170,10 +167,10 @@ public class FtcVisionAprilTag
          * @return rotated rectangle angle.
          */
         @Override
-        public Double getRotatedAngle()
+        public Double getRotatedRectAngle()
         {
-            return rotatedAngle;
-        }   //getRotatedAngle
+            return rotatedRectAngle;
+        }   //getRotatedRectAngle
 
         /**
          * This method returns the pose of the detected object relative to the camera.
@@ -274,7 +271,7 @@ public class FtcVisionAprilTag
                        ",decisionMargin=" + aprilTagDetection.decisionMargin +
                        "},rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
-                       ",angle=" + getRotatedAngle();
+                       ",angle=" + getRotatedRectAngle();
             }
             else
             {
@@ -283,7 +280,7 @@ public class FtcVisionAprilTag
                        ",rect=" + getObjectRect() +
                        "},rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
-                       ",angle=" + getRotatedAngle();
+                       ",angle=" + getRotatedRectAngle();
             }
         }   //toString
 

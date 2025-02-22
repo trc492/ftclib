@@ -25,6 +25,8 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
@@ -67,6 +69,10 @@ public class FtcVisionEocvColorBlob
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param objWidth specifies object width in real world units (the long edge).
+     * @param objHeight specifies object height in real world units (the short edge).
+     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
+     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
@@ -74,11 +80,13 @@ public class FtcVisionEocvColorBlob
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
+            objHeight, cameraMatrix, distCoeffs);
         tracer = colorBlobProcessor.tracer;
         this.instanceName = instanceName;
 
@@ -107,13 +115,18 @@ public class FtcVisionEocvColorBlob
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param objWidth specifies object width in real world units (the long edge).
+     * @param objHeight specifies object height in real world units (the short edge).
+     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
+     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, null, null,
-             true);
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
+             objHeight, cameraMatrix, distCoeffs, null, null, true);
     }   //FtcVisionEocvColorBlob
 
     /**

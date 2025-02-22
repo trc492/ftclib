@@ -90,7 +90,7 @@ public class FtcLimelightVision
         public final TrcPose2D targetPose;
         public final TrcPose2D robotPose;
         public final Point[] vertices;
-        public final double pixelWidth, pixelHeight, rotatedAngle;
+        public final double pixelWidth, pixelHeight, rotatedRectAngle;
         public final Rect targetRect;
         public final double targetArea;
         public double targetDepth;
@@ -124,14 +124,14 @@ public class FtcLimelightVision
             {
                 pixelWidth = side1;
                 pixelHeight = side2;
-                rotatedAngle = Math.toDegrees(Math.atan(
+                rotatedRectAngle = Math.toDegrees(Math.atan(
                     (vertices[1].y - vertices[0].y) / (vertices[1].x - vertices[0].x)));
             }
             else
             {
                 pixelWidth = side2;
                 pixelHeight = side1;
-                rotatedAngle = Math.toDegrees(Math.atan(
+                rotatedRectAngle = Math.toDegrees(Math.atan(
                     (vertices[2].y - vertices[1].y) / (vertices[2].x - vertices[1].x)));
             }
             this.targetRect = getObjectRect();
@@ -157,7 +157,7 @@ public class FtcLimelightVision
                    ",depth=" + targetDepth +
                    "},rotatedRect=(width=" + getPixelWidth() +
                    ",height=" + getPixelHeight() +
-                   ",angle=" + getRotatedAngle();
+                   ",angle=" + getRotatedRectAngle();
         }   //toString
 
         /**
@@ -255,10 +255,10 @@ public class FtcLimelightVision
          * @return rotated rectangle angle.
          */
         @Override
-        public Double getRotatedAngle()
+        public Double getRotatedRectAngle()
         {
-            return rotatedAngle;
-        }   //getRotatedAngle
+            return rotatedRectAngle;
+        }   //getRotatedRectAngle
 
         /**
          * This method returns the pose of the detected object relative to the camera.

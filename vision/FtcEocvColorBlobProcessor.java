@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -69,6 +70,10 @@ public class FtcEocvColorBlobProcessor
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param objWidth specifies object width in real world units (the long edge).
+     * @param objHeight specifies object height in real world units (the short edge).
+     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
+     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -81,10 +86,12 @@ public class FtcEocvColorBlobProcessor
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, Integer lineColor,
+        Float lineWidth, Integer textColor, Float textSize)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly);
+            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
+            objHeight, cameraMatrix, distCoeffs);
 
         this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
@@ -113,13 +120,18 @@ public class FtcEocvColorBlobProcessor
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param objWidth specifies object width in real world units (the long edge).
+     * @param objHeight specifies object height in real world units (the short edge).
+     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
+     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, null, null,
-             null, null);
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
+             objHeight, cameraMatrix, distCoeffs, null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**
