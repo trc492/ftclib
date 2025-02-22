@@ -135,6 +135,28 @@ public class FtcEocvColorBlobProcessor
     }   //FtcEocvColorBlobProcessor
 
     /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param colorConversion specifies color space conversion, can be null if no color space conversion.
+     *        Note: FTC ECOV input Mat format is RGBA, so you need to do Imgproc.COLOR_RGBA2xxx or
+     *        Imgproc.COLOR_RGB2xxx conversion.
+     * @param colorThresholds specifies an array of color thresholds. If useHsv is false, the array contains RGB
+     *        thresholds (minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue). If useHsv is true, the array contains
+     *        HSV thresholds (minHue, maxHue, minSat, maxSat, minValue, maxValue).
+     * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
+     * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
+     *        if filterContourParams is null).
+     */
+    public FtcEocvColorBlobProcessor(
+        String instanceName, Integer colorConversion, double[] colorThresholds,
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
+    {
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
+             0.0, 0.0, null, null, null, null, null, null);
+    }   //FtcEocvColorBlobProcessor
+
+    /**
      * This method returns the pipeline instance name.
      *
      * @return pipeline instance Name

@@ -115,6 +115,32 @@ public class FtcVisionEocvColorBlob
      * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
      * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
      *        if filterContourParams is null).
+     * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
+     * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
+     * @param annotate specifies true to draw annotation, false otherwise.
+     */
+    public FtcVisionEocvColorBlob(
+        String instanceName, Integer colorConversion, double[] colorThresholds,
+        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
+        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
+    {
+        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
+             0.0, 0.0, null, null, cameraRect, worldRect, annotate);
+    }   //FtcVisionEocvColorBlob
+
+    /**
+     * Constructor: Create an instance of the object.
+     *
+     * @param instanceName specifies the instance name.
+     * @param colorConversion specifies color space conversion, can be null if no color space conversion.
+     *        Note: FTC ECOV input Mat format is RGBA, so you need to do Imgproc.COLOR_RGBA2xxx or
+     *        Imgproc.COLOR_RGB2xxx conversion.
+     * @param colorThresholds specifies an array of color thresholds. If useHsv is false, the array contains RGB
+     *        thresholds (minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue). If useHsv is true, the array contains
+     *        HSV thresholds (minHue, maxHue, minSat, maxSat, minValue, maxValue).
+     * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
+     * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
+     *        if filterContourParams is null).
      * @param objWidth specifies object width in real world units (the long edge).
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
