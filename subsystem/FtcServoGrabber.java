@@ -192,7 +192,8 @@ public class FtcServoGrabber
         // Sensor inverted is taken care in TrcServoGrabber, so don't double invert in FtcSensorTrigger.
         TrcTrigger sensorTrigger = params.sensorType == null? null:
             new FtcSensorTrigger(
-                instanceName, params.sensorType, params.analogSensorData, false, params.triggerThreshold).getTrigger();
+                instanceName, params.sensorType, params.analogSensorData, null, false, params.triggerThreshold)
+                .getTrigger();
         TrcServoGrabber.Params grabberParams = new TrcServoGrabber.Params()
             .setServo(servo)
             .setOpenCloseParams(params.openPos, params.openTime, params.closePos, params.closeTime);

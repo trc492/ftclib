@@ -24,6 +24,7 @@ package ftclib.sensor;
 
 import androidx.annotation.NonNull;
 
+import trclib.motor.TrcMotor;
 import trclib.sensor.TrcAnalogSensor;
 import trclib.sensor.TrcTrigger;
 import trclib.sensor.TrcTriggerDigitalInput;
@@ -38,13 +39,14 @@ public class FtcSensorTrigger
     {
         DigitalInput,
         AnalogInput,
-        AnalogSensor
+        AnalogSensor,
+        MotorCurrent
     }   //enum SensorType
 
     private final String instanceName;
-    private final FtcDigitalInput digitalInput;
     private final FtcAnalogInput analogInput;
     private final TrcAnalogSensor analogSensor;
+    private final TrcMotor motor;
     private final TrcTrigger trigger;
 
     /**
@@ -53,39 +55,49 @@ public class FtcSensorTrigger
      * @param instanceName specifies the instance name.
      * @param sensorType specifies the sensor type.
      * @param analogSource specifies the analog sensor source, only applicable if the sensor type is AnalogSource.
+     * @param motor specifies the motor to get motor current, only applicable if sensor type is motor current trigger.
      * @param sensorInverted specifies true if the sensor polarity is inverted.
      * @param triggerThreshold specifies the trigger threshold value if it is an analog sensor, null if sensor is
      *        digital.
      */
     public FtcSensorTrigger(
-        String instanceName, SensorType sensorType, TrcAnalogSensor.AnalogDataSource analogSource,
+        String instanceName, SensorType sensorType, TrcAnalogSensor.AnalogDataSource analogSource, TrcMotor motor,
         boolean sensorInverted, Double triggerThreshold)
     {
         this.instanceName = instanceName;
         switch (sensorType)
         {
             case DigitalInput:
-                analogInput = null;
-                analogSensor = null;
-                digitalInput = new FtcDigitalInput(instanceName);
+                this.analogInput = null;
+                this.analogSensor = null;
+                this.motor = null;
+                FtcDigitalInput digitalInput = new FtcDigitalInput(instanceName);
                 digitalInput.setInverted(sensorInverted);
                 trigger = new TrcTriggerDigitalInput(instanceName, digitalInput);
                 break;
 
             case AnalogInput:
-                digitalInput = null;
-                analogSensor = null;
-                analogInput = new FtcAnalogInput(instanceName);
+                this.analogSensor = null;
+                this.motor = null;
+                this.analogInput = new FtcAnalogInput(instanceName);
                 analogInput.setInverted(sensorInverted);
                 trigger = new TrcTriggerThresholdZones(
                     instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
                 break;
 
             case AnalogSensor:
-                digitalInput = null;
-                analogInput = null;
-                analogSensor = new TrcAnalogSensor(instanceName, analogSource);
+                this.analogInput = null;
+                this.motor = null;
+                this.analogSensor = new TrcAnalogSensor(instanceName, analogSource);
                 analogSensor.setInverted(sensorInverted);
+                trigger = new TrcTriggerThresholdZones(
+                    instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
+                break;
+
+            case MotorCurrent:
+                this.analogInput = null;
+                this.analogSensor = null;
+                this.motor = motor;
                 trigger = new TrcTriggerThresholdZones(
                     instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
                 break;
@@ -133,6 +145,10 @@ public class FtcSensorTrigger
         else if (analogSensor != null)
         {
             data = analogSensor.getData(0).value;
+        }
+        else if (motor != null)
+        {
+            data = motor.getCurrent();
         }
 
         return data;

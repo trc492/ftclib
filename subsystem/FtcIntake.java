@@ -292,7 +292,8 @@ public class FtcIntake
         if (sensorType != null)
         {
             triggerParams = new TrcIntake.TriggerParams(
-                new FtcSensorTrigger(name, sensorType, analogSensorData, sensorInverted, sensorThreshold).getTrigger(),
+                new FtcSensorTrigger(
+                    name, sensorType, analogSensorData, null, sensorInverted, sensorThreshold).getTrigger(),
                 triggerCallback);
         }
 
