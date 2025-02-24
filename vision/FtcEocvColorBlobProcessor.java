@@ -35,6 +35,7 @@ import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcOpenCvDetector;
@@ -74,6 +75,7 @@ public class FtcEocvColorBlobProcessor
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
      * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
+     * @param cameraPose specifies the camera's 3D position on the robot.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -86,12 +88,12 @@ public class FtcEocvColorBlobProcessor
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, Integer lineColor,
-        Float lineWidth, Integer textColor, Float textSize)
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose,
+        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-            objHeight, cameraMatrix, distCoeffs);
+            objHeight, cameraMatrix, distCoeffs, cameraPose);
 
         this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
@@ -124,14 +126,15 @@ public class FtcEocvColorBlobProcessor
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
      * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
+     * @param cameraPose specifies the camera's 3D position on the robot.
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs)
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-             objHeight, cameraMatrix, distCoeffs, null, null, null, null);
+             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -153,7 +156,7 @@ public class FtcEocvColorBlobProcessor
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null, null, null, null, null);
+             0.0, 0.0, null, null, null, null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**

@@ -32,6 +32,7 @@ import org.opencv.core.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -73,6 +74,7 @@ public class FtcVisionEocvColorBlob
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
      * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
+     * @param cameraPose specifies the camera's 3D position on the robot.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
@@ -80,13 +82,13 @@ public class FtcVisionEocvColorBlob
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs,
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-            objHeight, cameraMatrix, distCoeffs);
+            objHeight, cameraMatrix, distCoeffs, cameraPose);
         tracer = colorBlobProcessor.tracer;
         this.instanceName = instanceName;
 
@@ -125,7 +127,7 @@ public class FtcVisionEocvColorBlob
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null, cameraRect, worldRect, annotate);
+             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate);
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -145,14 +147,15 @@ public class FtcVisionEocvColorBlob
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
      * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
+     * @param cameraPose specifies the camera's 3D position on the robot.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs)
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-             objHeight, cameraMatrix, distCoeffs, null, null, true);
+             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true);
     }   //FtcVisionEocvColorBlob
 
     /**

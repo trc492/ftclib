@@ -29,6 +29,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcOpenCvDetector;
@@ -60,15 +61,16 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      * @param objHeight specifies object height in real world units (the short edge).
      * @param cameraMatrix specifies the camera lens characteristics (fx, fy, cx, cy), null if not provided.
      * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
+     * @param cameraPose specifies the camera's 3D position on the robot.
      */
     public FtcRawEocvColorBlobPipeline(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs)
+        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-            objHeight, cameraMatrix, distCoeffs);
+            objHeight, cameraMatrix, distCoeffs, cameraPose);
         this.tracer = colorBlobPipeline.tracer;
     }   //FtcRawEocvColorBlobPipeline
 
@@ -91,7 +93,7 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null);
+             0.0, 0.0, null, null, null);
     }   //FtcRawEocvColorBlobPipeline
 
     /**
