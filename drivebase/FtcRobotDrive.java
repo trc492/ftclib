@@ -125,10 +125,10 @@ public class FtcRobotDrive
         public boolean pidStallDetectionEnabled = false;
         // PidDrive Parameters
         public boolean usePidDrive = false;
-        public boolean enablePidDriveSquareRootPid = false;
+        public boolean enablePidDriveSquid = false;
         // PurePursuit Parameters
         public boolean usePurePursuitDrive = false;
-        public boolean enablePurePursuitDriveSquareRootPid = false;
+        public boolean enablePurePursuitDriveSquid = false;
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
         public boolean fastModeEnabled = true;
@@ -239,7 +239,7 @@ public class FtcRobotDrive
             // of the absolute target position.
             pidDrive.setAbsoluteTargetModeEnabled(true);
             pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
-            pidDrive.setSquareRootPidEnabled(robotInfo.enablePidDriveSquareRootPid);
+            pidDrive.setSquidModeEnabled(robotInfo.enablePidDriveSquid);
         }
 
         if (robotInfo.usePurePursuitDrive)
@@ -251,7 +251,7 @@ public class FtcRobotDrive
             purePursuitDrive.setMoveOutputLimit(robotInfo.yDrivePidPowerLimit);
             purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
             purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
-            purePursuitDrive.setSquareRootPidEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
+            purePursuitDrive.setSquidModeEnabled(robotInfo.enablePurePursuitDriveSquid);
             purePursuitDrive.setFastModeEnabled(robotInfo.fastModeEnabled);
         }
 
