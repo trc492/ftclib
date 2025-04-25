@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
@@ -400,6 +401,7 @@ public class FtcLimelightVision
     }   //class DetectedObject
 
     public final TrcDbgTrace tracer;
+    private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcPose3D cameraPose;
     public final TargetGroundOffset targetGroundOffset;
@@ -419,6 +421,7 @@ public class FtcLimelightVision
         HardwareMap hardwareMap, String instanceName, TrcPose3D cameraPose, TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
+        this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
         this.cameraPose = cameraPose;
         this.targetGroundOffset = targetGroundOffset;
@@ -706,5 +709,29 @@ public class FtcLimelightVision
 
         return bestTarget;
     }   //getBestDetectedTargetInfo
+
+    /**
+     * This method update the dashboard with vision status.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
+     * @return updated line number for the next subsystem to print.
+     */
+    public int updateStatus(int lineNum)
+    {
+        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(ResultType.Fiducial, null, null, null);
+
+        if (object != null)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "AprilTag[%d]: targetPose=%s, robotPose=%s",
+                object.detectedObj.label, object.detectedObj.targetPose, object.detectedObj.robotPose);
+        }
+        else
+        {
+            dashboard.displayPrintf(lineNum++, "");
+        }
+
+        return lineNum;
+    }   //updateStatus
 
 }   //class FtcLimelightVision

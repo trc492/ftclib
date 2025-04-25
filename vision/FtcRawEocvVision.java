@@ -30,6 +30,7 @@ import org.openftc.easyopencv.OpenCvWebcam;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import ftclib.driverio.FtcDashboard;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvDetector;
@@ -44,6 +45,7 @@ import trclib.vision.TrcVisionTargetInfo;
 public class FtcRawEocvVision
 {
     public final TrcDbgTrace tracer;
+    private final FtcDashboard dashboard;
     private final String instanceName;
     private final OpenCvCamera openCvCamera;
     private final TrcHomographyMapper homographyMapper;
@@ -68,6 +70,7 @@ public class FtcRawEocvVision
         OpenCvCamera openCvCamera, OpenCvCameraRotation cameraRotation)
     {
         this.tracer = new TrcDbgTrace();
+        this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
         this.openCvCamera = openCvCamera;
 
@@ -247,5 +250,30 @@ public class FtcRawEocvVision
 
         return bestTarget;
     }   //getBestDetectedTargetInfo
+
+    /**
+     * This method update the dashboard with vision status.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
+     * @return updated line number for the next subsystem to print.
+     */
+    public int updateStatus(int lineNum)
+    {
+        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> object =
+            getBestDetectedTargetInfo(null, null, 0.0, 0.0);
+
+        if (object != null)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "RawEocv(%s): targetPose=%s, rotatedRectAngle=%f",
+                object.detectedObj.label, object.detectedObj.getObjectPose(), object.detectedObj.getRotatedRectAngle());
+        }
+        else
+        {
+            dashboard.displayPrintf(lineNum++, "");
+        }
+
+        return lineNum;
+    }   //updateStatus
 
 }   //class FtcRawEocvVision

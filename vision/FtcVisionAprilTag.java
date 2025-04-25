@@ -35,6 +35,7 @@ import org.opencv.core.Rect;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.pathdrive.TrcPose2D;
@@ -340,6 +341,7 @@ public class FtcVisionAprilTag
     }   //class Parameters
 
     public final TrcDbgTrace tracer;
+    private final FtcDashboard dashboard;
     private final String instanceName;
     private final AprilTagProcessor aprilTagProcessor;
 
@@ -352,6 +354,7 @@ public class FtcVisionAprilTag
     public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily)
     {
         tracer = new TrcDbgTrace();
+        dashboard = FtcDashboard.getInstance();
         instanceName = tagFamily.name();
         // Create the AprilTag processor.
         AprilTagProcessor.Builder builder = new AprilTagProcessor.Builder().setTagFamily(tagFamily);
@@ -468,5 +471,29 @@ public class FtcVisionAprilTag
 
         return bestTarget;
     }   //getBestDetectedTargetInfo
+
+    /**
+     * This method update the dashboard with vision status.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
+     * @return updated line number for the next subsystem to print.
+     */
+    public int updateStatus(int lineNum)
+    {
+        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(null, null);
+
+        if (object != null)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "AprilTag[%d]: targetPose=%s",
+                object.detectedObj.aprilTagDetection.id, object.detectedObj.getObjectPose());
+        }
+        else
+        {
+            dashboard.displayPrintf(lineNum++, "");
+        }
+
+        return lineNum;
+    }   //updateStatus
 
 }   //class FtcVisionAprilTag

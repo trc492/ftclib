@@ -32,6 +32,7 @@ import org.opencv.core.Point;
 import java.util.ArrayList;
 import java.util.Comparator;
 
+import ftclib.driverio.FtcDashboard;
 import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
@@ -54,6 +55,7 @@ public class FtcVisionEocvColorBlob
 
     private final FtcEocvColorBlobProcessor colorBlobProcessor;
     public final TrcDbgTrace tracer;
+    private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcHomographyMapper homographyMapper;
 
@@ -90,6 +92,7 @@ public class FtcVisionEocvColorBlob
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
             objHeight, cameraMatrix, distCoeffs, cameraPose);
         tracer = colorBlobProcessor.tracer;
+        this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
 
         if (cameraRect != null && worldRect != null)
@@ -285,5 +288,30 @@ public class FtcVisionEocvColorBlob
     {
         return homographyMapper != null? homographyMapper.mapPoint(point): null;
     }   //mapPoint
+
+    /**
+     * This method update the dashboard with vision status.
+     *
+     * @param lineNum specifies the starting line number to print the subsystem status.
+     * @return updated line number for the next subsystem to print.
+     */
+    public int updateStatus(int lineNum)
+    {
+        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> object =
+            getBestDetectedTargetInfo(null, null, 0.0, 0.0);
+
+        if (object != null)
+        {
+            dashboard.displayPrintf(
+                lineNum++, "EocvColorBlob(%s): targetPose=%s, rotatedAngle=%f",
+                object.detectedObj.label, object.detectedObj.objPose,  object.detectedObj.rotatedRectAngle);
+        }
+        else
+        {
+            dashboard.displayPrintf(lineNum++, "");
+        }
+
+        return lineNum;
+    }   //updateStatus
 
 }   //class FtcVisionEocvColorBlob
