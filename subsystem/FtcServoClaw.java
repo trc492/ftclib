@@ -29,17 +29,17 @@ import ftclib.sensor.FtcSensorTrigger;
 import trclib.motor.TrcServo;
 import trclib.sensor.TrcAnalogSensor;
 import trclib.sensor.TrcTrigger;
-import trclib.subsystem.TrcServoGrabber;
+import trclib.subsystem.TrcServoClaw;
 
 /**
- * This class implements a platform dependent Servo Grabber Subsystem. A Servo Grabber consists of one or two servos.
- * Optionally, it may have a sensor to detect the game element entering the proximity of the grabber to activate the
+ * This class implements a platform dependent Servo Claw Subsystem. A Servo Claw consists of one or two servos.
+ * Optionally, it may have a sensor to detect the game element entering the proximity of the claw to activate the
  * grabbing action.
  */
-public class FtcServoGrabber
+public class FtcServoClaw
 {
     /**
-     * This class contains all the parameters of the Servo Grabber.
+     * This class contains all the parameters of the Servo Claw.
      */
     public static class Params
     {
@@ -109,7 +109,7 @@ public class FtcServoGrabber
         }   //setFollowerServo
 
         /**
-         * This method sets the open/close parameters of the servo grabber.
+         * This method sets the open/close parameters of the servo claw.
          *
          * @param openPos specifies the open position in physical unit.
          * @param openTime specifies the time in seconds required to open from fully close position.
@@ -178,42 +178,42 @@ public class FtcServoGrabber
 
     }   //class Params
 
-    private final TrcServoGrabber grabber;
+    private final TrcServoClaw claw;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param params specifies the servo grabber parameters.
+     * @param params specifies the servo claw parameters.
      */
-    public FtcServoGrabber(String instanceName, Params params)
+    public FtcServoClaw(String instanceName, Params params)
     {
         TrcServo servo = new FtcServoActuator(params.servoParams).getServo();
-        // Sensor inverted is taken care in TrcServoGrabber, so don't double invert in FtcSensorTrigger.
+        // Sensor inverted is taken care in TrcServoClaw, so don't double invert in FtcSensorTrigger.
         TrcTrigger sensorTrigger = params.sensorType == null? null:
             new FtcSensorTrigger(
                 instanceName, params.sensorType, params.analogSensorData, null, false, params.triggerThreshold)
                 .getTrigger();
-        TrcServoGrabber.Params grabberParams = new TrcServoGrabber.Params()
+        TrcServoClaw.Params clawParams = new TrcServoClaw.Params()
             .setServo(servo)
             .setOpenCloseParams(params.openPos, params.openTime, params.closePos, params.closeTime);
 
         if (sensorTrigger != null)
         {
-            grabberParams.setSensorTrigger(sensorTrigger, params.triggerInverted, params.triggerThreshold);
+            clawParams.setSensorTrigger(sensorTrigger, params.triggerInverted, params.triggerThreshold);
         }
 
-        grabber = new TrcServoGrabber(instanceName, grabberParams);
-    }   //FtcServoGrabber
+        claw = new TrcServoClaw(instanceName, clawParams);
+    }   //FtcServoClaw
 
     /**
-     * This method returns the created servo grabber.
+     * This method returns the created servo claw.
      *
-     * @return servo grabber.
+     * @return servo claw.
      */
-    public TrcServoGrabber getGrabber()
+    public TrcServoClaw getClaw()
     {
-        return grabber;
-    }   //getGrabber
+        return claw;
+    }   //getClaw
 
-}   //class FtcServoGrabber
+}   //class FtcServoClaw
