@@ -83,7 +83,6 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         }
         catch (NoSuchFieldException | IllegalAccessException e)
         {
-            e.printStackTrace();
             throw new RuntimeException("Failed to access runningNotifier.");
         }
     }   //FtcOpMode
