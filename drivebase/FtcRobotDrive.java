@@ -29,7 +29,6 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import ftclib.sensor.FtcOctoQuad;
-import teamcode.subsystems.LEDIndicator;
 import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
@@ -51,6 +50,12 @@ public class FtcRobotDrive
     public static final int INDEX_RIGHT_BACK = 3;
     public static final int INDEX_LEFT_CENTER = 4;
     public static final int INDEX_RIGHT_CENTER = 5;
+
+    public enum LEDType
+    {
+        GobildaLEDIndicator,
+        RevBlinkin
+    }   //enum LEDType
 
     /**
      * This class contains Vision parameters of a camera.
@@ -144,9 +149,9 @@ public class FtcRobotDrive
         public VisionInfo limelight = null;
         // Miscellaneous
         public String indicator1Name = null;
-        public LEDIndicator.LEDType indicator1Type = null;
+        public LEDType indicator1Type = null;
         public String indicator2Name = null;
-        public LEDIndicator.LEDType indicator2Type = null;
+        public LEDType indicator2Type = null;
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
