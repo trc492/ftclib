@@ -65,15 +65,15 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public String[] swerveModuleNames = null;
     }   //class SwerveInfo
 
-    private final String moduleName = getClass().getSimpleName();
+    private static final String moduleName = FtcSwerveDrive.class.getSimpleName();
 
     public final TrcDbgTrace tracer;
     public final SwerveInfo swerveInfo;
     public final TrcEncoder[] steerEncoders;
     public final TrcMotor[] steerMotors;
     public final TrcSwerveModule[] swerveModules;
-
     private final FtcDashboard dashboard;
+
     private final double[] steerZeros = new double[4];
     private int steerZeroCalibrationCount = 0;
     private String xModeOwner = null;
@@ -88,6 +88,8 @@ public class FtcSwerveDrive extends FtcRobotDrive
         super(swerveInfo);
         this.tracer = new TrcDbgTrace();
         this.swerveInfo = swerveInfo;
+        // The parent class FtcRobotDrive is creating all the drive motors with generic parameters (e.g. Brake mode
+        // on with VoltageComp).
         steerEncoders = createSteerEncoders();
         steerMotors = createSteerMotors();
         swerveModules = createSwerveModules();

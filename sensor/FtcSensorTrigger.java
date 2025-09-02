@@ -22,102 +22,114 @@
 
 package ftclib.sensor;
 
-import androidx.annotation.NonNull;
-
 import trclib.motor.TrcMotor;
-import trclib.sensor.TrcAnalogSensor;
+import trclib.sensor.TrcAnalogSource;
 import trclib.sensor.TrcTrigger;
 import trclib.sensor.TrcTriggerDigitalInput;
-import trclib.sensor.TrcTriggerThresholdZones;
+import trclib.sensor.TrcTriggerThresholdRange;
 
 /**
  * This class creates an FTC platform specific Sensor Trigger with the specified parameters.
  */
 public class FtcSensorTrigger
 {
-    public enum SensorType
-    {
-        DigitalInput,
-        AnalogInput,
-        AnalogSensor,
-        MotorCurrent
-    }   //enum SensorType
-
-    private final String instanceName;
-    private final FtcAnalogInput analogInput;
-    private final TrcAnalogSensor analogSensor;
-    private final TrcMotor motor;
-    private final TrcTrigger trigger;
+    private FtcAnalogInput analogInput = null;
+    private TrcAnalogSource analogSource = null;
+    private TrcMotor motor = null;
+    private TrcTrigger trigger = null;
 
     /**
-     * Constructor: Creates an instance of the object.
+     * This method creates a digital input trigger.
      *
-     * @param instanceName specifies the instance name.
-     * @param sensorType specifies the sensor type.
-     * @param analogSource specifies the analog sensor source, only applicable if the sensor type is AnalogSource.
-     * @param motor specifies the motor to get motor current, only applicable if sensor type is motor current trigger.
-     * @param sensorInverted specifies true if the sensor polarity is inverted.
-     * @param triggerThreshold specifies the trigger threshold value if it is an analog sensor, null if sensor is
-     *        digital.
+     * @param sensorName specifies the name of the sensor.
+     * @param sensorInverted specifies true if the sensor state is inverted, false otherwise.
+     * @return this object for chaining.
      */
-    public FtcSensorTrigger(
-        String instanceName, SensorType sensorType, TrcAnalogSensor.AnalogDataSource analogSource, TrcMotor motor,
-        boolean sensorInverted, Double triggerThreshold)
+    public FtcSensorTrigger setDigitalInputTrigger(String sensorName, boolean sensorInverted)
     {
-        this.instanceName = instanceName;
-        switch (sensorType)
+        if (trigger != null)
         {
-            case DigitalInput:
-                this.analogInput = null;
-                this.analogSensor = null;
-                this.motor = null;
-                FtcDigitalInput digitalInput = new FtcDigitalInput(instanceName);
-                digitalInput.setInverted(sensorInverted);
-                trigger = new TrcTriggerDigitalInput(instanceName, digitalInput);
-                break;
-
-            case AnalogInput:
-                this.analogSensor = null;
-                this.motor = null;
-                this.analogInput = new FtcAnalogInput(instanceName);
-                analogInput.setInverted(sensorInverted);
-                trigger = new TrcTriggerThresholdZones(
-                    instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
-                break;
-
-            case AnalogSensor:
-                this.analogInput = null;
-                this.motor = null;
-                this.analogSensor = new TrcAnalogSensor(instanceName, analogSource);
-                analogSensor.setInverted(sensorInverted);
-                trigger = new TrcTriggerThresholdZones(
-                    instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
-                break;
-
-            case MotorCurrent:
-                this.analogInput = null;
-                this.analogSensor = null;
-                this.motor = motor;
-                trigger = new TrcTriggerThresholdZones(
-                    instanceName, this::getAnalogValue, new double[] {triggerThreshold}, false);
-                break;
-
-            default:
-                throw new UnsupportedOperationException("Unsupported sensor type.");
+            throw new IllegalStateException("You can only set one type of trigger.");
         }
-    }   //FtcSensorTrigger
+        FtcDigitalInput digitalInput = new FtcDigitalInput(sensorName);
+        digitalInput.setInverted(sensorInverted);
+        trigger = new TrcTriggerDigitalInput(sensorName + ".trigger", digitalInput);
+        return this;
+    }   //setDigitalInputTrigger
 
     /**
-     * This method returns the instance name.
+     * This method creates an analog input trigger.
      *
-     * @return instance name.
+     * @param sensorName specifies the name of the sensor.
+     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
+     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
+     *        trigger range to be triggered.
+     * @return this object for chaining.
      */
-    @NonNull
-    @Override
-    public String toString()
+    public FtcSensorTrigger setAnalogInputTrigger(
+        String sensorName, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod)
     {
-        return instanceName;
-    }   //toString
+        if (trigger != null)
+        {
+            throw new IllegalStateException("You can only set one type of trigger.");
+        }
+        analogInput = new FtcAnalogInput(sensorName);
+        trigger = new TrcTriggerThresholdRange(sensorName + ".trigger", this::getAnalogValue);
+        ((TrcTriggerThresholdRange) trigger).setTrigger(
+            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+        return this;
+    }   //setAnalogInputTrigger
+
+    /**
+     * This method creates an analog source trigger.
+     *
+     * @param sourceName specifies the name of the data source.
+     * @param dataSource specifies the method to call to get the analog data value.
+     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
+     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
+     *        trigger range to be triggered.
+     * @return this object for chaining.
+     */
+    public FtcSensorTrigger setAnalogSourceTrigger(
+        String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+        double upperTriggerThreshold, double triggerSettlingPeriod)
+    {
+        if (trigger != null)
+        {
+            throw new IllegalStateException("You can only set one type of trigger.");
+        }
+        analogSource = new TrcAnalogSource(sourceName, dataSource);
+        trigger = new TrcTriggerThresholdRange(sourceName + ".trigger", this::getAnalogValue);
+        ((TrcTriggerThresholdRange) trigger).setTrigger(
+            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+        return this;
+    }   //setAnalogSourceTrigger
+
+    /**
+     * This method creates a motor current trigger.
+     *
+     * @param motor specifies the motor to get the current value from.
+     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
+     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
+     *        trigger range to be triggered.
+     * @return this object for chaining.
+     */
+    public FtcSensorTrigger setMotorCurrentTrigger(
+        TrcMotor motor, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod)
+    {
+        if (trigger != null)
+        {
+            throw new IllegalStateException("You can only set one type of trigger.");
+        }
+        this.motor = motor;
+        trigger = new TrcTriggerThresholdRange(motor.getName() + ".trigger", this::getAnalogValue);
+        ((TrcTriggerThresholdRange) trigger).setTrigger(
+            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+        return this;
+    }   //setMotorCurrentTrigger
 
     /**
      * This method returns the created sensor trigger.
@@ -130,9 +142,9 @@ public class FtcSensorTrigger
     }   //getTrigger
 
     /**
-     * This method returns the analog sensor value.
+     * This method returns the analog data value.
      *
-     * @return analog sensor value.
+     * @return analog data value.
      */
     private double getAnalogValue()
     {
@@ -142,9 +154,9 @@ public class FtcSensorTrigger
         {
             data = analogInput.getData(0).value;
         }
-        else if (analogSensor != null)
+        else if (analogSource != null)
         {
-            data = analogSensor.getData(0).value;
+            data = analogSource.getData(0).value;
         }
         else if (motor != null)
         {

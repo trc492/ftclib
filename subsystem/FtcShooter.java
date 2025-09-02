@@ -68,44 +68,47 @@ public class FtcShooter
         /**
          * This method sets the parameters of the shooter motor 1.
          *
-         * @param name specifies the name of the motor.
+         * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
-         * @param inverted specifies true to invert the motor direction, false otherwise.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor1(String name, FtcMotorActuator.MotorType motorType, boolean inverted)
+        public Params setShooterMotor1(String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted)
         {
-            this.shooterMotor1Params = new FtcMotorActuator.Params().setPrimaryMotor(name, motorType, inverted);
+            this.shooterMotor1Params =
+                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             return this;
         }   //setShooterMotor1
 
         /**
          * This method sets the parameters of the shooter motor 2.
          *
-         * @param name specifies the name of the motor.
+         * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
-         * @param inverted specifies true to invert the motor direction, false otherwise.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor2(String name, FtcMotorActuator.MotorType motorType, boolean inverted)
+        public Params setShooterMotor2(String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted)
         {
-            this.shooterMotor2Params = new FtcMotorActuator.Params().setPrimaryMotor(name, motorType, inverted);
+            this.shooterMotor2Params =
+                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             return this;
         }   //setShooterMotor2
 
         /**
          * This method sets the parameters of tilt if there is one.
          *
-         * @param name specifies the name of the motor.
+         * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
-         * @param inverted specifies true to invert the motor direction, false otherwise.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param tiltParams specifies tilt parameters.
          * @return this object for chaining.
          */
         public Params setTiltMotor(
-            String name, FtcMotorActuator.MotorType motorType, boolean inverted, TrcShooter.PanTiltParams tiltParams)
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted,
+            TrcShooter.PanTiltParams tiltParams)
         {
-            this.tiltMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(name, motorType, inverted);
+            this.tiltMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             this.tiltParams = tiltParams;
             return this;
         }   //setTiltMotor
@@ -113,16 +116,17 @@ public class FtcShooter
         /**
          * This method sets the parameters of pan if there is one.
          *
-         * @param name specifies the name of the motor.
+         * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
-         * @param inverted specifies true to invert the motor direction, false otherwise.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param panParams specifies pan parameters.
          * @return this object for chaining.
          */
         public Params setPanMotor(
-            String name, FtcMotorActuator.MotorType motorType, boolean inverted, TrcShooter.PanTiltParams panParams)
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted,
+            TrcShooter.PanTiltParams panParams)
         {
-            this.panMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(name, motorType, inverted);
+            this.panMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             this.panParams = panParams;
             return this;
         }   //setPanMotor

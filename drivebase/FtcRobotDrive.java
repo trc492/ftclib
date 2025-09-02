@@ -29,6 +29,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import ftclib.sensor.FtcOctoQuad;
+import teamcode.subsystems.LEDIndicator;
 import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
@@ -62,6 +63,7 @@ public class FtcRobotDrive
         public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0;
         public double camYaw = 0.0, camPitch = 0.0, camRoll = 0.0;
         public TrcPose3D camPose = null;
+        // The following parameters are for OpenCvVision.
         public OpenCvCameraRotation camOrientation = null;
         public TrcHomographyMapper.Rectangle cameraRect = null;
         public TrcHomographyMapper.Rectangle worldRect = null;
@@ -102,6 +104,10 @@ public class FtcRobotDrive
         // Drive Motor Odometry
         public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // Robot Drive Characteristics
+        public Double driveMotorMaxVelocity = null;
+        public TrcPidController.PidCoefficients driveMotorVelPidCoeffs = null;
+        public Double driveMotorVelPidTolerance = null;
+        public boolean driveMotorSoftwarePid = false;
         public Double robotMaxVelocity = null;
         public Double robotMaxAcceleration = null;
         public Double robotMaxDeceleration = null;
@@ -125,10 +131,10 @@ public class FtcRobotDrive
         public boolean pidStallDetectionEnabled = false;
         // PidDrive Parameters
         public boolean usePidDrive = false;
-        public boolean enablePidDriveSquid = false;
+        public boolean enablePidDriveSquareRootPid = false;
         // PurePursuit Parameters
         public boolean usePurePursuitDrive = false;
-        public boolean enablePurePursuitDriveSquid = false;
+        public boolean enablePurePursuitDriveSquareRootPid = false;
         public double ppdFollowingDistance = 0.0;
         public TrcPidController.PidCoefficients velPidCoeffs = null;
         public boolean fastModeEnabled = true;
@@ -137,7 +143,10 @@ public class FtcRobotDrive
         public VisionInfo webCam2 = null;
         public VisionInfo limelight = null;
         // Miscellaneous
-        public String indicatorName = null;
+        public String indicator1Name = null;
+        public LEDIndicator.LEDType indicator1Type = null;
+        public String indicator2Name = null;
+        public LEDIndicator.LEDType indicator2Type = null;
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
@@ -206,6 +215,17 @@ public class FtcRobotDrive
         TrcPidController pidCtrl;
 
         this.driveBase = driveBase;
+        if (robotInfo.driveMotorMaxVelocity != null && robotInfo.driveMotorVelPidCoeffs != null &&
+            robotInfo.driveMotorVelPidTolerance != null)
+        {
+            driveBase.enableMotorVelocityControl(
+                robotInfo.driveMotorMaxVelocity, robotInfo.driveMotorVelPidCoeffs,
+                robotInfo.driveMotorVelPidTolerance, robotInfo.driveMotorSoftwarePid);
+        }
+        else
+        {
+            driveBase.disableMotorVelocityControl();
+        }
         // Create and initialize PID controllers.
         if (robotInfo.usePidDrive)
         {
@@ -239,7 +259,7 @@ public class FtcRobotDrive
             // of the absolute target position.
             pidDrive.setAbsoluteTargetModeEnabled(true);
             pidDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
-            pidDrive.setSquidModeEnabled(robotInfo.enablePidDriveSquid);
+            pidDrive.setSquidModeEnabled(robotInfo.enablePidDriveSquareRootPid);
         }
 
         if (robotInfo.usePurePursuitDrive)
@@ -251,7 +271,7 @@ public class FtcRobotDrive
             purePursuitDrive.setMoveOutputLimit(robotInfo.yDrivePidPowerLimit);
             purePursuitDrive.setRotOutputLimit(robotInfo.turnPidPowerLimit);
             purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
-            purePursuitDrive.setSquidModeEnabled(robotInfo.enablePurePursuitDriveSquid);
+            purePursuitDrive.setSquidModeEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
             purePursuitDrive.setFastModeEnabled(robotInfo.fastModeEnabled);
         }
 

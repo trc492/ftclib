@@ -117,8 +117,9 @@ public class FtcServo extends TrcServo
      * This method is called when the onTime has expired. It disables the servo controller.
      *
      * @param context specifies callback context (not used).
+     * @param canceled not used.
      */
-    private void onTimeExpired(Object context)
+    private void onTimeExpired(Object context, boolean canceled)
     {
         controller.pwmDisable();
     }   //onTimeExpired
