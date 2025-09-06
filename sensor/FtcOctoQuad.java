@@ -22,9 +22,7 @@
 
 package ftclib.sensor;
 
-import com.qualcomm.hardware.digitalchickenlabs.CachingOctoQuad;
 import com.qualcomm.hardware.digitalchickenlabs.OctoQuad;
-import com.qualcomm.hardware.digitalchickenlabs.OctoQuadBase;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import java.util.ArrayList;
@@ -46,7 +44,7 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
 {
     private final String moduleName = getClass().getSimpleName();
     private static final ArrayList<FtcOctoQuad> odometrySensors = new ArrayList<>();
-    private static CachingOctoQuad octoQuad = null;
+    private static OctoQuad octoQuad = null;
 
     public final TrcDbgTrace tracer;
     private final String instanceName;
@@ -71,8 +69,8 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
     {
         if (octoQuad == null)
         {
-            octoQuad = (CachingOctoQuad) hardwareMap.get(OctoQuad.class, instanceName);
-            octoQuad.setCachingMode(CachingOctoQuad.CachingMode.MANUAL);
+            octoQuad = hardwareMap.get(OctoQuad.class, instanceName);
+            octoQuad.setCachingMode(OctoQuad.CachingMode.MANUAL);
             TrcTaskMgr.registerIoTaskLoopCallback(moduleName, this::ioTaskLoopBegin, null);
         }
 
@@ -255,7 +253,7 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
     public void setInverted(boolean inverted)
     {
         octoQuad.setSingleEncoderDirection(
-            encIndex, inverted? OctoQuadBase.EncoderDirection.REVERSE: OctoQuadBase.EncoderDirection.FORWARD);
+            encIndex, inverted? OctoQuad.EncoderDirection.REVERSE: OctoQuad.EncoderDirection.FORWARD);
     }   //setInverted
 
     /**
@@ -266,7 +264,7 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
     @Override
     public boolean isInverted()
     {
-        return octoQuad.getSingleEncoderDirection(encIndex) == OctoQuadBase.EncoderDirection.REVERSE;
+        return octoQuad.getSingleEncoderDirection(encIndex) == OctoQuad.EncoderDirection.REVERSE;
     }   //isInverted
 
     /**
