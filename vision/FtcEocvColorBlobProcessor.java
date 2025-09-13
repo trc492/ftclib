@@ -56,7 +56,8 @@ public class FtcEocvColorBlobProcessor
     public final TrcDbgTrace tracer;
     private final Paint linePaint;
     private final Paint textPaint;
-    private boolean annotate = false;
+    private boolean annotateEnabled = false;
+    private boolean drawRotatedRect = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -244,15 +245,26 @@ public class FtcEocvColorBlobProcessor
     }   //getDetectedObjects
 
     /**
-     * This method enables/disables image annotation of the detected object.
+     * This method enables image annotation of the detected object.
      *
-     * @param enabled specifies true to enable annotation, false to disable.
+     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle.
      */
     @Override
-    public void setAnnotateEnabled(boolean enabled)
+    public void enableAnnotation(boolean drawRotatedRect)
     {
-        annotate = enabled;
+        this.annotateEnabled = true;
+        this.drawRotatedRect = drawRotatedRect;
     }   //setAnnotateEnabled
+
+    /**
+     * This method disables image annotation.
+     */
+    @Override
+    public void disableAnnotation()
+    {
+        this.annotateEnabled = false;
+        this.drawRotatedRect = false;
+    }   //disableAnnotation
 
     /**
      * This method checks if image annotation is enabled.
@@ -262,7 +274,7 @@ public class FtcEocvColorBlobProcessor
     @Override
     public boolean isAnnotateEnabled()
     {
-        return annotate;
+        return annotateEnabled;
     }   //isAnnotateEnabled
 
     /**
@@ -365,16 +377,17 @@ public class FtcEocvColorBlobProcessor
     {
         // Allow only one draw operation at a time (we could be called from two different threads - viewport or
         // camera stream).
-        if (annotate && userContext != null)
+        if (annotateEnabled && userContext != null)
         {
             TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
                 (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
+            Point[] vertices;
 
             for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
             {
-                Point[] vertices = object.getRotatedRectVertices();
                 Rect objRect = object.getObjectRect();
-                if (vertices != null)
+
+                if (drawRotatedRect && (vertices = object.getRotatedRectVertices()) != null)
                 {
                     for (int start = 0; start < vertices.length; start++)
                     {

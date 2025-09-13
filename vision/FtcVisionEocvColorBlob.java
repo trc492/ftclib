@@ -80,12 +80,15 @@ public class FtcVisionEocvColorBlob
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
+     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
+     *        only if annotate is true.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
         double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
+        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
+        boolean drawRotatedRect)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
@@ -104,7 +107,14 @@ public class FtcVisionEocvColorBlob
             homographyMapper = null;
         }
 
-        colorBlobProcessor.setAnnotateEnabled(annotate);
+        if (annotate)
+        {
+            colorBlobProcessor.enableAnnotation(drawRotatedRect);
+        }
+        else
+        {
+            colorBlobProcessor.disableAnnotation();
+        }
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -123,14 +133,17 @@ public class FtcVisionEocvColorBlob
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
+     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
+     *        only if annotate is true.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate)
+        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
+        boolean drawRotatedRect)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate);
+             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate, drawRotatedRect);
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -158,7 +171,7 @@ public class FtcVisionEocvColorBlob
         double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true);
+             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true, false);
     }   //FtcVisionEocvColorBlob
 
     /**

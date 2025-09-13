@@ -165,15 +165,24 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
     }   //getDetectedObjects
 
     /**
-     * This method enables/disables image annotation of the detected object.
+     * This method enables image annotation of the detected object.
      *
-     * @param enabled specifies true to enable annotation, false to disable.
+     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle.
      */
     @Override
-    public void setAnnotateEnabled(boolean enabled)
+    public void enableAnnotation(boolean drawRotatedRect)
     {
-        colorBlobPipeline.setAnnotateEnabled(enabled);
+        colorBlobPipeline.enableAnnotation(drawRotatedRect);
     }   //setAnnotateEnabled
+
+    /**
+     * This method disables image annotation.
+     */
+    @Override
+    public void disableAnnotation()
+    {
+        colorBlobPipeline.disableAnnotation();
+    }   //disableAnnotation
 
     /**
      * This method checks if image annotation is enabled.
