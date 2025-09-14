@@ -22,7 +22,8 @@
 
 package ftclib.sensor;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import trclib.motor.TrcMotor;
 import trclib.sensor.TrcTrigger;
@@ -65,7 +66,7 @@ public class FtcSensorTrigger
      * @param digitalSource specifies the method to call to get the digital state value.
      * @return this object for chaining.
      */
-    public FtcSensorTrigger setDigitalSourceTrigger(String sourceName, Supplier<Boolean> digitalSource)
+    public FtcSensorTrigger setDigitalSourceTrigger(String sourceName, BooleanSupplier digitalSource)
     {
         if (trigger != null)
         {
@@ -111,7 +112,8 @@ public class FtcSensorTrigger
      * @return this object for chaining.
      */
     public FtcSensorTrigger setAnalogSourceTrigger(
-        String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold, double upperTriggerThreshold,
+        String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
+        double upperTriggerThreshold,
         double triggerSettlingPeriod)
     {
         if (trigger != null)

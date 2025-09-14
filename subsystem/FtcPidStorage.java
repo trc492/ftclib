@@ -24,7 +24,8 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
@@ -168,7 +169,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setEntryDigitalSourceTrigger(
-          String sourceName, Supplier<Boolean> digitalSource, boolean advanceOnTrigger,
+          String sourceName, BooleanSupplier digitalSource, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (entryTriggerParams != null)
@@ -224,7 +225,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setEntryAnalogSourceTrigger(
-          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
+          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -275,7 +276,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setExitDigitalSourceTrigger(
-          String sourceName, Supplier<Boolean> digitalSource, boolean advanceOnTrigger,
+          String sourceName, BooleanSupplier digitalSource, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (exitTriggerParams != null)
@@ -331,7 +332,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setExitAnalogSourceTrigger(
-          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
+          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {

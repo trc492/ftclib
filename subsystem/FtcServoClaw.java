@@ -24,14 +24,12 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import ftclib.motor.FtcServoActuator;
 import ftclib.sensor.FtcSensorTrigger;
-import trclib.motor.TrcServo;
-import trclib.robotcore.TrcEvent;
 import trclib.sensor.TrcTrigger;
-import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcServoClaw;
 
 /**
@@ -134,7 +132,7 @@ public class FtcServoClaw
          * @param digitalSource specifies the method to call to get the digital state value.
          * @return this object for chaining.
          */
-        public Params setDigitalSourceTrigger(String sourceName, Supplier<Boolean> digitalSource)
+        public Params setDigitalSourceTrigger(String sourceName, BooleanSupplier digitalSource)
         {
             if (sensorTrigger != null)
             {
@@ -179,7 +177,7 @@ public class FtcServoClaw
          * @return this object for chaining.
          */
         public Params setAnalogSourceTrigger(
-            String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
+            String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
             double upperTriggerThreshold, double triggerSettlingPeriod)
         {
             if (sensorTrigger != null)

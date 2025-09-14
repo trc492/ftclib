@@ -24,7 +24,8 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
-import java.util.function.Supplier;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
 
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
@@ -163,7 +164,8 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setFrontDigitalSourceTrigger(
-          String sourceName, Supplier<Boolean> digitalSource, TriggerAction triggerAction, TriggerMode triggerMode,
+          String sourceName, BooleanSupplier digitalSource, TriggerAction triggerAction,
+          TriggerMode triggerMode,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (frontTriggerParams != null)
@@ -222,7 +224,7 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setFrontAnalogSourceTrigger(
-          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
+          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, TriggerAction triggerAction,
           TriggerMode triggerMode, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -305,7 +307,8 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setBackDigitalSourceTrigger(
-          String sourceName, Supplier<Boolean> digitalSource, TriggerAction triggerAction, TriggerMode triggerMode,
+          String sourceName, BooleanSupplier digitalSource, TriggerAction triggerAction,
+          TriggerMode triggerMode,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (backTriggerParams != null)
@@ -364,7 +367,7 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setBackAnalogSourceTrigger(
-          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
+          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, TriggerAction triggerAction,
           TriggerMode triggerMode, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
