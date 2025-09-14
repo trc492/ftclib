@@ -24,10 +24,14 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
+import java.util.function.Supplier;
+
 import ftclib.motor.FtcServoActuator;
 import ftclib.sensor.FtcSensorTrigger;
 import trclib.motor.TrcServo;
-import trclib.sensor.TrcAnalogSource;
+import trclib.robotcore.TrcEvent;
+import trclib.sensor.TrcTrigger;
+import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcServoClaw;
 
 /**
@@ -43,11 +47,8 @@ public class FtcServoClaw
     public static class Params
     {
         private FtcServoActuator.Params servoParams = null;
-        private double openPos = 1.0;
-        private double openTime = 0.5;
-        private double closePos = 0.0;
-        private double closeTime = 0.5;
-        private FtcSensorTrigger sensorTrigger = null;
+        private final TrcServoClaw.ClawParams clawParams = new TrcServoClaw.ClawParams();
+        private TrcTrigger sensorTrigger = null;
 
         /**
          * This method returns the string format of the Params info.
@@ -59,10 +60,7 @@ public class FtcServoClaw
         public String toString()
         {
             return "servoParams=(" + servoParams +
-                   "),openPos=" + openPos +
-                   ",openTime=" + openTime +
-                   ",closePos=" + closePos +
-                   ",closeTime=" + closeTime +
+                   "),clawParams=" + clawParams +
                    ",sensorTrigger=" + sensorTrigger;
         }   //toString
 
@@ -75,8 +73,7 @@ public class FtcServoClaw
          */
         public Params setPrimaryServo(String servoName, boolean inverted)
         {
-            this.servoParams = new FtcServoActuator.Params()
-                .setPrimaryServo(servoName, inverted);
+            servoParams = new FtcServoActuator.Params().setPrimaryServo(servoName, inverted);
             return this;
         }   //setPrimaryServo
 
@@ -109,10 +106,7 @@ public class FtcServoClaw
          */
         public Params setOpenCloseParams(double openPos, double openTime, double closePos, double closeTime)
         {
-            this.openPos = openPos;
-            this.openTime = openTime;
-            this.closePos = closePos;
-            this.closeTime = closeTime;
+            clawParams.setOpenCloseParams(openPos, openTime, closePos, closeTime);
             return this;
         }   //setOpenCloseParams
 
@@ -129,9 +123,26 @@ public class FtcServoClaw
             {
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
-            sensorTrigger = new FtcSensorTrigger().setDigitalInputTrigger(sensorName, sensorInverted);
+            sensorTrigger = new FtcSensorTrigger().setDigitalInputTrigger(sensorName, sensorInverted).getTrigger();
             return this;
         }   //setDigitalInputTrigger
+
+        /**
+         * This method creates the digital source trigger.
+         *
+         * @param sourceName specifies the name of the digital source.
+         * @param digitalSource specifies the method to call to get the digital state value.
+         * @return this object for chaining.
+         */
+        public Params setDigitalSourceTrigger(String sourceName, Supplier<Boolean> digitalSource)
+        {
+            if (sensorTrigger != null)
+            {
+                throw new IllegalStateException("You can only set one type of trigger.");
+            }
+            sensorTrigger = new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger();
+            return this;
+        }   //setFrontDigitalSourceTrigger
 
         /**
          * This method creates the analog input trigger.
@@ -151,15 +162,16 @@ public class FtcServoClaw
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
             sensorTrigger = new FtcSensorTrigger()
-                .setAnalogInputTrigger(sensorName, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+                .setAnalogInputTrigger(
+                    sensorName, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod).getTrigger();
             return this;
         }   //setAnalogInputTrigger
 
         /**
          * This method creates the analog source trigger.
          *
-         * @param sourceName specifies the name of the data source.
-         * @param dataSource specifies the method to call to get the data source value.
+         * @param sourceName specifies the name of the analog source.
+         * @param analogSource specifies the method to call to get the analog source value.
          * @param lowerTriggerThreshold specifies the lower trigger threshold value.
          * @param upperTriggerThreshold specifies the upper trigger threshold value.
          * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
@@ -167,7 +179,7 @@ public class FtcServoClaw
          * @return this object for chaining.
          */
         public Params setAnalogSourceTrigger(
-            String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+            String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
             double upperTriggerThreshold, double triggerSettlingPeriod)
         {
             if (sensorTrigger != null)
@@ -176,7 +188,8 @@ public class FtcServoClaw
             }
             sensorTrigger = new FtcSensorTrigger()
                 .setAnalogSourceTrigger(
-                    sourceName, dataSource, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+                    sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
+                    triggerSettlingPeriod).getTrigger();
             return this;
         }   //setAnalogSourceTrigger
 
@@ -192,17 +205,11 @@ public class FtcServoClaw
      */
     public FtcServoClaw(String instanceName, Params params)
     {
-        TrcServo servo = new FtcServoActuator(params.servoParams).getServo();
-        TrcServoClaw.Params clawParams = new TrcServoClaw.Params()
-            .setServo(servo)
-            .setOpenCloseParams(params.openPos, params.openTime, params.closePos, params.closeTime);
-
-        if (params.sensorTrigger != null)
-        {
-            clawParams.setSensorTrigger(params.sensorTrigger.getTrigger());
-        }
-
-        claw = new TrcServoClaw(instanceName, clawParams);
+        claw = new TrcServoClaw(
+            instanceName,
+            new FtcServoActuator(params.servoParams).getServo(),
+            params.clawParams,
+            params.sensorTrigger);
     }   //FtcServoClaw
 
     /**

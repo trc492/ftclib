@@ -24,11 +24,12 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
+import java.util.function.Supplier;
+
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcEvent;
-import trclib.sensor.TrcAnalogSource;
 import trclib.sensor.TrcTrigger.TriggerMode;
 import trclib.subsystem.TrcRollerIntake;
 import trclib.subsystem.TrcRollerIntake.TriggerAction;
@@ -46,11 +47,7 @@ public class FtcRollerIntake
    public static class Params
    {
       private FtcMotorActuator.Params motorParams = null;
-      private double intakePower = 1.0;
-      private double ejectPower = 1.0;
-      private double retainPower = 0.0;
-      private double intakeFinishDelay = 0.0;
-      private double ejectFinishDelay = 0.0;
+      private final TrcRollerIntake.IntakeParams  intakeParams = new TrcRollerIntake.IntakeParams();
       private TrcRollerIntake.TriggerParams frontTriggerParams = null;
       private TrcRollerIntake.TriggerParams backTriggerParams = null;
 
@@ -64,11 +61,7 @@ public class FtcRollerIntake
       public String toString()
       {
          return "motorParams=" + motorParams +
-                ",intakePower=" + intakePower +
-                ",ejectPower=" + ejectPower +
-                ",retainPower=" + retainPower +
-                ",intakeFinishDelay=" + intakeFinishDelay +
-                ",ejectFinishDelay=" + ejectFinishDelay +
+                ",intakeParams=" + intakeParams +
                 ",frontTriggerParams=" + frontTriggerParams +
                 ",backTriggerParams=" + backTriggerParams;
       }   //toString
@@ -83,7 +76,7 @@ public class FtcRollerIntake
        */
       public Params setPrimaryMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
       {
-         this.motorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, inverted);
+         motorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, inverted);
          return this;
       }   //setPrimaryMotor
 
@@ -102,7 +95,7 @@ public class FtcRollerIntake
             throw new IllegalStateException("Must set the primary motor parameters first.");
          }
 
-         this.motorParams.setFollowerMotor(motorName, motorType, inverted);
+         motorParams.setFollowerMotor(motorName, motorType, inverted);
          return this;
       }   //setFollowerMotor
 
@@ -116,9 +109,7 @@ public class FtcRollerIntake
        */
       public Params setPowerLevels(double intakePower, double ejectPower, double retainPower)
       {
-         this.intakePower = intakePower;
-         this.ejectPower = ejectPower;
-         this.retainPower = retainPower;
+         intakeParams.setPowerLevels(intakePower, ejectPower, retainPower);
          return this;
       }   //setPowerLevels
 
@@ -131,8 +122,7 @@ public class FtcRollerIntake
        */
       public Params setFinishDelays(double intakeFinishDelay, double ejectFinishDelay)
       {
-         this.intakeFinishDelay = intakeFinishDelay;
-         this.ejectFinishDelay = ejectFinishDelay;
+         intakeParams.setFinishDelays(intakeFinishDelay, ejectFinishDelay);
          return this;
       }   //setFinishDelays
 
@@ -160,6 +150,31 @@ public class FtcRollerIntake
              triggerMode, triggerCallback, triggerCallbackContext);
          return this;
       }   //setFrontDigitalInputTrigger
+
+      /**
+       * This method creates the front digital source trigger.
+       *
+       * @param sourceName specifies the name of the digital source.
+       * @param digitalSource specifies the method to call to get the digital state value.
+       * @param triggerAction specifies the action when the trigger occurs.
+       * @param triggerMode specifies the trigger mode for the callback, ignored if there is no callback.
+       * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
+       * @param triggerCallbackContext specifies the callback context object.
+       * @return this object for chaining.
+       */
+      public Params setFrontDigitalSourceTrigger(
+          String sourceName, Supplier<Boolean> digitalSource, TriggerAction triggerAction, TriggerMode triggerMode,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+      {
+         if (frontTriggerParams != null)
+         {
+            throw new IllegalStateException("You can only set one type of trigger.");
+         }
+         frontTriggerParams = new TrcRollerIntake.TriggerParams(
+             new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), triggerAction,
+             triggerMode, triggerCallback, triggerCallbackContext);
+         return this;
+      }   //setFrontDigitalSourceTrigger
 
       /**
        * This method creates the front analog input trigger.
@@ -194,8 +209,8 @@ public class FtcRollerIntake
       /**
        * This method creates the front analog source trigger.
        *
-       * @param sourceName specifies the name of the data source.
-       * @param dataSource specifies the method to call to get the data source value.
+       * @param sourceName specifies the name of the analog source.
+       * @param analogSource specifies the method to call to get the analog source value.
        * @param lowerTriggerThreshold specifies the lower trigger threshold value.
        * @param upperTriggerThreshold specifies the upper trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
@@ -207,7 +222,7 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setFrontAnalogSourceTrigger(
-          String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, TriggerAction triggerAction,
           TriggerMode triggerMode, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -217,7 +232,7 @@ public class FtcRollerIntake
          }
          frontTriggerParams = new TrcRollerIntake.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, dataSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              triggerAction, triggerMode, triggerCallback, triggerCallbackContext);
          return this;
@@ -279,6 +294,31 @@ public class FtcRollerIntake
       }   //setBackDigitalInputTrigger
 
       /**
+       * This method creates the back digital source trigger.
+       *
+       * @param sourceName specifies the name of the digital source.
+       * @param digitalSource specifies the method to call to get the digital state value.
+       * @param triggerAction specifies the action when the trigger occurs.
+       * @param triggerMode specifies the trigger mode for the callback, ignored if there is no callback.
+       * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
+       * @param triggerCallbackContext specifies the callback context object.
+       * @return this object for chaining.
+       */
+      public Params setBackDigitalSourceTrigger(
+          String sourceName, Supplier<Boolean> digitalSource, TriggerAction triggerAction, TriggerMode triggerMode,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+      {
+         if (backTriggerParams != null)
+         {
+            throw new IllegalStateException("You can only set one type of trigger.");
+         }
+         backTriggerParams = new TrcRollerIntake.TriggerParams(
+             new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), triggerAction,
+             triggerMode, triggerCallback, triggerCallbackContext);
+         return this;
+      }   //setBackDigitalSourceTrigger
+
+      /**
        * This method creates the back analog input trigger.
        *
        * @param sensorName specifies the name of the sensor.
@@ -311,8 +351,8 @@ public class FtcRollerIntake
       /**
        * This method creates the back analog source trigger.
        *
-       * @param sourceName specifies the name of the data source.
-       * @param dataSource specifies the method to call to get the data source value.
+       * @param sourceName specifies the name of the analog source.
+       * @param analogSource specifies the method to call to get the analog source value.
        * @param lowerTriggerThreshold specifies the lower trigger threshold value.
        * @param upperTriggerThreshold specifies the upper trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
@@ -324,7 +364,7 @@ public class FtcRollerIntake
        * @return this object for chaining.
        */
       public Params setBackAnalogSourceTrigger(
-          String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, TriggerAction triggerAction,
           TriggerMode triggerMode, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -334,7 +374,7 @@ public class FtcRollerIntake
          }
          backTriggerParams = new TrcRollerIntake.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, dataSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              triggerAction, triggerMode, triggerCallback, triggerCallbackContext);
          return this;
@@ -382,23 +422,12 @@ public class FtcRollerIntake
     */
    public FtcRollerIntake(String instanceName, Params params)
    {
-      TrcMotor motor = new FtcMotorActuator(params.motorParams).getMotor();
-      TrcRollerIntake.Params intakeParams = new TrcRollerIntake.Params()
-          .setMotor(motor)
-          .setPowerLevels(params.intakePower, params.ejectPower, params.retainPower)
-          .setFinishDelays(params.intakeFinishDelay, params.ejectFinishDelay);
-
-      if (params.frontTriggerParams != null)
-      {
-         intakeParams.setFrontTrigger(params.frontTriggerParams);
-      }
-
-      if (params.backTriggerParams != null)
-      {
-         intakeParams.setBackTrigger(params.backTriggerParams);
-      }
-
-      intake = new TrcRollerIntake(instanceName, intakeParams);
+      intake = new TrcRollerIntake(
+          instanceName,
+          new FtcMotorActuator(params.motorParams).getMotor(),
+          params.intakeParams,
+          params.frontTriggerParams,
+          params.backTriggerParams);
    }   //FtcRollerIntake
 
    /**

@@ -24,10 +24,11 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
+import java.util.function.Supplier;
+
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
 import trclib.robotcore.TrcEvent;
-import trclib.sensor.TrcAnalogSource;
 import trclib.subsystem.TrcPidStorage;
 
 /**
@@ -73,7 +74,7 @@ public class FtcPidStorage
        */
       public Params setPrimaryMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
       {
-         this.motorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, inverted);
+         motorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, inverted);
          return this;
       }   //setPrimaryMotor
 
@@ -92,7 +93,7 @@ public class FtcPidStorage
             throw new IllegalStateException("Must set the primary motor parameters first.");
          }
 
-         this.motorParams.setFollowerMotor(motorName, motorType, inverted);
+         motorParams.setFollowerMotor(motorName, motorType, inverted);
          return this;
       }   //setFollowerMotor
 
@@ -104,7 +105,7 @@ public class FtcPidStorage
        */
       public Params setObjectDistance(double distance)
       {
-         this.storageParams.objectDistance = distance;
+         storageParams.setObjectDistance(distance);
          return this;
       }   //setObjectDistance
 
@@ -116,7 +117,7 @@ public class FtcPidStorage
        */
       public Params setMovePower(double power)
       {
-         this.storageParams.movePower = power;
+         storageParams.setMovePower(power);
          return this;
       }   //setMovePower
 
@@ -128,7 +129,7 @@ public class FtcPidStorage
        */
       public Params setMaxCapacity(int capacity)
       {
-         this.storageParams.maxCapacity = capacity;
+         storageParams.setMaxCapacity(capacity);
          return this;
       }   //setMaxCapacity
 
@@ -155,6 +156,30 @@ public class FtcPidStorage
              triggerCallback, triggerCallbackContext);
          return this;
       }   //setEntryDigitalInputTrigger
+
+      /**
+       * This method creates the entry digital source trigger.
+       *
+       * @param sourceName specifies the name of the digital source.
+       * @param digitalSource specifies the method to call to get the digital state value.
+       * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
+       * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
+       * @param triggerCallbackContext specifies the callback context object.
+       * @return this object for chaining.
+       */
+      public Params setEntryDigitalSourceTrigger(
+          String sourceName, Supplier<Boolean> digitalSource, boolean advanceOnTrigger,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+      {
+         if (entryTriggerParams != null)
+         {
+            throw new IllegalStateException("You can only set one type of trigger.");
+         }
+         entryTriggerParams = new TrcPidStorage.TriggerParams(
+             new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), advanceOnTrigger,
+             triggerCallback, triggerCallbackContext);
+         return this;
+      }   //setEntryDigitalSourceTrigger
 
       /**
        * This method creates the entry analog input trigger.
@@ -187,8 +212,8 @@ public class FtcPidStorage
       /**
        * This method creates the entry analog source trigger.
        *
-       * @param sourceName specifies the name of the data source.
-       * @param dataSource specifies the method to call to get the data source value.
+       * @param sourceName specifies the name of the analog source.
+       * @param analogSource specifies the method to call to get the analog source value.
        * @param lowerTriggerThreshold specifies the lower trigger threshold value.
        * @param upperTriggerThreshold specifies the upper trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
@@ -199,7 +224,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setEntryAnalogSourceTrigger(
-          String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -209,7 +234,7 @@ public class FtcPidStorage
          }
          entryTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, dataSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
@@ -238,6 +263,30 @@ public class FtcPidStorage
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setExitDigitalInputTrigger
+
+      /**
+       * This method creates the exit digital source trigger.
+       *
+       * @param sourceName specifies the name of the digital source.
+       * @param digitalSource specifies the method to call to get the digital state value.
+       * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
+       * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
+       * @param triggerCallbackContext specifies the callback context object.
+       * @return this object for chaining.
+       */
+      public Params setExitDigitalSourceTrigger(
+          String sourceName, Supplier<Boolean> digitalSource, boolean advanceOnTrigger,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+      {
+         if (exitTriggerParams != null)
+         {
+            throw new IllegalStateException("You can only set one type of trigger.");
+         }
+         exitTriggerParams = new TrcPidStorage.TriggerParams(
+             new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), advanceOnTrigger,
+             triggerCallback, triggerCallbackContext);
+         return this;
+      }   //setExitDigitalSourceTrigger
 
       /**
        * This method creates the exit analog input trigger.
@@ -270,8 +319,8 @@ public class FtcPidStorage
       /**
        * This method creates the exit analog source trigger.
        *
-       * @param sourceName specifies the name of the data source.
-       * @param dataSource specifies the method to call to get the data source value.
+       * @param sourceName specifies the name of the analog source.
+       * @param analogSource specifies the method to call to get the analog source value.
        * @param lowerTriggerThreshold specifies the lower trigger threshold value.
        * @param upperTriggerThreshold specifies the upper trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
@@ -282,7 +331,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setExitAnalogSourceTrigger(
-          String sourceName, TrcAnalogSource.AnalogDataSource dataSource, double lowerTriggerThreshold,
+          String sourceName, Supplier<Double> analogSource, double lowerTriggerThreshold,
           double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
           TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
@@ -292,7 +341,7 @@ public class FtcPidStorage
          }
          exitTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, dataSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
@@ -311,8 +360,11 @@ public class FtcPidStorage
    public FtcPidStorage(String instanceName, Params params)
    {
       pidStorage = new TrcPidStorage(
-          instanceName, new FtcMotorActuator(params.motorParams).getMotor(), params.storageParams,
-          params.entryTriggerParams, params.exitTriggerParams);
+          instanceName,
+          new FtcMotorActuator(params.motorParams).getMotor(),
+          params.storageParams,
+          params.entryTriggerParams,
+          params.exitTriggerParams);
    }   //FtcRollerIntake
 
    /**

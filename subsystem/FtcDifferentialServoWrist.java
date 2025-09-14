@@ -45,19 +45,7 @@ public class FtcDifferentialServoWrist
     {
         private FtcServoActuator.Params servo1Params = null;
         private FtcServoActuator.Params servo2Params = null;
-        private double logicalMin = 0.0;
-        private double logicalMax = 1.0;
-        private double physicalPosRange = 1.0;
-        private double tiltPosOffset = 0.0;
-        private double rotatePosOffset = 0.0;
-        private double maxStepRate = 0.0;
-        private double tiltPosLowLimit = 0.0;
-        private double tiltPosHighLimit = 1.0;
-        private double rotatePosLowLimit = 0.0;
-        private double rotatePosHighLimit = 1.0;
-        private double presetTolerance = 0.0;
-        private double[] tiltPosPresets = null;
-        private double[] rotatePosPresets = null;
+        private final TrcDifferentialServoWrist.WristParams wristParams = new TrcDifferentialServoWrist.WristParams();
 
         /**
          * This method returns the string format of the Params info.
@@ -70,19 +58,7 @@ public class FtcDifferentialServoWrist
         {
             return "servo1Params=" + servo1Params +
                    ",servo2Params=" + servo2Params +
-                   ",logRangeMin=" + logicalMin +
-                   ",logRangeMax=" + logicalMax +
-                   ",phyRange=" + physicalPosRange +
-                   ",tiltOffset=" + tiltPosOffset +
-                   ",rotateOffset=" + rotatePosOffset +
-                   ",maxStepRate=" + maxStepRate +
-                   ",tiltPosLowLimit=" + tiltPosLowLimit +
-                   ",tiltPosHighLimit=" + tiltPosHighLimit +
-                   ",rotatePosLowLimit=" + rotatePosLowLimit +
-                   ",rotatePosHighLimit=" + rotatePosHighLimit +
-                   ",presetTolerance=" + presetTolerance +
-                   ",tiltPresets=" + Arrays.toString(tiltPosPresets) +
-                   ",rotatePresets=" + Arrays.toString(rotatePosPresets);
+                   ",wristParams=" + wristParams;
         }   //toString
 
         /**
@@ -96,8 +72,8 @@ public class FtcDifferentialServoWrist
          */
         public Params setServos(String servo1Name, boolean servo1Inverted, String servo2Name, boolean servo2Inverted)
         {
-            this.servo1Params = new FtcServoActuator.Params().setPrimaryServo(servo1Name, servo1Inverted);
-            this.servo2Params = new FtcServoActuator.Params().setPrimaryServo(servo2Name, servo2Inverted);
+            servo1Params = new FtcServoActuator.Params().setPrimaryServo(servo1Name, servo1Inverted);
+            servo2Params = new FtcServoActuator.Params().setPrimaryServo(servo2Name, servo2Inverted);
             return this;
         }   //setServos
 
@@ -120,11 +96,7 @@ public class FtcDifferentialServoWrist
         public Params setPosRange(
             double logicalMin, double logicalMax, double physicalRange, double tiltOffset, double rotateOffset)
         {
-            this.logicalMin = logicalMin;
-            this.logicalMax = logicalMax;
-            this.physicalPosRange = physicalRange;
-            this.tiltPosOffset = tiltOffset;
-            this.rotatePosOffset = rotateOffset;
+            wristParams.setPosRange(logicalMin, logicalMax, physicalRange, tiltOffset, rotateOffset);
             return this;
         }   //setPosRange
 
@@ -136,7 +108,7 @@ public class FtcDifferentialServoWrist
          */
         public Params setMaxStepRate(double maxStepRate)
         {
-            this.maxStepRate = maxStepRate;
+            wristParams.setMaxStepRate(maxStepRate);
             return this;
         }   //setMaxStepRate
 
@@ -152,10 +124,7 @@ public class FtcDifferentialServoWrist
         public Params setPositionLimits(
             double tiltPosLowLimit, double tiltPosHighLimit, double rotatePosLowLimit, double rotatePosHighLimit)
         {
-            this.tiltPosLowLimit = tiltPosLowLimit;
-            this.tiltPosHighLimit = tiltPosHighLimit;
-            this.rotatePosLowLimit = rotatePosLowLimit;
-            this.rotatePosHighLimit = rotatePosHighLimit;
+            wristParams.setPositionLimits(tiltPosLowLimit, tiltPosHighLimit, rotatePosLowLimit, rotatePosHighLimit);
             return this;
         }   //setPositionLimits
 
@@ -169,9 +138,7 @@ public class FtcDifferentialServoWrist
          */
         public Params setPosPresets(double presetTolerance, double[] tiltPosPresets, double[] rotatePosPresets)
         {
-            this.presetTolerance = presetTolerance;
-            this.tiltPosPresets = tiltPosPresets;
-            this.rotatePosPresets = rotatePosPresets;
+            wristParams.setPosPresets(presetTolerance, tiltPosPresets, rotatePosPresets);
             return this;
         }   //setPosPresets
 
@@ -187,19 +154,11 @@ public class FtcDifferentialServoWrist
      */
     public FtcDifferentialServoWrist(String instanceName, Params params)
     {
-        TrcServo servo1 = new FtcServoActuator(params.servo1Params).getServo();
-        TrcServo servo2 = new FtcServoActuator(params.servo2Params).getServo();
-        TrcDifferentialServoWrist.Params wristParams = new TrcDifferentialServoWrist.Params()
-            .setServos(servo1, servo2)
-            .setPosRange(
-                params.logicalMin, params.logicalMax, params.physicalPosRange, params.tiltPosOffset,
-                params.rotatePosOffset)
-            .setMaxStepRate(params.maxStepRate)
-            .setPositionLimits(
-                params.tiltPosLowLimit, params.tiltPosHighLimit, params.rotatePosLowLimit, params.rotatePosHighLimit)
-            .setPosPresets(params.presetTolerance, params.tiltPosPresets, params.rotatePosPresets);
-
-        wrist = new TrcDifferentialServoWrist(instanceName, wristParams);
+        wrist = new TrcDifferentialServoWrist(
+            instanceName,
+            new FtcServoActuator(params.servo1Params).getServo(),
+            new FtcServoActuator(params.servo2Params).getServo(),
+            params.wristParams);
     }   //FtcDifferentialServoWrist
 
     /**
