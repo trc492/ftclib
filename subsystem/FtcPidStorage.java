@@ -99,6 +99,79 @@ public class FtcPidStorage
       }   //setFollowerMotor
 
       /**
+       * This method sets the lower limit switch parameters.
+       *
+       * @param name specifies the name of the limit switch.
+       * @param inverted specifies true if the limit switch is normally open, false if normally close.
+       * @return this object for chaining.
+       */
+      public Params setLowerLimitSwitch(String name, boolean inverted)
+      {
+         if (motorParams == null)
+         {
+            throw new IllegalStateException("Must set the primary motor parameters first.");
+         }
+
+         motorParams.setLowerLimitSwitch(name, inverted);
+         return this;
+      }   //setLowerLimitSwitch
+
+      /**
+       * This method sets the upper limit switch parameters.
+       *
+       * @param name specifies the name of the limit switch.
+       * @param inverted specifies true if the limit switch is normally open, false if normally close.
+       * @return this object for chaining.
+       */
+      public Params setUpperLimitSwitch(String name, boolean inverted)
+      {
+         if (motorParams == null)
+         {
+            throw new IllegalStateException("Must set the primary motor parameters first.");
+         }
+
+         motorParams.setUpperLimitSwitch(name, inverted);
+         return this;
+      }   //setUpperLimitSwitch
+
+      /**
+       * This method sets the position sensor scale factor and offset.
+       *
+       * @param scale specifies scale factor to multiply the position sensor reading.
+       * @param offset specifies offset added to the scaled sensor reading.
+       * @param zeroOffset specifies the zero offset for absolute encoder.
+       * @return this object for chaining.
+       */
+      public Params setPositionScaleAndOffset(double scale, double offset, double zeroOffset)
+      {
+         if (motorParams == null)
+         {
+            throw new IllegalStateException("Must set the primary motor parameters first.");
+         }
+
+         motorParams.setPositionScaleAndOffset(scale, offset, zeroOffset);
+         return this;
+      }   //setPositionScaleAndOffset
+
+      /**
+       * This method sets an array of preset positions.
+       *
+       * @param tolerance specifies the preset tolerance.
+       * @param posPresets specifies an array of preset positions in scaled unit.
+       * @return this object for chaining.
+       */
+      public Params setPositionPresets(double tolerance, double... posPresets)
+      {
+         if (motorParams == null)
+         {
+            throw new IllegalStateException("Must set the primary motor parameters first.");
+         }
+
+         motorParams.setPositionPresets(tolerance, posPresets);
+         return this;
+      }   //setPositionPresets
+
+      /**
        * This method sets the distance between objects inside the storage.
        *
        * @param distance specifies the distance between objects in the storage.
