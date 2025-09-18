@@ -24,6 +24,7 @@ package ftclib.drivebase;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
+import org.opencv.core.MatOfDouble;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import ftclib.motor.FtcMotorActuator;
@@ -57,6 +58,31 @@ public class FtcRobotDrive
         RevBlinkin
     }   //enum LEDType
 
+    public static class CameraInfo
+    {
+        public double fx;
+        public double fy;
+        public double cx;
+        public double cy;
+        public MatOfDouble distCoeffs;
+
+        public CameraInfo setLensProperties(double fx, double fy, double cx, double cy)
+        {
+            this.fx = fx;
+            this.fy = fy;
+            this.cx = cx;
+            this.cy = cy;
+            return this;
+        }   //setLensProperties
+
+        public CameraInfo setDistortionCoefficents(double... coeffs)
+        {
+            this.distCoeffs = new MatOfDouble(coeffs);
+            return this;
+        }   //setDistortionCoefficients
+
+    }   //class CameraInfo
+
     /**
      * This class contains Vision parameters of a camera.
      */
@@ -68,6 +94,7 @@ public class FtcRobotDrive
         public double camXOffset = 0.0, camYOffset = 0.0, camZOffset = 0.0;
         public double camYaw = 0.0, camPitch = 0.0, camRoll = 0.0;
         public TrcPose3D camPose = null;
+        public CameraInfo camInfo = null;
         // The following parameters are for OpenCvVision.
         public OpenCvCameraRotation camOrientation = null;
         public TrcHomographyMapper.Rectangle cameraRect = null;

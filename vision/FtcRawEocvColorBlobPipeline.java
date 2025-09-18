@@ -109,6 +109,16 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
     }   //toString
 
     /**
+     * This method returns the created ColorBlob pipeline.
+     *
+     * @return created color blob pipeline.
+     */
+    public TrcOpenCvColorBlobPipeline getPipeline()
+    {
+        return colorBlobPipeline;
+    }   //getPipeline
+
+    /**
      * This method returns the color threshold values.
      *
      * @return array of color threshold values.

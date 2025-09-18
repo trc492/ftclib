@@ -173,6 +173,16 @@ public class FtcEocvColorBlobProcessor
     }   //toString
 
     /**
+     * This method returns the created ColorBlob pipeline.
+     *
+     * @return created color blob pipeline.
+     */
+    public TrcOpenCvColorBlobPipeline getPipeline()
+    {
+        return colorBlobPipeline;
+    }   //getPipeline
+
+    /**
      * This method sets the annotation rectangle and text attributes such as rectangle line width/color and label
      * text color/size.
      *
