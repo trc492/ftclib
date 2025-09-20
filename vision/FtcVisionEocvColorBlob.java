@@ -82,13 +82,14 @@ public class FtcVisionEocvColorBlob
      * @param annotate specifies true to draw annotation, false otherwise.
      * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
      *        only if annotate is true.
+     * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
         double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
-        boolean drawRotatedRect)
+        boolean drawRotatedRect, boolean drawCrosshair)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(
@@ -109,7 +110,7 @@ public class FtcVisionEocvColorBlob
 
         if (annotate)
         {
-            colorBlobProcessor.enableAnnotation(drawRotatedRect);
+            colorBlobProcessor.enableAnnotation(drawRotatedRect, drawCrosshair);
         }
         else
         {
@@ -135,15 +136,16 @@ public class FtcVisionEocvColorBlob
      * @param annotate specifies true to draw annotation, false otherwise.
      * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
      *        only if annotate is true.
+     * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, Integer colorConversion, double[] colorThresholds,
         TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
-        boolean drawRotatedRect)
+        boolean drawRotatedRect, boolean drawCrosshair)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate, drawRotatedRect);
+             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate, drawRotatedRect, drawCrosshair);
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -171,7 +173,7 @@ public class FtcVisionEocvColorBlob
         double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
     {
         this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true, false);
+             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true, false, false);
     }   //FtcVisionEocvColorBlob
 
     /**

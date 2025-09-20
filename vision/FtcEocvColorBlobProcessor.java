@@ -49,15 +49,16 @@ public class FtcEocvColorBlobProcessor
     implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>, VisionProcessor
 {
     private static final int DEF_LINE_COLOR = Color.GREEN;
-    private static final float DEF_LINE_WIDTH = 4.0f;
+    private static final float DEF_LINE_WIDTH = 2.0f;
     private static final int DEF_TEXT_COLOR = Color.CYAN;
-    private static final float DEF_TEXT_SIZE = 20.0f;
+    private static final float DEF_TEXT_SIZE = 15.0f;
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
     private final Paint linePaint;
     private final Paint textPaint;
     private boolean annotateEnabled = false;
     private boolean drawRotatedRect = false;
+    private boolean drawCrosshair = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -258,12 +259,14 @@ public class FtcEocvColorBlobProcessor
      * This method enables image annotation of the detected object.
      *
      * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle.
+     * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
      */
     @Override
-    public void enableAnnotation(boolean drawRotatedRect)
+    public void enableAnnotation(boolean drawRotatedRect, boolean drawCrosshair)
     {
         this.annotateEnabled = true;
         this.drawRotatedRect = drawRotatedRect;
+        this.drawCrosshair = drawCrosshair;
     }   //setAnnotateEnabled
 
     /**
@@ -274,6 +277,7 @@ public class FtcEocvColorBlobProcessor
     {
         this.annotateEnabled = false;
         this.drawRotatedRect = false;
+        this.drawCrosshair = false;
     }   //disableAnnotation
 
     /**
@@ -429,6 +433,14 @@ public class FtcEocvColorBlobProcessor
                     canvas.drawLine(left, bottom, left, top, linePaint);
                     canvas.drawText(colorBlobPipeline.toString(), left, top, textPaint);
                 }
+            }
+
+            if (drawCrosshair)
+            {
+                float midScreenHeight = onscreenHeight/2.0f;
+                float midScreenWidth = onscreenWidth/2.0f;
+                canvas.drawLine(0.0f, midScreenHeight, onscreenWidth, midScreenHeight, linePaint);
+                canvas.drawLine(midScreenWidth, 0.0f, midScreenWidth, onscreenHeight, linePaint);
             }
         }
     }   //onDrawFrame

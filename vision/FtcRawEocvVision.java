@@ -24,7 +24,6 @@ package ftclib.vision;
 
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraRotation;
-import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
@@ -51,7 +50,7 @@ public class FtcRawEocvVision
     private final TrcHomographyMapper homographyMapper;
 
     private boolean cameraStarted = false;
-    private volatile TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>> openCvPipeline = null;
+    private volatile FtcRawEocvColorBlobPipeline openCvPipeline = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -144,17 +143,17 @@ public class FtcRawEocvVision
      *
      * @param pipeline specifies the pipeline to be used for detection, can be null to disable vision.
      */
-    public void setPipeline(TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>> pipeline)
+    public void setPipeline(FtcRawEocvColorBlobPipeline pipeline)
     {
         if (pipeline != openCvPipeline)
         {
             // Pipeline has changed.
             if (pipeline != null)
             {
-                pipeline.reset();
+                pipeline.getColorBlobPipeline().reset();
             }
             openCvPipeline = pipeline;
-            openCvCamera.setPipeline((OpenCvPipeline) pipeline);
+            openCvCamera.setPipeline(pipeline);
         }
     }   //setPipeline
 
@@ -165,7 +164,7 @@ public class FtcRawEocvVision
      */
     public TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>> getPipeline()
     {
-        return openCvPipeline;
+        return openCvPipeline.getColorBlobPipeline();
     }   //getPipeline
 
     /**
@@ -187,7 +186,7 @@ public class FtcRawEocvVision
         // Do this only if the pipeline is set.
         if (openCvPipeline != null)
         {
-            TrcOpenCvDetector.DetectedObject<?>[] objects = openCvPipeline.getDetectedObjects();
+            TrcOpenCvDetector.DetectedObject<?>[] objects = openCvPipeline.getColorBlobPipeline().getDetectedObjects();
 
             if (objects != null)
             {

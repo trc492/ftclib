@@ -30,19 +30,14 @@ import org.opencv.core.MatOfDouble;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import trclib.pathdrive.TrcPose3D;
-import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
-import trclib.vision.TrcOpenCvDetector;
-import trclib.vision.TrcOpenCvPipeline;
 
 /**
  * This class implements an EOCV color blob pipeline.
  */
 public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
-    implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>
 {
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
-    public final TrcDbgTrace tracer;
 
     /**
      * Constructor: Create an instance of the object.
@@ -71,7 +66,6 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
             instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
             objHeight, cameraMatrix, distCoeffs, cameraPose);
-        this.tracer = colorBlobPipeline.tracer;
     }   //FtcRawEocvColorBlobPipeline
 
     /**
@@ -113,142 +107,10 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      *
      * @return created color blob pipeline.
      */
-    public TrcOpenCvColorBlobPipeline getPipeline()
+    public TrcOpenCvColorBlobPipeline getColorBlobPipeline()
     {
         return colorBlobPipeline;
-    }   //getPipeline
-
-    /**
-     * This method returns the color threshold values.
-     *
-     * @return array of color threshold values.
-     */
-    public double[] getColorThresholds()
-    {
-        return colorBlobPipeline.getColorThresholds();
-    }   //getColorThresholds
-
-    /**
-     * This method sets the color threshold values.
-     *
-     * @param colorThresholds specifies an array of color threshold values.
-     */
-    public void setColorThresholds(double... colorThresholds)
-    {
-        colorBlobPipeline.setColorThresholds(colorThresholds);
-    }   //setColorThresholds
-
-    //
-    // Implements TrcOpenCvPipeline interface.
-    //
-
-    /**
-     * This method is called to reset the state of the pipeline if any.
-     */
-    @Override
-    public void reset()
-    {
-        colorBlobPipeline.reset();
-    }   //reset
-
-    /**
-     * This method is called to process the input image through the pipeline.
-     *
-     * @param input specifies the input image to be processed.
-     * @return array of detected objects.
-     */
-    @Override
-    public TrcOpenCvColorBlobPipeline.DetectedObject[] process(Mat input)
-    {
-        return colorBlobPipeline.process(input);
-    }   //process
-
-    /**
-     * This method returns the array of detected objects.
-     *
-     * @return array of detected objects.
-     */
-    @Override
-    public TrcOpenCvColorBlobPipeline.DetectedObject[] getDetectedObjects()
-    {
-        return colorBlobPipeline.getDetectedObjects();
-    }   //getDetectedObjects
-
-    /**
-     * This method enables image annotation of the detected object.
-     *
-     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle.
-     */
-    @Override
-    public void enableAnnotation(boolean drawRotatedRect)
-    {
-        colorBlobPipeline.enableAnnotation(drawRotatedRect);
-    }   //setAnnotateEnabled
-
-    /**
-     * This method disables image annotation.
-     */
-    @Override
-    public void disableAnnotation()
-    {
-        colorBlobPipeline.disableAnnotation();
-    }   //disableAnnotation
-
-    /**
-     * This method checks if image annotation is enabled.
-     *
-     * @return true if annotation is enabled, false otherwise.
-     */
-    @Override
-    public boolean isAnnotateEnabled()
-    {
-        return colorBlobPipeline.isAnnotateEnabled();
-    }   //isAnnotateEnabled
-
-    /**
-     * This method sets the intermediate mat of the pipeline as the video output mat.
-     *
-     * @param intermediateStep specifies the intermediate mat used as video output (0 is the original input frame).
-     */
-    @Override
-    public void setVideoOutput(int intermediateStep)
-    {
-        colorBlobPipeline.setVideoOutput(intermediateStep);
-    }   //setVideoOutput
-
-    /**
-     * This method cycles to the next intermediate mat of the pipeline as the video output mat.
-     */
-    @Override
-    public void setNextVideoOutput()
-    {
-        colorBlobPipeline.setNextVideoOutput();
-    }   //setNextVideoOutput
-
-    /**
-     * This method returns an intermediate processed frame. Typically, a pipeline processes a frame in a number of
-     * steps. It may be useful to see an intermediate frame for a step in the pipeline for tuning or debugging
-     * purposes.
-     *
-     * @param step specifies the intermediate step (0 is the original input frame).
-     * @return processed frame of the specified step.
-     */
-    @Override
-    public Mat getIntermediateOutput(int step)
-    {
-        return colorBlobPipeline.getIntermediateOutput(step);
-    }   //getIntermediateOutput
-
-    /**
-     * This method returns the selected intermediate output Mat.
-     *
-     * @return selected output mat.
-     */
-    @Override
-    public Mat getSelectedOutput()
-    {
-        return colorBlobPipeline.getSelectedOutput();
-    }   //getSelectedOutput
+    }   //getColorBlobPipeline
 
     //
     // Implements OpenCvPipeline abstract methods.
