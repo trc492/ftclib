@@ -47,7 +47,8 @@ public class FtcVisionEocvColorBlob
      */
     public interface FilterTarget
     {
-        boolean validateTarget(TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> objInfo);
+        boolean validateTarget(
+            TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> objInfo, Object context);
     }   //interface FilterTarget
 
     private final FtcEocvColorBlobProcessor colorBlobProcessor;
@@ -154,13 +155,14 @@ public class FtcVisionEocvColorBlob
      * This method returns an array list of target info on the filtered detected targets.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
+     * @param filterContext specifies filter context object to be passed to the validate method, can be null.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return filtered target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> getDetectedTargetsInfo(
-        FilterTarget filter,
+        FilterTarget filter, Object filterContext,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
         double objGroundOffset, double cameraHeight)
     {
@@ -176,7 +178,7 @@ public class FtcVisionEocvColorBlob
                     getDetectedTargetInfo(detectedObjects[i], objGroundOffset, cameraHeight);
                 boolean rejected = false;
 
-                if (filter == null || filter.validateTarget(objInfo))
+                if (filter == null || filter.validateTarget(objInfo, filterContext))
                 {
                     targets.add(objInfo);
                 }
@@ -204,19 +206,20 @@ public class FtcVisionEocvColorBlob
      * This method returns the target info of the best detected target.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
+     * @param filterContext specifies filter context object to be passed to the validate method, can be null.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @param objGroundOffset specifies the object ground offset above the floor.
      * @param cameraHeight specifies the height of the camera above the floor.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> getBestDetectedTargetInfo(
-        FilterTarget filter,
+        FilterTarget filter, Object filterContext,
         Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
         double objGroundOffset, double cameraHeight)
     {
         TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(filter, comparator, objGroundOffset, cameraHeight);
+            getDetectedTargetsInfo(filter, filterContext, comparator, objGroundOffset, cameraHeight);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -246,7 +249,7 @@ public class FtcVisionEocvColorBlob
     public int updateStatus(int lineNum)
     {
         TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> object =
-            getBestDetectedTargetInfo(null, null, 0.0, 0.0);
+            getBestDetectedTargetInfo(null, null, null, 0.0, 0.0);
 
         if (object != null)
         {
