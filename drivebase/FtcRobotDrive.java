@@ -64,7 +64,7 @@ public class FtcRobotDrive
         public double fy;
         public double cx;
         public double cy;
-        public MatOfDouble distCoeffs;
+        public double[] distCoeffs;
 
         public CameraInfo setLensProperties(double fx, double fy, double cx, double cy)
         {
@@ -77,7 +77,7 @@ public class FtcRobotDrive
 
         public CameraInfo setDistortionCoefficents(double... coeffs)
         {
-            this.distCoeffs = new MatOfDouble(coeffs);
+            this.distCoeffs = coeffs;
             return this;
         }   //setDistortionCoefficients
 

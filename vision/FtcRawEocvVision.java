@@ -164,7 +164,7 @@ public class FtcRawEocvVision
      */
     public TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>> getPipeline()
     {
-        return openCvPipeline.getColorBlobPipeline();
+        return openCvPipeline != null? openCvPipeline.getColorBlobPipeline(): null;
     }   //getPipeline
 
     /**

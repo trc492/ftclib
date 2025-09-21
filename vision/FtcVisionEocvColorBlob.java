@@ -25,15 +25,12 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
 import org.opencv.core.Point;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 
 import ftclib.driverio.FtcDashboard;
-import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
@@ -63,20 +60,7 @@ public class FtcVisionEocvColorBlob
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param colorConversion specifies color space conversion, can be null if no color space conversion.
-     *        Note: FTC ECOV input Mat format is RGBA, so you need to do Imgproc.COLOR_RGBA2xxx or
-     *        Imgproc.COLOR_RGB2xxx conversion.
-     * @param colorThresholds specifies an array of color thresholds. If useHsv is false, the array contains RGB
-     *        thresholds (minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue). If useHsv is true, the array contains
-     *        HSV thresholds (minHue, maxHue, minSat, maxSat, minValue, maxValue).
-     * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
-     * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
-     *        if filterContourParams is null).
-     * @param objWidth specifies object width in real world units (the long edge).
-     * @param objHeight specifies object height in real world units (the short edge).
-     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
-     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
-     * @param cameraPose specifies the camera's 3D position on the robot.
+     * @param pipelineParams specifies the pipeline parameters.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
@@ -85,16 +69,12 @@ public class FtcVisionEocvColorBlob
      * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
      */
     public FtcVisionEocvColorBlob(
-        String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose,
+        String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
         boolean drawRotatedRect, boolean drawCrosshair)
     {
         // Create the Color Blob processor.
-        colorBlobProcessor = new FtcEocvColorBlobProcessor(
-            instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-            objHeight, cameraMatrix, distCoeffs, cameraPose);
+        colorBlobProcessor = new FtcEocvColorBlobProcessor(instanceName, pipelineParams);
         tracer = colorBlobProcessor.tracer;
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
@@ -122,58 +102,11 @@ public class FtcVisionEocvColorBlob
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param colorConversion specifies color space conversion, can be null if no color space conversion.
-     *        Note: FTC ECOV input Mat format is RGBA, so you need to do Imgproc.COLOR_RGBA2xxx or
-     *        Imgproc.COLOR_RGB2xxx conversion.
-     * @param colorThresholds specifies an array of color thresholds. If useHsv is false, the array contains RGB
-     *        thresholds (minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue). If useHsv is true, the array contains
-     *        HSV thresholds (minHue, maxHue, minSat, maxSat, minValue, maxValue).
-     * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
-     * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
-     *        if filterContourParams is null).
-     * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
-     * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
-     * @param annotate specifies true to draw annotation, false otherwise.
-     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
-     *        only if annotate is true.
-     * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
+     * @param pipelineParams specifies the pipeline parameters.
      */
-    public FtcVisionEocvColorBlob(
-        String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
-        boolean drawRotatedRect, boolean drawCrosshair)
+    public FtcVisionEocvColorBlob(String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams)
     {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly,
-             0.0, 0.0, null, null, null, cameraRect, worldRect, annotate, drawRotatedRect, drawCrosshair);
-    }   //FtcVisionEocvColorBlob
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param colorConversion specifies color space conversion, can be null if no color space conversion.
-     *        Note: FTC ECOV input Mat format is RGBA, so you need to do Imgproc.COLOR_RGBA2xxx or
-     *        Imgproc.COLOR_RGB2xxx conversion.
-     * @param colorThresholds specifies an array of color thresholds. If useHsv is false, the array contains RGB
-     *        thresholds (minRed, maxRed, minGreen, maxGreen, minBlue, maxBlue). If useHsv is true, the array contains
-     *        HSV thresholds (minHue, maxHue, minSat, maxSat, minValue, maxValue).
-     * @param filterContourParams specifies the parameters for filtering contours, can be null if not provided.
-     * @param externalContourOnly specifies true for finding external contours only, false otherwise (not applicable
-     *        if filterContourParams is null).
-     * @param objWidth specifies object width in real world units (the long edge).
-     * @param objHeight specifies object height in real world units (the short edge).
-     * @param cameraMatrix specifies the camera lens characteristic matrix (fx, fy, cx, cy), null if not provided.
-     * @param distCoeffs specifies the camera lens distortion coefficients, null if not provided.
-     * @param cameraPose specifies the camera's 3D position on the robot.
-     */
-    public FtcVisionEocvColorBlob(
-        String instanceName, Integer colorConversion, double[] colorThresholds,
-        TrcOpenCvColorBlobPipeline.FilterContourParams filterContourParams, boolean externalContourOnly,
-        double objWidth, double objHeight, Mat cameraMatrix, MatOfDouble distCoeffs, TrcPose3D cameraPose)
-    {
-        this(instanceName, colorConversion, colorThresholds, filterContourParams, externalContourOnly, objWidth,
-             objHeight, cameraMatrix, distCoeffs, cameraPose, null, null, true, false, false);
+        this(instanceName, pipelineParams, null, null, true, false, false);
     }   //FtcVisionEocvColorBlob
 
     /**
