@@ -112,8 +112,7 @@ public class FtcSensorTrigger
      * @return this object for chaining.
      */
     public FtcSensorTrigger setAnalogSourceTrigger(
-        String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
-        double upperTriggerThreshold,
+        String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold, double upperTriggerThreshold,
         double triggerSettlingPeriod)
     {
         if (trigger != null)
