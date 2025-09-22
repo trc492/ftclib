@@ -52,12 +52,6 @@ public class FtcRobotDrive
     public static final int INDEX_LEFT_CENTER = 4;
     public static final int INDEX_RIGHT_CENTER = 5;
 
-    public enum LEDType
-    {
-        GobildaLEDIndicator,
-        RevBlinkin
-    }   //enum LEDType
-
     public static class CameraInfo
     {
         public double fx;
@@ -175,10 +169,7 @@ public class FtcRobotDrive
         public VisionInfo webCam2 = null;
         public VisionInfo limelight = null;
         // Miscellaneous
-        public String indicator1Name = null;
-        public LEDType indicator1Type = null;
-        public String indicator2Name = null;
-        public LEDType indicator2Type = null;
+        public String[] indicatorNames = null;
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
