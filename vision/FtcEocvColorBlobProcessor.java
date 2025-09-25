@@ -49,7 +49,7 @@ public class FtcEocvColorBlobProcessor
     private static final int DEF_LINE_COLOR = Color.GREEN;
     private static final float DEF_LINE_WIDTH = 2.0f;
     private static final int DEF_TEXT_COLOR = Color.CYAN;
-    private static final float DEF_TEXT_SIZE = 15.0f;
+    private static final float DEF_TEXT_SIZE = 20.0f;
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
     private final Paint linePaint;
@@ -355,9 +355,8 @@ public class FtcEocvColorBlobProcessor
                             linePaint);
                     }
                     canvas.drawText(
-                        colorBlobPipeline.toString(),
-                        (float) (objRect.x * scaleBmpPxToCanvasPx), (float) (objRect.y * scaleBmpPxToCanvasPx),
-                        textPaint);
+                        object.label, (float) (objRect.x * scaleBmpPxToCanvasPx),
+                        (float) (objRect.y * scaleBmpPxToCanvasPx), textPaint);
                 }
                 else
                 {
@@ -372,7 +371,7 @@ public class FtcEocvColorBlobProcessor
                     canvas.drawLine(right, top, right, bottom, linePaint);
                     canvas.drawLine(right, bottom, left, bottom, linePaint);
                     canvas.drawLine(left, bottom, left, top, linePaint);
-                    canvas.drawText(colorBlobPipeline.toString(), left, top, textPaint);
+                    canvas.drawText(object.label, left, top, textPaint);
                 }
             }
 
