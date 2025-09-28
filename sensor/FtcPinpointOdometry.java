@@ -44,6 +44,7 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
     public static class Config
     {
         private double yPodXOffset = 0.0, xPodYOffset = 0.0;
+        private GoBildaPinpointDriver.GoBildaOdometryPods gobildaPodType = null;
         private double encoderCountsPerMm = 1.0;
         private boolean yPodEncoderInverted = false, xPodEncoderInverted = false;
 
@@ -58,6 +59,7 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         {
             return "{yPodXOffset=" + yPodXOffset +
                    ",xPodYOffset=" + xPodYOffset +
+                   ",gobildaPodType=" + gobildaPodType +
                    ",encRes=" + encoderCountsPerMm +
                    ",yPodEncoderInverted=" + yPodEncoderInverted +
                    ",xPodEncoderInverted=" + xPodEncoderInverted + "}";
@@ -76,6 +78,18 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
             this.xPodYOffset = xPodYOffset;
             return this;
         }   //setPodOffsets
+
+        /**
+         * This method sets the Odometry pod encoder resolution.
+         *
+         * @param podType specifies the Gobilda pod type.
+         * @return this object for chaining.
+         */
+        public Config setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods podType)
+        {
+            this.gobildaPodType = podType;
+            return this;
+        }   //setEncoderResolution
 
         /**
          * This method sets the Odometry pod encoder resolution.
@@ -122,7 +136,14 @@ public class FtcPinpointOdometry implements TrcDriveBaseOdometry
         this.instanceName = instanceName;
         this.ppOdo = hardwareMap.get(GoBildaPinpointDriver.class, instanceName);
         ppOdo.setOffsets(-config.yPodXOffset, config.xPodYOffset);
-        ppOdo.setEncoderResolution(config.encoderCountsPerMm);
+        if (config.gobildaPodType != null)
+        {
+            ppOdo.setEncoderResolution(config.gobildaPodType);
+        }
+        else
+        {
+            ppOdo.setEncoderResolution(config.encoderCountsPerMm);
+        }
         ppOdo.setEncoderDirections(
             config.yPodEncoderInverted?
                 GoBildaPinpointDriver.EncoderDirection.REVERSED: GoBildaPinpointDriver.EncoderDirection.FORWARD,
