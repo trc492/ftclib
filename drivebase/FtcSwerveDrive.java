@@ -112,7 +112,8 @@ public class FtcSwerveDrive extends FtcRobotDrive
 
         for (int i = 0; i < encoders.length; i++)
         {
-            encoders[i] = new FtcAnalogEncoder(swerveInfo.steerEncoderNames[i]);
+            // This assumes the encoder is mounted 1:1 gear ratio to the steering axle.
+            encoders[i] = new FtcAnalogEncoder(swerveInfo.steerEncoderNames[i], false);
             encoders[i].setInverted(swerveInfo.steerEncoderInverted[i]);
             encoders[i].setScaleAndOffset(360.0, 0.0, swerveInfo.steerEncoderZeros[i]);
             // Enable Wrap Value converter.

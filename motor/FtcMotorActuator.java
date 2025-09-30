@@ -260,7 +260,7 @@ public class FtcMotorActuator
             params.upperLimitSwitchName != null? new FtcDigitalInput(params.upperLimitSwitchName): null;
         TrcEncoder encoder =
             params.externalEncoderName != null?
-                new FtcAnalogEncoder(params.externalEncoderName): params.externalEncoder;
+                new FtcAnalogEncoder(params.externalEncoderName, true): params.externalEncoder;
 
         TrcMotor.ExternalSensors sensors = null;
         if (lowerLimitSwitch != null || upperLimitSwitch != null || encoder != null)

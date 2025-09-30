@@ -47,25 +47,28 @@ public class FtcAnalogEncoder implements TrcEncoder
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
+     * @param useWrapConverter specifies true to use WrapValueConverter, false otherwise.
      * @param filters specifies an array of filter objects, one for each axis, to filter sensor data. If no filter
-     *                is used, this can be set to null.
+     *        is used, this can be set to null.
      */
-    public FtcAnalogEncoder(String instanceName, TrcFilter[]filters)
+    public FtcAnalogEncoder(String instanceName, boolean useWrapConverter, TrcFilter[]filters)
     {
         this.tracer = new TrcDbgTrace();
         this.instanceName = instanceName;
         analogInput = new FtcAnalogInput(instanceName, filters);
-        wrapValueConverter = new TrcWrapValueConverter(instanceName, this::getRawPosition, 0.0, 1.0);
+        wrapValueConverter = useWrapConverter?
+            new TrcWrapValueConverter(instanceName, this::getRawPosition, 0.0, 1.0): null;
     }   //FtcAnalogEncoder
 
     /**
      * Constructor: Creates an instance of the object.
      *
      * @param instanceName specifies the instance name.
+     * @param useWrapConverter specifies true to use WrapValueConverter, false otherwise.
      */
-    public FtcAnalogEncoder(String instanceName)
+    public FtcAnalogEncoder(String instanceName, boolean useWrapConverter)
     {
-        this(instanceName, null);
+        this(instanceName, useWrapConverter, null);
     }   //FtcAnalogEncoder
 
     /**
@@ -79,13 +82,13 @@ public class FtcAnalogEncoder implements TrcEncoder
     }   //setEnabled
 
     /**
-     * This method checks if the Cardinal Converter task is enabled.
+     * This method checks if the Wrap Value Converter task is enabled.
      *
-     * @return true if cardinal converter is enabled, false if disabled.
+     * @return true if wrap value converter is enabled, false if disabled.
      */
     public boolean isEnabled()
     {
-        return wrapValueConverter.isTaskEnabled();
+        return wrapValueConverter != null && wrapValueConverter.isTaskEnabled();
     }   //isEnabled
 
     /**
@@ -109,19 +112,24 @@ public class FtcAnalogEncoder implements TrcEncoder
     public void reset()
     {
         tracer.traceDebug(instanceName, "Reset encoder.");
-        wrapValueConverter.resetConverter();
+        if (wrapValueConverter != null)
+        {
+            wrapValueConverter.resetConverter();
+        }
     }   //reset
 
     /**
      * This method reads the normalized analog input of the encoder.
      *
-     * @return normalized input of the encoder in the unit of percent rotation (0 to 1).
+     * @return normalized zero adjusted input of the encoder in the unit of percent rotation (0 to 1).
      */
     @Override
     public double getRawPosition()
     {
-        double pos = analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
-        tracer.traceDebug(instanceName, "RawPos=" + pos);
+        double normalizedPos = analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
+        double pos = normalizedPos - zeroOffset;
+        if (pos < 0.0) pos += 1.0;
+        tracer.traceDebug(instanceName, "RawPos(normalized=%f, zeroAdjusted=%f)", normalizedPos, pos);
         return pos;
     }   //getRawPosition
 
@@ -133,11 +141,10 @@ public class FtcAnalogEncoder implements TrcEncoder
     @Override
     public double getScaledPosition()
     {
-        // wrapValueConverter returns the normalized reading from AnalogInput.
-        // Offset must also be normalized.
-        double pos = (wrapValueConverter.getContinuousValue() - zeroOffset) * scale * sign + offset;
-        tracer.traceDebug(instanceName, "ScaledPos=" + pos);
-        return pos;
+        double pos = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
+        double scaledPos = pos * scale * sign + offset;
+        tracer.traceDebug(instanceName, "RawPos=%f, ScaledPos=%f", pos, scaledPos);
+        return scaledPos;
     }   //getScaledPosition
 
     /**

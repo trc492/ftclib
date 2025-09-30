@@ -140,7 +140,7 @@ public class FtcServoClaw
             }
             sensorTrigger = new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger();
             return this;
-        }   //setFrontDigitalSourceTrigger
+        }   //setDigitalSourceTrigger
 
         /**
          * This method creates the analog input trigger.
