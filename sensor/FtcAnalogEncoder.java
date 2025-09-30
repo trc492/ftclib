@@ -78,7 +78,10 @@ public class FtcAnalogEncoder implements TrcEncoder
      */
     public void setEnabled(boolean enabled)
     {
-        wrapValueConverter.setTaskEnabled(enabled);
+        if (wrapValueConverter != null)
+        {
+            wrapValueConverter.setTaskEnabled(enabled);
+        }
     }   //setEnabled
 
     /**
