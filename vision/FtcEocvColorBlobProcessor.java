@@ -22,6 +22,7 @@
 
 package ftclib.vision;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -30,11 +31,13 @@ import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
+import org.opencv.android.Utils;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
 import trclib.robotcore.TrcDbgTrace;
+import trclib.timer.TrcTimer;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
 import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcOpenCvPipeline;
@@ -46,6 +49,7 @@ import trclib.vision.TrcOpenCvPipeline;
 public class FtcEocvColorBlobProcessor
     implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>, VisionProcessor
 {
+    private static final double DEF_STREAM_INTERVAL = 0.1;  // in seconds (10 fps)
     private static final int DEF_LINE_COLOR = Color.GREEN;
     private static final float DEF_LINE_WIDTH = 2.0f;
     private static final int DEF_TEXT_COLOR = Color.CYAN;
@@ -57,6 +61,11 @@ public class FtcEocvColorBlobProcessor
     private boolean annotateEnabled = false;
     private boolean drawRotatedRect = false;
     private boolean drawCrosshair = false;
+
+    private Double streamInterval = null;
+    private Double nextStreamTime = null;
+    private Bitmap dashboardBitmap = null;
+    private Canvas dashboardCanvas = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -123,6 +132,32 @@ public class FtcEocvColorBlobProcessor
     {
         return colorBlobPipeline;
     }   //getPipeline
+
+    /**
+     * This method enables video streaming to FtcDashboard.
+     *
+     * @param streamInterval specifies the streaming interval in seconds.
+     */
+    public void enableStreamToDashboard(double streamInterval)
+    {
+        this.streamInterval = streamInterval;
+    }   //enableStreamToDashboard
+
+    /**
+     * This method enables video streaming to FtcDashboard at DEF_STREAM_INTERVAL.
+     */
+    public void enableStreamToDashboard()
+    {
+        this.streamInterval = DEF_STREAM_INTERVAL;
+    }   //enableStreamToDashboard
+
+    /**
+     * This method disables video streaming to FtcDashboard.
+     */
+    public void disableStreamToDashboard()
+    {
+        this.streamInterval = null;
+    }   //disableStreamToDashboard
 
     /**
      * This method sets the annotation rectangle and text attributes such as rectangle line width/color and label
@@ -336,53 +371,100 @@ public class FtcEocvColorBlobProcessor
         {
             TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
                 (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
-            Point[] vertices;
-
-            for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
+            // Create dashboard bitmap if not already.
+            if (dashboardBitmap == null ||
+                dashboardBitmap.getWidth() != onscreenWidth ||
+                dashboardBitmap.getHeight() != onscreenHeight)
             {
-                Rect objRect = object.getObjectRect();
-
-                if (drawRotatedRect && (vertices = object.getRotatedRectVertices()) != null)
+                dashboardBitmap = Bitmap.createBitmap(onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
+                dashboardCanvas = new Canvas(dashboardBitmap);
+            }
+            // Convert Mat to bitmap
+            synchronized (colorBlobPipeline)
+            {
+                Mat frame = getSelectedOutput();
+                if (frame != null && !frame.empty())
                 {
-                    for (int start = 0; start < vertices.length; start++)
-                    {
-                        int end = (start + 1) % vertices.length;
-                        canvas.drawLine(
-                            (float) (vertices[start].x * scaleBmpPxToCanvasPx),
-                            (float) (vertices[start].y * scaleBmpPxToCanvasPx),
-                            (float) (vertices[end].x * scaleBmpPxToCanvasPx),
-                            (float) (vertices[end].y * scaleBmpPxToCanvasPx),
-                            linePaint);
-                    }
-                    canvas.drawText(
-                        object.label, (float) (objRect.x * scaleBmpPxToCanvasPx),
-                        (float) (objRect.y * scaleBmpPxToCanvasPx), textPaint);
-                }
-                else
-                {
-                    // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
-                    // scale the rect to canvas resolution.
-                    float left = objRect.x * scaleBmpPxToCanvasPx;
-                    float right = (objRect.x + objRect.width) * scaleBmpPxToCanvasPx;
-                    float top = objRect.y * scaleBmpPxToCanvasPx;
-                    float bottom = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
-
-                    canvas.drawLine(left, top, right, top, linePaint);
-                    canvas.drawLine(right, top, right, bottom, linePaint);
-                    canvas.drawLine(right, bottom, left, bottom, linePaint);
-                    canvas.drawLine(left, bottom, left, top, linePaint);
-                    canvas.drawText(object.label, left, top, textPaint);
+                    Utils.matToBitmap(frame, dashboardBitmap);
                 }
             }
+            // Draw annotations once on dashboardCanvas
+            drawAnnotations(dashboardCanvas, dets, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx);
+            // Draw the resulting annotated bitmap onto the viewport canvas
+            canvas.drawBitmap(dashboardBitmap, 0, 0, null);
 
-            if (drawCrosshair)
+            // Stream to FTC Dashboard at the limited rate
+            if (streamInterval != null)
             {
-                float midScreenHeight = onscreenHeight/2.0f;
-                float midScreenWidth = onscreenWidth/2.0f;
-                canvas.drawLine(0.0f, midScreenHeight, onscreenWidth, midScreenHeight, linePaint);
-                canvas.drawLine(midScreenWidth, 0.0f, midScreenWidth, onscreenHeight, linePaint);
+                double currTime = TrcTimer.getCurrentTime();
+                if (nextStreamTime == null || currTime >= nextStreamTime)
+                {
+                    nextStreamTime = currTime + streamInterval;
+                    com.acmerobotics.dashboard.FtcDashboard.getInstance().sendImage(dashboardBitmap);
+                }
             }
         }
     }   //onDrawFrame
+
+    /**
+     * This method draws the annotation on the canvas.
+     *
+     * @param canvas specifies the canvas to draw on.
+     * @param dets specifies the array of detected object.
+     * @param onscreenWidth specifies the canvas width.
+     * @param onscreenHeight specifies the canvas height.
+     * @param scaleBmpPxToCanvasPx specifies the scale.
+     */
+    private void drawAnnotations(
+        Canvas canvas, TrcOpenCvColorBlobPipeline.DetectedObject[] dets, int onscreenWidth, int onscreenHeight,
+        float scaleBmpPxToCanvasPx)
+    {
+        Point[] vertices;
+
+        for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
+        {
+            Rect objRect = object.getObjectRect();
+
+            if (drawRotatedRect && (vertices = object.getRotatedRectVertices()) != null)
+            {
+                for (int start = 0; start < vertices.length; start++)
+                {
+                    int end = (start + 1) % vertices.length;
+                    canvas.drawLine(
+                        (float) (vertices[start].x * scaleBmpPxToCanvasPx),
+                        (float) (vertices[start].y * scaleBmpPxToCanvasPx),
+                        (float) (vertices[end].x * scaleBmpPxToCanvasPx),
+                        (float) (vertices[end].y * scaleBmpPxToCanvasPx),
+                        linePaint);
+                }
+                canvas.drawText(
+                    object.label, (float) (objRect.x * scaleBmpPxToCanvasPx),
+                    (float) (objRect.y * scaleBmpPxToCanvasPx), textPaint);
+            }
+            else
+            {
+                // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
+                // scale the rect to canvas resolution.
+                float left = objRect.x * scaleBmpPxToCanvasPx;
+                float right = (objRect.x + objRect.width) * scaleBmpPxToCanvasPx;
+                float top = objRect.y * scaleBmpPxToCanvasPx;
+                float bottom = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
+
+                canvas.drawLine(left, top, right, top, linePaint);
+                canvas.drawLine(right, top, right, bottom, linePaint);
+                canvas.drawLine(right, bottom, left, bottom, linePaint);
+                canvas.drawLine(left, bottom, left, top, linePaint);
+                canvas.drawText(object.label, left, top, textPaint);
+            }
+        }
+
+        if (drawCrosshair)
+        {
+            float midScreenHeight = onscreenHeight/2.0f;
+            float midScreenWidth = onscreenWidth/2.0f;
+            canvas.drawLine(0.0f, midScreenHeight, onscreenWidth, midScreenHeight, linePaint);
+            canvas.drawLine(midScreenWidth, 0.0f, midScreenWidth, onscreenHeight, linePaint);
+        }
+    }   //drawAnnotation
 
 }  //class FtcEocvColorBlobProcessor
