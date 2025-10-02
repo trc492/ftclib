@@ -32,9 +32,14 @@ import androidx.annotation.NonNull;
 import org.firstinspires.ftc.robotcore.internal.camera.calibration.CameraCalibration;
 import org.firstinspires.ftc.vision.VisionProcessor;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.timer.TrcTimer;
@@ -54,18 +59,26 @@ public class FtcEocvColorBlobProcessor
     private static final float DEF_LINE_WIDTH = 2.0f;
     private static final int DEF_TEXT_COLOR = Color.CYAN;
     private static final float DEF_TEXT_SIZE = 20.0f;
+    private final android.graphics.Rect srcRect = new android.graphics.Rect();
+    private final android.graphics.Rect dstRect = new android.graphics.Rect();
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
     private final Paint linePaint;
     private final Paint textPaint;
+    private final float strokeWidth;
+    private final float textSize;
+    private final Mat rawColorMat = new Mat();
     private boolean annotateEnabled = false;
     private boolean drawRotatedRect = false;
     private boolean drawCrosshair = false;
 
+    private ExecutorService dashboardExecutor = null;
     private Double streamInterval = null;
     private Double nextStreamTime = null;
     private Bitmap dashboardBitmap = null;
+    private Bitmap bitmapToSend = null;
     private Canvas dashboardCanvas = null;
+    private Bitmap rawBitmap = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -90,14 +103,14 @@ public class FtcEocvColorBlobProcessor
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
-        linePaint.setColor(lineColor != null? lineColor: DEF_LINE_COLOR);
-        linePaint.setStrokeWidth(lineWidth != null? lineWidth: DEF_LINE_WIDTH);
+        linePaint.setColor(lineColor != null ? lineColor : DEF_LINE_COLOR);
+        this.strokeWidth = lineWidth != null ? lineWidth : DEF_LINE_WIDTH;
 
         textPaint = new Paint();
         textPaint.setAntiAlias(true);
         textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setColor(textColor != null? textColor: DEF_TEXT_COLOR);
-        textPaint.setTextSize(textSize != null? textSize: DEF_TEXT_SIZE);
+        textPaint.setColor(textColor != null ? textColor : DEF_TEXT_COLOR);
+        this.textSize = textSize != null ? textSize : DEF_TEXT_SIZE;
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -140,7 +153,11 @@ public class FtcEocvColorBlobProcessor
      */
     public void enableStreamToDashboard(double streamInterval)
     {
-        this.streamInterval = streamInterval;
+        if (dashboardExecutor == null)
+        {
+            this.dashboardExecutor = Executors.newSingleThreadExecutor();
+            this.streamInterval = streamInterval;
+        }
     }   //enableStreamToDashboard
 
     /**
@@ -148,7 +165,7 @@ public class FtcEocvColorBlobProcessor
      */
     public void enableStreamToDashboard()
     {
-        this.streamInterval = DEF_STREAM_INTERVAL;
+        enableStreamToDashboard(DEF_STREAM_INTERVAL);
     }   //enableStreamToDashboard
 
     /**
@@ -156,7 +173,9 @@ public class FtcEocvColorBlobProcessor
      */
     public void disableStreamToDashboard()
     {
-        this.streamInterval = null;
+        dashboardExecutor.shutdownNow();
+        dashboardExecutor = null;
+        streamInterval = null;
     }   //disableStreamToDashboard
 
     /**
@@ -318,30 +337,33 @@ public class FtcEocvColorBlobProcessor
     // Implements VisionProcessor interface.
     //
 
-   /**
-    * This method is called to initialize the vision processor.
-    *
-    * @param width specifies the image width.
-    * @param height specifies the image height.
-    * @param calibration specifies the camera calibration data.
-    */
+    /**
+     * This method is called to initialize the vision processor.
+     *
+     * @param width specifies the image width.
+     * @param height specifies the image height.
+     * @param calibration specifies the camera calibration data.
+     */
     @Override
     public void init(int width, int height, CameraCalibration calibration)
     {
         // Don't really need to do anything here.
     }   //init
 
-   /**
-    * This method is called to process an image frame.
-    *
-    * @param frame specifies the source image to be processed.
-    * @param captureTimeNanos specifies the capture frame timestamp.
-    * @return array of detected objects.
-    */
+    /**
+     * This method is called to process an image frame.
+     *
+     * @param frame specifies the source image to be processed.
+     * @param captureTimeNanos specifies the capture frame timestamp.
+     * @return array of detected objects.
+     */
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos)
     {
-        return colorBlobPipeline.process(frame);
+        synchronized (colorBlobPipeline)
+        {
+            return colorBlobPipeline.process(frame);
+        }
     }   //processFrame
 
     /**
@@ -367,104 +389,186 @@ public class FtcEocvColorBlobProcessor
     {
         // Allow only one draw operation at a time (we could be called from two different threads - viewport or
         // camera stream).
-        if (annotateEnabled && userContext != null)
+        if (annotateEnabled)
         {
             TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
                 (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
-            // Create dashboard bitmap if not already.
-            if (dashboardBitmap == null ||
-                dashboardBitmap.getWidth() != onscreenWidth ||
-                dashboardBitmap.getHeight() != onscreenHeight)
-            {
-                dashboardBitmap = Bitmap.createBitmap(onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
-                dashboardCanvas = new Canvas(dashboardBitmap);
-            }
-            // Convert Mat to bitmap
-            synchronized (colorBlobPipeline)
-            {
-                Mat frame = getSelectedOutput();
-                if (frame != null && !frame.empty())
-                {
-                    Utils.matToBitmap(frame, dashboardBitmap);
-                }
-            }
-            // Draw annotations once on dashboardCanvas
-            drawAnnotations(dashboardCanvas, dets, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx);
-            // Draw the resulting annotated bitmap onto the viewport canvas
-            canvas.drawBitmap(dashboardBitmap, 0, 0, null);
 
-            // Stream to FTC Dashboard at the limited rate
-            if (streamInterval != null)
+            if (streamInterval == null)
             {
+                // No FTC Dashboard streaming: just annotate directly
+                drawAnnotations(dets, canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity);
+            }
+            else
+            {
+                // Stream to FTC Dashboard at the limited rate
                 double currTime = TrcTimer.getCurrentTime();
                 if (nextStreamTime == null || currTime >= nextStreamTime)
                 {
                     nextStreamTime = currTime + streamInterval;
-                    com.acmerobotics.dashboard.FtcDashboard.getInstance().sendImage(dashboardBitmap);
+                    // Convert Mat to bitmap
+                    synchronized (colorBlobPipeline)
+                    {
+                        Mat frame = getSelectedOutput();
+                        if (frame == null || frame.empty()) return;
+
+                        int frameWidth = frame.width();
+                        int frameHeight = frame.height();
+                        // Allocate rawBitmap once
+                        if (rawBitmap == null ||
+                            rawBitmap.getWidth() != frameWidth ||
+                            rawBitmap.getHeight() != frameHeight)
+                        {
+                            rawBitmap = Bitmap.createBitmap(frameWidth, frameHeight, Bitmap.Config.ARGB_8888);
+                        }
+                        // Convert grayscale to RGBA if necessary before copying to rawBitmap
+                        if (frame.type() == CvType.CV_8UC1)
+                        {
+                            // Single-channel grayscale → RGBA
+                            Imgproc.cvtColor(frame, rawColorMat, Imgproc.COLOR_GRAY2RGBA);
+                            Utils.matToBitmap(rawColorMat, rawBitmap);
+                        }
+                        else if (frame.type() == CvType.CV_8UC3)
+                        {
+                            // RGB → RGBA
+                            Imgproc.cvtColor(frame, rawColorMat, Imgproc.COLOR_RGB2RGBA);
+                            Utils.matToBitmap(rawColorMat, rawBitmap);
+                        }
+                        else if (frame.type() == CvType.CV_8UC4)
+                        {
+                            Utils.matToBitmap(frame, rawBitmap);
+                        }
+                        else if (frame.type() == CvType.CV_32FC1 || frame.type() == CvType.CV_32FC3)
+                        {
+                            // Float mats → convert to 8-bit first
+                            frame.convertTo(rawColorMat, CvType.CV_8UC3, 255.0);
+                            if (rawColorMat.channels() == 1)
+                            {
+                                Imgproc.cvtColor(rawColorMat, rawColorMat, Imgproc.COLOR_GRAY2RGBA);
+                            }
+                            else
+                            {
+                                Imgproc.cvtColor(rawColorMat, rawColorMat, Imgproc.COLOR_RGB2RGBA);
+                            }
+                            Utils.matToBitmap(rawColorMat, rawBitmap);
+                        }
+                        else if (frame.type() == CvType.CV_32FC4)
+                        {
+                            // 4-channel float → 8-bit RGBA
+                            frame.convertTo(rawColorMat, CvType.CV_8UC4, 255.0);
+                            Utils.matToBitmap(rawColorMat, rawBitmap);
+                        }
+                    }
+                    // Allocate dashboard buffer once
+                    if (dashboardBitmap == null ||
+                        dashboardBitmap.getWidth() != onscreenWidth ||
+                        dashboardBitmap.getHeight() != onscreenHeight)
+                    {
+                        dashboardBitmap = Bitmap.createBitmap(
+                            onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
+                        bitmapToSend = Bitmap.createBitmap(
+                            onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
+                        dashboardCanvas = new Canvas(dashboardBitmap);
+                    }
+                    // Clear previous content
+                    dashboardCanvas.drawColor(Color.BLACK, android.graphics.PorterDuff.Mode.SRC);
+                    int rawBitmapWidth = rawBitmap.getWidth();
+                    int rawBitmapHeight = rawBitmap.getHeight();
+                    // Upscale rawBitmap → dashboardBitmap
+                    srcRect.set(0, 0, rawBitmapWidth, rawBitmapHeight);
+                    dstRect.set(0, 0, onscreenWidth, onscreenHeight);
+                    dashboardCanvas.drawBitmap(rawBitmap, srcRect, dstRect, null);
+                    // Draw annotations in upscale space
+                    drawAnnotations(
+                        dets, dashboardCanvas, onscreenWidth, onscreenHeight, (float) onscreenWidth/rawBitmapWidth,
+                        scaleCanvasDensity);
+                    // Stream annotated upscale image to dashboard
+                    bitmapToSend = dashboardBitmap.copy(dashboardBitmap.getConfig(), false);
+                    dashboardExecutor.submit(
+                        () ->
+                        {
+                            com.acmerobotics.dashboard.FtcDashboard.getInstance().sendImage(bitmapToSend);
+                        });
+                }
+                // Render annotated image outside of the less frequent annotation code. If the annotation was not
+                // updated, we render the last annotated image. This will prevent FTC SDK rendering the original
+                // camera image on top of our annotated image causing flickering.
+                if (dashboardBitmap != null)
+                {
+                    canvas.drawBitmap(dashboardBitmap, 0, 0, null);
                 }
             }
         }
     }   //onDrawFrame
 
     /**
-     * This method draws the annotation on the canvas.
+     * Draws annotations on the given canvas.
      *
-     * @param canvas specifies the canvas to draw on.
-     * @param dets specifies the array of detected object.
-     * @param onscreenWidth specifies the canvas width.
-     * @param onscreenHeight specifies the canvas height.
-     * @param scaleBmpPxToCanvasPx specifies the scale.
+     * @param dets array of detected objects
+     * @param canvas canvas to draw on
+     * @param canvasWidth canvas width in pixels
+     * @param canvasHeight canvas height in pixels
+     * @param scaleBmpPxToCanvasPx scale factor from Mat pixels → canvas pixels
+     * @param scaleCanvasDensity scale factor for device density (e.g., DPI)
      */
     private void drawAnnotations(
-        Canvas canvas, TrcOpenCvColorBlobPipeline.DetectedObject[] dets, int onscreenWidth, int onscreenHeight,
-        float scaleBmpPxToCanvasPx)
+        TrcOpenCvColorBlobPipeline.DetectedObject[] dets, Canvas canvas, int canvasWidth, int canvasHeight,
+        float scaleBmpPxToCanvasPx, float scaleCanvasDensity)
     {
-        Point[] vertices;
+        // Combined scaling for upscaling and device density
+        float scale = scaleBmpPxToCanvasPx*scaleCanvasDensity;
+        linePaint.setStrokeWidth(strokeWidth*scale);
+        textPaint.setTextSize(textSize*scale);
 
-        for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
+        if (dets != null)
         {
-            Rect objRect = object.getObjectRect();
-
-            if (drawRotatedRect && (vertices = object.getRotatedRectVertices()) != null)
+            for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
             {
-                for (int start = 0; start < vertices.length; start++)
+                Rect objRect = object.getObjectRect();
+                Point[] vertices = drawRotatedRect ? object.getRotatedRectVertices() : null;
+
+                if (vertices != null)
                 {
-                    int end = (start + 1) % vertices.length;
-                    canvas.drawLine(
-                        (float) (vertices[start].x * scaleBmpPxToCanvasPx),
-                        (float) (vertices[start].y * scaleBmpPxToCanvasPx),
-                        (float) (vertices[end].x * scaleBmpPxToCanvasPx),
-                        (float) (vertices[end].y * scaleBmpPxToCanvasPx),
-                        linePaint);
+                    for (int i = 0; i < vertices.length; i++)
+                    {
+                        int j = (i + 1)%vertices.length;
+                        canvas.drawLine(
+                            (float) (vertices[i].x*scaleBmpPxToCanvasPx),
+                            (float) (vertices[i].y*scaleBmpPxToCanvasPx),
+                            (float) (vertices[j].x*scaleBmpPxToCanvasPx),
+                            (float) (vertices[j].y*scaleBmpPxToCanvasPx),
+                            linePaint);
+                    }
+                    canvas.drawText(
+                        object.label, (float) (objRect.x*scaleBmpPxToCanvasPx),
+                        (float) (objRect.y*scaleBmpPxToCanvasPx), textPaint);
                 }
-                canvas.drawText(
-                    object.label, (float) (objRect.x * scaleBmpPxToCanvasPx),
-                    (float) (objRect.y * scaleBmpPxToCanvasPx), textPaint);
-            }
-            else
-            {
-                // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
-                // scale the rect to canvas resolution.
-                float left = objRect.x * scaleBmpPxToCanvasPx;
-                float right = (objRect.x + objRect.width) * scaleBmpPxToCanvasPx;
-                float top = objRect.y * scaleBmpPxToCanvasPx;
-                float bottom = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
-
-                canvas.drawLine(left, top, right, top, linePaint);
-                canvas.drawLine(right, top, right, bottom, linePaint);
-                canvas.drawLine(right, bottom, left, bottom, linePaint);
-                canvas.drawLine(left, bottom, left, top, linePaint);
-                canvas.drawText(object.label, left, top, textPaint);
+                else
+                {
+                    // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
+                    // scale the rect to canvas resolution.
+                    float left = objRect.x*scaleBmpPxToCanvasPx;
+                    float right = (objRect.x + objRect.width)*scaleBmpPxToCanvasPx;
+                    float top = objRect.y*scaleBmpPxToCanvasPx;
+                    float bottom = (objRect.y + objRect.height)*scaleBmpPxToCanvasPx;
+                    canvas.drawLine(left, top, right, top, linePaint);
+                    canvas.drawLine(right, top, right, bottom, linePaint);
+                    canvas.drawLine(right, bottom, left, bottom, linePaint);
+                    canvas.drawLine(left, bottom, left, top, linePaint);
+                    canvas.drawText(object.label, left, top, textPaint);
+                }
             }
         }
 
         if (drawCrosshair)
         {
-            float midScreenHeight = onscreenHeight/2.0f;
-            float midScreenWidth = onscreenWidth/2.0f;
-            canvas.drawLine(0.0f, midScreenHeight, onscreenWidth, midScreenHeight, linePaint);
-            canvas.drawLine(midScreenWidth, 0.0f, midScreenWidth, onscreenHeight, linePaint);
+            float midX = canvasWidth/2.0f;
+            float midY = canvasHeight/2.0f;
+            // Draw horizontal crosshair
+            canvas.drawLine(0.0f, midY, canvasWidth, midY, linePaint);
+            // Draw vertical crosshair
+            canvas.drawLine(midX, 0.0f, midX, canvasHeight, linePaint);
         }
     }   //drawAnnotation
 
-}  //class FtcEocvColorBlobProcessor
+}   //class FtcEocvColorBlobProcessor
