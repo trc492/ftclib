@@ -73,7 +73,7 @@ public class FtcEocvColorBlobProcessor
     private boolean drawCrosshair = false;
 
     private ExecutorService dashboardExecutor = null;
-    private Double streamInterval = null;
+    private double streamInterval = 0.0;
     private Double nextStreamTime = null;
     private Bitmap dashboardBitmap = null;
     private Bitmap bitmapToSend = null;
@@ -151,32 +151,42 @@ public class FtcEocvColorBlobProcessor
      *
      * @param streamInterval specifies the streaming interval in seconds.
      */
-    public void enableStreamToDashboard(double streamInterval)
+    public void enableDashboardStream(double streamInterval)
     {
         if (dashboardExecutor == null)
         {
             this.dashboardExecutor = Executors.newSingleThreadExecutor();
             this.streamInterval = streamInterval;
         }
-    }   //enableStreamToDashboard
+    }   //enableDashboardStream
 
     /**
      * This method enables video streaming to FtcDashboard at DEF_STREAM_INTERVAL.
      */
-    public void enableStreamToDashboard()
+    public void enableDashboardStream()
     {
-        enableStreamToDashboard(DEF_STREAM_INTERVAL);
-    }   //enableStreamToDashboard
+        enableDashboardStream(DEF_STREAM_INTERVAL);
+    }   //enableDashboardStream
 
     /**
      * This method disables video streaming to FtcDashboard.
      */
-    public void disableStreamToDashboard()
+    public void disableDashboardStream()
     {
         dashboardExecutor.shutdownNow();
         dashboardExecutor = null;
-        streamInterval = null;
-    }   //disableStreamToDashboard
+        streamInterval = 0.0;
+    }   //disableDashboardStream
+
+    /**
+     * This method checks if FtcDashboard video streaming is enabled.
+     *
+     * @return true if FtcDashboard streaming is enabled, false otherwise.
+     */
+    public boolean isDashboardStreamEnabled()
+    {
+        return dashboardExecutor != null;
+    }   //isDashboardStreamEnabled
 
     /**
      * This method sets the annotation rectangle and text attributes such as rectangle line width/color and label
@@ -394,7 +404,7 @@ public class FtcEocvColorBlobProcessor
             TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
                 (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
 
-            if (streamInterval == null)
+            if (dashboardExecutor == null)
             {
                 // No FTC Dashboard streaming: just annotate directly
                 drawAnnotations(dets, canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity);
