@@ -22,6 +22,8 @@
 
 package ftclib.vision;
 
+import static org.opencv.imgproc.Imgproc.MARKER_CROSS;
+
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -63,14 +65,12 @@ public class FtcEocvColorBlobProcessor
     private final android.graphics.Rect dstRect = new android.graphics.Rect();
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
+    private final TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams;
     private final Paint linePaint;
     private final Paint textPaint;
     private final float strokeWidth;
     private final float textSize;
     private final Mat rawColorMat = new Mat();
-    private boolean annotateEnabled = false;
-    private boolean drawRotatedRect = false;
-    private boolean drawCrosshair = false;
 
     private ExecutorService dashboardExecutor = null;
     private double streamInterval = 0.0;
@@ -102,6 +102,7 @@ public class FtcEocvColorBlobProcessor
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
         this.tracer = colorBlobPipeline.tracer;
+        this.pipelineParams = pipelineParams;
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
@@ -277,9 +278,12 @@ public class FtcEocvColorBlobProcessor
     @Override
     public void enableAnnotation(boolean drawRotatedRect, boolean drawCrosshair)
     {
-        this.annotateEnabled = true;
-        this.drawRotatedRect = drawRotatedRect;
-        this.drawCrosshair = drawCrosshair;
+        synchronized (pipelineParams)
+        {
+            pipelineParams.annotation.enabled = true;
+            pipelineParams.annotation.drawRotatedRect = drawRotatedRect;
+            pipelineParams.annotation.drawCrosshair = drawCrosshair;
+        }
     }   //setAnnotateEnabled
 
     /**
@@ -288,9 +292,12 @@ public class FtcEocvColorBlobProcessor
     @Override
     public void disableAnnotation()
     {
-        this.annotateEnabled = false;
-        this.drawRotatedRect = false;
-        this.drawCrosshair = false;
+        synchronized (pipelineParams)
+        {
+            pipelineParams.annotation.enabled = false;
+            pipelineParams.annotation.drawRotatedRect = false;
+            pipelineParams.annotation.drawCrosshair = false;
+        }
     }   //disableAnnotation
 
     /**
@@ -301,7 +308,10 @@ public class FtcEocvColorBlobProcessor
     @Override
     public boolean isAnnotateEnabled()
     {
-        return annotateEnabled;
+        synchronized (pipelineParams)
+        {
+            return pipelineParams.annotation.enabled;
+        }
     }   //isAnnotateEnabled
 
     /**
@@ -407,7 +417,7 @@ public class FtcEocvColorBlobProcessor
     {
         // Allow only one draw operation at a time (we could be called from two different threads - viewport or
         // camera stream).
-        if (annotateEnabled)
+        if (pipelineParams.annotation.enabled)
         {
             TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
                 (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
@@ -543,7 +553,7 @@ public class FtcEocvColorBlobProcessor
             for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
             {
                 Rect objRect = object.getObjectRect();
-                Point[] vertices = drawRotatedRect ? object.getRotatedRectVertices() : null;
+                Point[] vertices = pipelineParams.annotation.drawRotatedRect ? object.getRotatedRectVertices() : null;
 
                 if (vertices != null)
                 {
@@ -575,10 +585,21 @@ public class FtcEocvColorBlobProcessor
                     canvas.drawLine(left, bottom, left, top, linePaint);
                     canvas.drawText(object.label, left, top, textPaint);
                 }
+
+                if (pipelineParams.annotation.drawCrosshair)
+                {
+                    float centerX = (objRect.x + objRect.width/2.0f) * scaleBmpPxToCanvasPx;
+                    float centerY = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
+                    float halfCrosshairLen = (10.0f * scaleBmpPxToCanvasPx)/2.0f;
+                    canvas.drawLine(
+                        centerX - halfCrosshairLen, centerY, centerX + halfCrosshairLen, centerY, linePaint);
+                    canvas.drawLine(
+                        centerX, centerY - halfCrosshairLen, centerX, centerY + halfCrosshairLen, linePaint);
+                }
             }
         }
 
-        if (drawCrosshair)
+        if (pipelineParams.annotation.drawCrosshair)
         {
             float midX = canvasWidth/2.0f;
             float midY = canvasHeight/2.0f;
