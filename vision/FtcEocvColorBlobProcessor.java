@@ -84,7 +84,8 @@ public class FtcEocvColorBlobProcessor
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param pipelineParams specifies the pipeline parameters.
+     * @param pipelineParams specifies pipeline parameters.
+     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -96,9 +97,10 @@ public class FtcEocvColorBlobProcessor
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, Integer lineColor, Float lineWidth,
+        Integer textColor, Float textSize)
     {
-        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams);
+        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
         this.tracer = colorBlobPipeline.tracer;
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
@@ -117,11 +119,14 @@ public class FtcEocvColorBlobProcessor
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param pipelineParams specifies the pipeline parameters.
+     * @param pipelineParams specifies pipeline parameters.
+     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      */
-    public FtcEocvColorBlobProcessor(String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams)
+    public FtcEocvColorBlobProcessor(
+        String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
     {
-        this(instanceName, pipelineParams, null, null, null, null);
+        this(instanceName, pipelineParams, solvePnpParams, null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -173,9 +178,12 @@ public class FtcEocvColorBlobProcessor
      */
     public void disableDashboardStream()
     {
-        dashboardExecutor.shutdownNow();
-        dashboardExecutor = null;
-        streamInterval = 0.0;
+        if (dashboardExecutor != null)
+        {
+            dashboardExecutor.shutdownNow();
+            dashboardExecutor = null;
+            streamInterval = 0.0;
+        }
     }   //disableDashboardStream
 
     /**

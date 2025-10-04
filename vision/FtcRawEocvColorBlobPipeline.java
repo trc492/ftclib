@@ -42,10 +42,13 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      *
      * @param instanceName specifies the instance name.
      * @param pipelineParams specifies the pipeline parameters.
+     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      */
-    public FtcRawEocvColorBlobPipeline(String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams)
+    public FtcRawEocvColorBlobPipeline(
+        String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
     {
-        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams);
+        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
     }   //FtcRawEocvColorBlobPipeline
 
     /**

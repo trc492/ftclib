@@ -61,7 +61,8 @@ public class FtcVisionEocvColorBlob
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param pipelineParams specifies the pipeline parameters.
+     * @param pipelineParams specifies pipeline parameters.
+     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
      * @param annotate specifies true to draw annotation, false otherwise.
@@ -71,11 +72,12 @@ public class FtcVisionEocvColorBlob
      */
     public FtcVisionEocvColorBlob(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams,
         TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
         boolean drawRotatedRect, boolean drawCrosshair)
     {
         // Create the Color Blob processor.
-        colorBlobProcessor = new FtcEocvColorBlobProcessor(instanceName, pipelineParams);
+        colorBlobProcessor = new FtcEocvColorBlobProcessor(instanceName, pipelineParams, solvePnpParams);
         tracer = colorBlobProcessor.tracer;
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
@@ -103,11 +105,14 @@ public class FtcVisionEocvColorBlob
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param pipelineParams specifies the pipeline parameters.
+     * @param pipelineParams specifies pipeline parameters.
+     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      */
-    public FtcVisionEocvColorBlob(String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams)
+    public FtcVisionEocvColorBlob(
+        String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
     {
-        this(instanceName, pipelineParams, null, null, true, false, false);
+        this(instanceName, pipelineParams, solvePnpParams, null, null, true, false, false);
     }   //FtcVisionEocvColorBlob
 
     /**
