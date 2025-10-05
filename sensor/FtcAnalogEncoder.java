@@ -129,10 +129,7 @@ public class FtcAnalogEncoder implements TrcEncoder
     @Override
     public double getRawPosition()
     {
-        double normalizedPos = analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
-        double pos = normalizedPos - zeroOffset;
-        if (pos < 0.0) pos += 1.0;
-        tracer.traceDebug(instanceName, "RawPos(normalized=%f, zeroAdjusted=%f)", normalizedPos, pos);
+        double pos = analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
         return pos;
     }   //getRawPosition
 
@@ -145,8 +142,10 @@ public class FtcAnalogEncoder implements TrcEncoder
     public double getScaledPosition()
     {
         double pos = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
-        double scaledPos = pos * scale * sign + offset;
-        tracer.traceDebug(instanceName, "RawPos=%f, ScaledPos=%f", pos, scaledPos);
+        double scaledPos = (pos - zeroOffset) * scale * sign + offset;
+        tracer.traceDebug(
+            instanceName, "RawPos=%f, ScaledPos=%f (zeroOffset=%f, scale=%f, offset=%f, sign=%.0f)",
+            pos, scaledPos, zeroOffset, scale, offset, sign);
         return scaledPos;
     }   //getScaledPosition
 

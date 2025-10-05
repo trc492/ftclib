@@ -74,7 +74,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
     public final TrcSwerveModule[] swerveModules;
     private final FtcDashboard dashboard;
 
-    private final double[] steerZeros = new double[4];
+    private final double[] calSteerZeros = new double[4];
     private int steerZeroCalibrationCount = 0;
     private String xModeOwner = null;
 
@@ -130,6 +130,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
     private TrcMotor[] createSteerMotors()
     {
         TrcMotor[] motors = new TrcMotor[swerveInfo.steerMotorNames.length];
+        double[] steerEncZeros = readSteeringCalibrationData();
 
         for (int i = 0; i < motors.length; i++)
         {
@@ -137,7 +138,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
                 .setPrimaryMotor(
                     swerveInfo.steerMotorNames[i], swerveInfo.steerMotorType, swerveInfo.steerMotorInverted[i])
                 .setExternalEncoder(steerEncoders[i])
-                .setPositionScaleAndOffset(360.0, 0.0, swerveInfo.steerEncoderZeros[i]);
+                .setPositionScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
             motors[i].setPositionPidParameters(
                 swerveInfo.steerMotorPidCoeffs, swerveInfo.steerMotorPidTolerance, true, null);
@@ -218,21 +219,21 @@ public class FtcSwerveDrive extends FtcRobotDrive
             dashboard.displayPrintf(
                 lineNum++, "Count = %d", steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: lf=%.3f/%f",
+                lineNum++, "Encoder: lf=%f/%f",
                 steerEncoders[FtcSwerveDrive.INDEX_LEFT_FRONT].getRawPosition(),
-                steerZeros[FtcSwerveDrive.INDEX_LEFT_FRONT] / steerZeroCalibrationCount);
+                calSteerZeros[FtcSwerveDrive.INDEX_LEFT_FRONT] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: rf=%.3f/%f",
+                lineNum++, "Encoder: rf=%f/%f",
                 steerEncoders[FtcSwerveDrive.INDEX_RIGHT_FRONT].getRawPosition(),
-                steerZeros[FtcSwerveDrive.INDEX_RIGHT_FRONT] / steerZeroCalibrationCount);
+                calSteerZeros[FtcSwerveDrive.INDEX_RIGHT_FRONT] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: lb=%.3f/%f",
+                lineNum++, "Encoder: lb=%f/%f",
                 steerEncoders[FtcSwerveDrive.INDEX_LEFT_BACK].getRawPosition(),
-                steerZeros[FtcSwerveDrive.INDEX_LEFT_BACK] / steerZeroCalibrationCount);
+                calSteerZeros[FtcSwerveDrive.INDEX_LEFT_BACK] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: rb=%.3f/%f",
+                lineNum++, "Encoder: rb=%f/%f",
                 steerEncoders[FtcSwerveDrive.INDEX_RIGHT_BACK].getRawPosition(),
-                steerZeros[FtcSwerveDrive.INDEX_RIGHT_BACK] / steerZeroCalibrationCount);
+                calSteerZeros[FtcSwerveDrive.INDEX_RIGHT_BACK] / steerZeroCalibrationCount);
         }
 
         return lineNum;
@@ -244,7 +245,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
     public void startSteeringCalibration()
     {
         steerZeroCalibrationCount = 0;
-        Arrays.fill(steerZeros, 0.0);
+        Arrays.fill(calSteerZeros, 0.0);
     }   //startSteeringCalibration
 
     /**
@@ -252,12 +253,12 @@ public class FtcSwerveDrive extends FtcRobotDrive
      */
     public void stopSteeringCalibration()
     {
-        for (int i = 0; i < steerZeros.length; i++)
+        for (int i = 0; i < calSteerZeros.length; i++)
         {
-            steerZeros[i] /= steerZeroCalibrationCount;
+            calSteerZeros[i] /= steerZeroCalibrationCount;
         }
         steerZeroCalibrationCount = 0;
-        saveSteeringCalibrationData(steerZeros);
+        saveSteeringCalibrationData(calSteerZeros);
     }   //stopSteeringCalibration
 
     /**
@@ -265,9 +266,9 @@ public class FtcSwerveDrive extends FtcRobotDrive
      */
     public void runSteeringCalibration()
     {
-        for (int i = 0; i < steerZeros.length; i++)
+        for (int i = 0; i < calSteerZeros.length; i++)
         {
-            steerZeros[i] += steerEncoders[i].getRawPosition();
+            calSteerZeros[i] += steerEncoders[i].getRawPosition();
         }
         steerZeroCalibrationCount++;
     }   //runSteeringCalibration
@@ -281,14 +282,14 @@ public class FtcSwerveDrive extends FtcRobotDrive
     {
         try (PrintStream out = new PrintStream(new FileOutputStream(swerveInfo.steerZerosFilePath)))
         {
-            for (int i = 0; i < swerveInfo.steerMotorNames.length; i++)
+            for (int i = 0; i < zeros.length; i++)
             {
-                out.println(swerveInfo.steerMotorNames[i] + ": " + zeros[i]);
+                out.println(swerveInfo.steerEncoderNames[i] + ": " + zeros[i]);
             }
             out.close();
             tracer.traceInfo(
                 moduleName,
-                "SteeringCalibrationData" + Arrays.toString(swerveInfo.steerMotorNames) +
+                "SteeringCalibrationData" + Arrays.toString(swerveInfo.steerEncoderNames) +
                 "=" + Arrays.toString(zeros));
         }
         catch (FileNotFoundException e)
@@ -304,46 +305,46 @@ public class FtcSwerveDrive extends FtcRobotDrive
      */
     public double[] readSteeringCalibrationData()
     {
-        double[] zeros;
-        String line = null;
+        double[] steerZeros = null;
 
-        try (Scanner in = new Scanner(new FileReader(swerveInfo.steerZerosFilePath)))
+        if (swerveInfo.steerZerosFilePath != null)
         {
-            zeros = new double[steerMotors.length];
+            String line = null;
 
-            for (int i = 0; i < steerMotors.length; i++)
+            try (Scanner in = new Scanner(new FileReader(swerveInfo.steerZerosFilePath)))
             {
-                line = in.nextLine();
-                int colonPos = line.indexOf(':');
-                String name = colonPos == -1? null: line.substring(0, colonPos);
+                steerZeros = new double[swerveInfo.steerEncoderNames.length];
 
-                if (name == null || !name.equals(swerveInfo.steerMotorNames[i]))
+                for (int i = 0; i < steerZeros.length; i++)
                 {
-                    throw new RuntimeException("Invalid steer motor name in line " + line);
+                    line = in.nextLine();
+                    int colonPos = line.indexOf(':');
+                    String name = colonPos == -1 ? null : line.substring(0, colonPos);
+
+                    if (name == null || !name.equals(swerveInfo.steerEncoderNames[i]))
+                    {
+                        throw new RuntimeException("Invalid steer encoder name: " + line);
+                    }
+
+                    steerZeros[i] = Double.parseDouble(line.substring(colonPos + 1));
                 }
-
-                zeros[i] = Double.parseDouble(line.substring(colonPos + 1));
+                tracer.traceInfo(
+                    moduleName,
+                    "SteeringCalibrationData" + Arrays.toString(swerveInfo.steerEncoderNames) +
+                    "=" + Arrays.toString(steerZeros));
             }
-            tracer.traceInfo(
-                moduleName,
-                "SteeringCalibrationData" + Arrays.toString(swerveInfo.steerMotorNames) +
-                "=" + Arrays.toString(zeros));
-        }
-        catch (FileNotFoundException e)
-        {
-            tracer.traceWarn(moduleName, "Steering calibration data file not found, using built-in defaults.");
-            zeros = swerveInfo.steerEncoderZeros.clone();
-        }
-        catch (NumberFormatException e)
-        {
-            throw new RuntimeException("Invalid zero position value: " + line);
-        }
-        catch (RuntimeException e)
-        {
-            throw new RuntimeException("Invalid steer motor name: " + line);
+            catch (FileNotFoundException e)
+            {
+                tracer.traceWarn(moduleName, "Steering calibration data file not found, using built-in defaults.");
+                steerZeros = null;
+            }
+            catch (NumberFormatException e)
+            {
+                throw new RuntimeException("Invalid zero position value: " + line);
+            }
         }
 
-        return zeros;
+        return steerZeros != null? steerZeros: swerveInfo.steerEncoderZeros.clone();
     }   //readSteeringCalibrationData
 
 }   //class FtcSwerveDrive
