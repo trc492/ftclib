@@ -65,16 +65,11 @@ public class FtcVisionEocvColorBlob
      * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
      * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
      * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
-     * @param annotate specifies true to draw annotation, false otherwise.
-     * @param drawRotatedRect specifies true to draw rotated rectangle, false to draw bounding rectangle, applicable
-     *        only if annotate is true.
-     * @param drawCrosshair specifies true to draw crosshair at the center of the screen, false otherwise.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
         TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect, boolean annotate,
-        boolean drawRotatedRect, boolean drawCrosshair)
+        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect)
     {
         // Create the Color Blob processor.
         colorBlobProcessor = new FtcEocvColorBlobProcessor(instanceName, pipelineParams, solvePnpParams);
@@ -90,15 +85,6 @@ public class FtcVisionEocvColorBlob
         {
             homographyMapper = null;
         }
-
-        if (annotate)
-        {
-            colorBlobProcessor.enableAnnotation(drawRotatedRect, drawCrosshair);
-        }
-        else
-        {
-            colorBlobProcessor.disableAnnotation();
-        }
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -112,7 +98,7 @@ public class FtcVisionEocvColorBlob
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
         TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
     {
-        this(instanceName, pipelineParams, solvePnpParams, null, null, true, false, false);
+        this(instanceName, pipelineParams, solvePnpParams, null, null);
     }   //FtcVisionEocvColorBlob
 
     /**

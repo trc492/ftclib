@@ -22,8 +22,6 @@
 
 package ftclib.vision;
 
-import static org.opencv.imgproc.Imgproc.MARKER_CROSS;
-
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -42,6 +40,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 
 import trclib.robotcore.TrcDbgTrace;
 import trclib.timer.TrcTimer;
@@ -65,6 +64,7 @@ public class FtcEocvColorBlobProcessor
     private final android.graphics.Rect dstRect = new android.graphics.Rect();
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
+    private final String instanceName;
     private final TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams;
     private final Paint linePaint;
     private final Paint textPaint;
@@ -74,9 +74,8 @@ public class FtcEocvColorBlobProcessor
 
     private ExecutorService dashboardExecutor = null;
     private double streamInterval = 0.0;
-    private Double nextStreamTime = null;
+    private double nextStreamTime = 0.0;
     private Bitmap dashboardBitmap = null;
-    private Bitmap bitmapToSend = null;
     private Canvas dashboardCanvas = null;
     private Bitmap rawBitmap = null;
 
@@ -102,18 +101,22 @@ public class FtcEocvColorBlobProcessor
     {
         colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
         this.tracer = colorBlobPipeline.tracer;
+        this.instanceName = instanceName;
         this.pipelineParams = pipelineParams;
+        this.strokeWidth = lineWidth != null ? lineWidth : DEF_LINE_WIDTH;
+        this.textSize = textSize != null ? textSize : DEF_TEXT_SIZE;
+
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
         linePaint.setColor(lineColor != null ? lineColor : DEF_LINE_COLOR);
-        this.strokeWidth = lineWidth != null ? lineWidth : DEF_LINE_WIDTH;
+        linePaint.setStrokeWidth(this.strokeWidth);
 
         textPaint = new Paint();
         textPaint.setAntiAlias(true);
         textPaint.setTextAlign(Paint.Align.LEFT);
         textPaint.setColor(textColor != null ? textColor : DEF_TEXT_COLOR);
-        this.textSize = textSize != null ? textSize : DEF_TEXT_SIZE;
+        textPaint.setTextSize(this.textSize);
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -163,6 +166,7 @@ public class FtcEocvColorBlobProcessor
         {
             this.dashboardExecutor = Executors.newSingleThreadExecutor();
             this.streamInterval = streamInterval;
+            this.nextStreamTime = TrcTimer.getCurrentTime();
         }
     }   //enableDashboardStream
 
@@ -431,7 +435,7 @@ public class FtcEocvColorBlobProcessor
             {
                 // Stream to FTC Dashboard at the limited rate
                 double currTime = TrcTimer.getCurrentTime();
-                if (nextStreamTime == null || currTime >= nextStreamTime)
+                if (currTime >= nextStreamTime)
                 {
                     nextStreamTime = currTime + streamInterval;
                     // Convert Mat to bitmap
@@ -494,8 +498,6 @@ public class FtcEocvColorBlobProcessor
                     {
                         dashboardBitmap = Bitmap.createBitmap(
                             onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
-                        bitmapToSend = Bitmap.createBitmap(
-                            onscreenWidth, onscreenHeight, Bitmap.Config.ARGB_8888);
                         dashboardCanvas = new Canvas(dashboardBitmap);
                     }
                     // Clear previous content
@@ -511,17 +513,27 @@ public class FtcEocvColorBlobProcessor
                         dets, dashboardCanvas, onscreenWidth, onscreenHeight, (float) onscreenWidth/rawBitmapWidth,
                         scaleCanvasDensity);
                     // Stream annotated upscale image to dashboard
-                    bitmapToSend = dashboardBitmap.copy(dashboardBitmap.getConfig(), false);
-                    dashboardExecutor.submit(
-                        () ->
+                    try
+                    {
+                        if (!dashboardExecutor.isShutdown())
                         {
-                            com.acmerobotics.dashboard.FtcDashboard.getInstance().sendImage(bitmapToSend);
-                        });
+                            dashboardExecutor.submit(
+                                () ->
+                                {
+                                    com.acmerobotics.dashboard.FtcDashboard.getInstance().sendImage(dashboardBitmap);
+                                });
+                        }
+                    }
+                    catch (RejectedExecutionException e)
+                    {
+                        // Ignore the Exception.
+                        tracer.traceInfo(instanceName, "Executor is shutting down during a frame render");
+                    }
                 }
                 // Render annotated image outside of the less frequent annotation code. If the annotation was not
                 // updated, we render the last annotated image. This will prevent FTC SDK rendering the original
                 // camera image on top of our annotated image causing flickering.
-                if (dashboardBitmap != null)
+                if (dashboardBitmap != null && !dashboardBitmap.isRecycled())
                 {
                     canvas.drawBitmap(dashboardBitmap, 0, 0, null);
                 }
