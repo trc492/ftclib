@@ -162,8 +162,10 @@ public class FtcEocvColorBlobProcessor
      */
     public void enableDashboardStream(double streamInterval)
     {
-        if (dashboardExecutor == null)
+        if (dashboardExecutor == null || dashboardExecutor.isShutdown())
         {
+            tracer.traceInfo(
+                instanceName, "Enable " + instanceName + " Dashboard Stream (interval=" + streamInterval + ")");
             this.dashboardExecutor = Executors.newSingleThreadExecutor();
             this.streamInterval = streamInterval;
             this.nextStreamTime = TrcTimer.getCurrentTime();
@@ -185,9 +187,8 @@ public class FtcEocvColorBlobProcessor
     {
         if (dashboardExecutor != null)
         {
+            tracer.traceInfo(instanceName, "Disable " + instanceName + " Dashboard Stream.");
             dashboardExecutor.shutdownNow();
-            dashboardExecutor = null;
-            streamInterval = 0.0;
         }
     }   //disableDashboardStream
 
@@ -392,10 +393,7 @@ public class FtcEocvColorBlobProcessor
     @Override
     public Object processFrame(Mat frame, long captureTimeNanos)
     {
-        synchronized (colorBlobPipeline)
-        {
-            return colorBlobPipeline.process(frame);
-        }
+        return colorBlobPipeline.process(frame);
     }   //processFrame
 
     /**
@@ -515,7 +513,13 @@ public class FtcEocvColorBlobProcessor
                     // Stream annotated upscale image to dashboard
                     try
                     {
-                        if (!dashboardExecutor.isShutdown())
+                        if (dashboardExecutor.isShutdown())
+                        {
+                            dashboardExecutor = null;
+                            streamInterval = 0.0;
+                            tracer.traceInfo(instanceName, "Executor is shutting down.");
+                        }
+                        else
                         {
                             dashboardExecutor.submit(
                                 () ->
