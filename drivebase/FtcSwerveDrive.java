@@ -63,6 +63,68 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public double steerMotorPidTolerance = 0.0;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
+
+        /**
+         * This method sets steer encoder info.
+         *
+         * @param names specifies the encoder names.
+         * @param inverted specifies whether the steer encoders are inverted.
+         * @param zeroOffsets specifies the zero offset of each encoder.
+         * @param zeroOffsetFilePath specifies the zero offseet file path to read/write zero offset data.
+         * @return this object for chaining.
+         */
+        public SwerveInfo setSteerEncoderInfo(
+            String[] names, boolean[] inverted, double[] zeroOffsets, String zeroOffsetFilePath)
+        {
+            this.steerEncoderNames = names;
+            this.steerEncoderInverted = inverted;
+            this.steerEncoderZeros = zeroOffsets;
+            this.steerZerosFilePath = zeroOffsetFilePath;
+            return this;
+        }   //setSteerEncoderInfo
+
+        /**
+         * This method sets the steer motor info.
+         *
+         * @param motorType specifies the steer motor type.
+         * @param motorNames specifies the steer motor names.
+         * @param motorInverted specifies whether the steer motors are inverted.
+         * @return this object for chaining.
+         */
+        public SwerveInfo setSteerMotorInfo(
+            FtcMotorActuator.MotorType motorType, String[] motorNames, boolean[] motorInverted)
+        {
+            this.steerMotorType = motorType;
+            this.steerMotorNames = motorNames;
+            this.steerMotorInverted = motorInverted;
+            return this;
+        }   //setSteerMotorInfo
+
+        /**
+         * This method sets the PID control parameters for the steer motors.
+         *
+         * @param pidCoeffs specifies PID Coefficients for PID control.
+         * @param pidTolerance specifies PID Tolerance.
+         * @return this object for chaining.
+         */
+        public SwerveInfo setSteerMotorPidParams(TrcPidController.PidCoefficients pidCoeffs, double pidTolerance)
+        {
+            this.steerMotorPidCoeffs = pidCoeffs;
+            this.steerMotorPidTolerance = pidTolerance;
+            return this;
+        }   //setSteerMotorPidParams
+
+        /**
+         * This method sets the swerve module names.
+         *
+         * @param moduleNames specifies swerve module names.
+         * @return this object for chaining.
+         */
+        public SwerveInfo setSwerveModuleNames(String... moduleNames)
+        {
+            this.swerveModuleNames = moduleNames;
+            return this;
+        }   //setSwerveModuleNames
     }   //class SwerveInfo
 
     private static final String moduleName = FtcSwerveDrive.class.getSimpleName();

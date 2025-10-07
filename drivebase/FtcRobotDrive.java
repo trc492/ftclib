@@ -29,6 +29,9 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import ftclib.sensor.FtcOctoQuad;
+import ftclib.sensor.FtcPinpointOdometry;
+import ftclib.sensor.FtcSparkFunOtos;
+import ftclib.sensor.GoBildaPinpointDriver;
 import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
@@ -197,11 +200,6 @@ public class FtcRobotDrive
         public Double headingWrapRangeLow = null, headingWrapRangeHigh = null;
         // DriveBase Parameters
         public TrcDriveBase.TuneParams tuneParams = null;
-        // Motion Profile Parameters
-        public Double profiledMaxVelocity = null;
-        public Double profiledMaxAcceleration = null;
-        public Double profiledMaxDeceleration = null;
-        public Double profiledMaxTurnRate = null;
         // PID Ramp Rates
         public Double xDriveMaxPidRampRate = null;
         public Double yDriveMaxPidRampRate = null;
@@ -215,7 +213,6 @@ public class FtcRobotDrive
         public boolean usePurePursuitDrive = false;
         public boolean enablePurePursuitDriveSquareRootPid = false;
         public double ppdFollowingDistance = 0.0;
-        public TrcPidController.PidCoefficients velPidCoeffs = null;
         public boolean fastModeEnabled = true;
         // Vision
         public VisionInfo webCam1 = null;
@@ -242,6 +239,18 @@ public class FtcRobotDrive
             this.robotWidth = robotWidth;
             this.wheelBaseLength = wheelBaseLength;
             this.wheelBaseWidth = wheelBaseWidth;
+            return this;
+        }   //setRobotInfo
+
+        /**
+         * This method sets basic robot info.
+         *
+         * @param robotName specifies robot name.
+         * @return this object for chaining.
+         */
+        public RobotInfo setRobotInfo(String robotName)
+        {
+            setRobotInfo(robotName, 0.0, 0.0, 0.0, 0.0);
             return this;
         }   //setRobotInfo
 
@@ -330,34 +339,82 @@ public class FtcRobotDrive
         }   //setOdometryWheels
 
         /**
-         * This method sets Drive Base Odometry to use Absolute Odometry devices such as Pinpoint or Sparkfun.
+         * This method sets the parameters for Pinpoint Odometry.
          *
-         * @param absoluteOdometry specifies the absolute odometry device object.
+         * @param name specifies the Pinpoint Odometry name.
+         * @param yPodXOffset specifies the X offset of the Y Pod.
+         * @param xPodYOffset specifies the Y offset of the X Pod.
+         * @param podType specifies the GoBilda odometry pod type.
+         * @param yPodInverted specifies true if Y Pod is inverted, false otherwise.
+         * @param xPodInverted specifies true if X Pod is inverted, false otherwise.
          * @param headingWrapRangeLow specifies the wrap range low for heading.
          * @param headingWrapRangeHigh specifies the wrap range high for heading.
          * @return this object for chaining.
          */
-        public RobotInfo setAbsoluteOdometry(
-            TrcDriveBaseOdometry absoluteOdometry, Double headingWrapRangeLow, Double headingWrapRangeHigh)
+        public RobotInfo setPinpointOdometry(
+            String name, double yPodXOffset, double xPodYOffset, GoBildaPinpointDriver.GoBildaOdometryPods podType,
+            boolean yPodInverted, boolean xPodInverted, double headingWrapRangeLow, double headingWrapRangeHigh)
         {
             this.odometryType = TrcDriveBase.OdometryType.AbsoluteOdometry;
-            this.absoluteOdometry = absoluteOdometry;
+            FtcPinpointOdometry.Config ppOdoConfig = new FtcPinpointOdometry.Config()
+                .setPodOffsets(yPodXOffset, xPodYOffset)    // Offsets from robot center in mm
+                .setEncoderResolution(podType)
+                .setEncodersInverted(yPodInverted, xPodInverted);
+            this.absoluteOdometry = new FtcPinpointOdometry(name, ppOdoConfig);
             this.headingWrapRangeLow = headingWrapRangeLow;
             this.headingWrapRangeHigh = headingWrapRangeHigh;
             return this;
-        }   //setAbsoluteOdometry
+        }   //setPinpointOdometry
 
         /**
-         * This method sets Drive Base Odometry to use Absolute Odometry devices such as Pinpoint or Sparkfun.
+         * This method sets the parameters for Pinpoint Odometry.
          *
-         * @param absoluteOdometry specifies the absolute odometry device object.
+         * @param name specifies the Pinpoint Odometry name.
+         * @param yPodXOffset specifies the X offset of the Y Pod.
+         * @param xPodYOffset specifies the Y offset of the X Pod.
+         * @param encResolution specifies the Pod encoder resolution in count per mm.
+         * @param yPodInverted specifies true if Y Pod is inverted, false otherwise.
+         * @param xPodInverted specifies true if X Pod is inverted, false otherwise.
+         * @param headingWrapRangeLow specifies the wrap range low for heading.
+         * @param headingWrapRangeHigh specifies the wrap range high for heading.
          * @return this object for chaining.
          */
-        public RobotInfo setAbsoluteOdometry(TrcDriveBaseOdometry absoluteOdometry)
+        public RobotInfo setPinpointOdometry(
+            String name, double yPodXOffset, double xPodYOffset, double encResolution, boolean yPodInverted,
+            boolean xPodInverted, double headingWrapRangeLow, double headingWrapRangeHigh)
         {
-            setAbsoluteOdometry(absoluteOdometry, null, null);
+            this.odometryType = TrcDriveBase.OdometryType.AbsoluteOdometry;
+            FtcPinpointOdometry.Config ppOdoConfig = new FtcPinpointOdometry.Config()
+                .setPodOffsets(yPodXOffset, xPodYOffset)    // Offsets from robot center in mm
+                .setEncoderResolution(encResolution)
+                .setEncodersInverted(yPodInverted, xPodInverted);
+            this.absoluteOdometry = new FtcPinpointOdometry(name, ppOdoConfig);
+            this.headingWrapRangeLow = headingWrapRangeLow;
+            this.headingWrapRangeHigh = headingWrapRangeHigh;
             return this;
-        }   //setAbsoluteOdometry
+        }   //setPinpointOdometry
+
+        /**
+         * This method sets the parameters for Sparkfun OTOS.
+         *
+         * @param name specifies the Sparkfun OTOS name.
+         * @param xOffset specifies the xOffset from robot center, right positive.
+         * @param yOffset specifies the yOffset from robot center, forward positive.
+         * @param angleOffset specifies the angular offset from robot forward, clockwise positive.
+         * @param linearScale specifies linear scale, must be between 0.872 and 1.127.
+         * @param angularScale specifies angular scale.
+         * @return this object for chaining.
+         */
+        public RobotInfo setSparkfunOTOS(
+            String name, double xOffset, double yOffset, double angleOffset, double linearScale, double angularScale)
+        {
+            this.odometryType = TrcDriveBase.OdometryType.AbsoluteOdometry;
+            FtcSparkFunOtos.Config otosConfig = new FtcSparkFunOtos.Config()
+                .setOffset(xOffset, yOffset, angleOffset)
+                .setScale(linearScale, angularScale);
+            absoluteOdometry = new FtcSparkFunOtos(name, otosConfig);
+            return this;
+        }   //setSparkfunOTOS
 
         /**
          * This method sets the Drive Base tunable parameters.
@@ -370,26 +427,6 @@ public class FtcRobotDrive
             this.tuneParams = tuneParams;
             return this;
         }   //setTuneParams
-
-        /**
-         * This method sets the motion profile parameters for the Drive Base.
-         *
-         * @param profiledMaxVelocity specifies maximum profiled velocity.
-         * @param profiledMaxAcceleration specifies maximum profiled acceleration.
-         * @param profiledMaxDeceleration specifies maximum profiled decelereation.
-         * @param profiledMaxTurnRate specifies maximum turn rate.
-         * @return this object for chaining.
-         */
-        public RobotInfo setMotionProfileParams(
-            double profiledMaxVelocity, double profiledMaxAcceleration, double profiledMaxDeceleration,
-            double profiledMaxTurnRate)
-        {
-            this.profiledMaxVelocity = profiledMaxVelocity;
-            this.profiledMaxAcceleration = profiledMaxAcceleration;
-            this.profiledMaxDeceleration = profiledMaxDeceleration;
-            this.profiledMaxTurnRate = profiledMaxTurnRate;
-            return this;
-        }   //setMotionProfileParams
 
         /**
          * This method sets the maximum ramp rate for each DOF.
@@ -436,18 +473,14 @@ public class FtcRobotDrive
          * This method sets PurePursuit Drive parameters.
          *
          * @param followDistance specifies the PurePursuit Drive following distance.
-         * @param velPidCoeffs specifies Velocity Control PID Coefficients for motion profiling.
          * @param useFastMode specifies true to enable FastMode, false to disable.
          * @param enableSquid specifies true to enable Squid mode, false to disable.
          * @return this object for chaining.
          */
-        public RobotInfo setPurePursuitDriveParams(
-            double followDistance, TrcPidController.PidCoefficients velPidCoeffs, boolean useFastMode,
-            boolean enableSquid)
+        public RobotInfo setPurePursuitDriveParams(double followDistance, boolean useFastMode, boolean enableSquid)
         {
             this.usePurePursuitDrive = true;
             this.ppdFollowingDistance = followDistance;
-            this.velPidCoeffs = velPidCoeffs;
             this.fastModeEnabled = useFastMode;
             this.enablePidDriveSquareRootPid = enableSquid;
             return this;

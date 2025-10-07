@@ -85,7 +85,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
          *
          * @param xOffset specifies the xOffset from robot center, right positive.
          * @param yOffset specifies the yOffset from robot center, forward positive.
-         * @param angleOffset specifes the angular offset from robot forward, clockwise positive.
+         * @param angleOffset specifies the angular offset from robot forward, clockwise positive.
          * @return this object for chaining.
          */
         public Config setOffset(double xOffset, double yOffset, double angleOffset)
