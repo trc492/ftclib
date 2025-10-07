@@ -44,19 +44,19 @@ public class FtcDifferentialDrive extends FtcRobotDrive
         switch (numMotors)
         {
             case 2:
-                driveBase = new TrcSimpleDriveBase(driveMotors[INDEX_LEFT_FRONT], driveMotors[INDEX_RIGHT_FRONT], gyro);
+                driveBase = new TrcSimpleDriveBase(driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_FRONT_RIGHT], gyro);
                 break;
 
             case 4:
                 driveBase = new TrcSimpleDriveBase(
-                    driveMotors[INDEX_LEFT_FRONT], driveMotors[INDEX_LEFT_BACK],
-                    driveMotors[INDEX_RIGHT_FRONT], driveMotors[INDEX_RIGHT_BACK], gyro);
+                    driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
+                    driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT], gyro);
                 break;
 
             case 6:
                 driveBase = new TrcSimpleDriveBase(
-                    driveMotors[INDEX_LEFT_FRONT], driveMotors[INDEX_LEFT_CENTER], driveMotors[INDEX_LEFT_BACK],
-                    driveMotors[INDEX_RIGHT_FRONT], driveMotors[INDEX_RIGHT_CENTER], driveMotors[INDEX_RIGHT_BACK],
+                    driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_CENTER_LEFT], driveMotors[INDEX_BACK_LEFT],
+                    driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_CENTER_RIGHT], driveMotors[INDEX_BACK_RIGHT],
                     gyro);
                 break;
 

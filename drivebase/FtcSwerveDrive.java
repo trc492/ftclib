@@ -94,8 +94,8 @@ public class FtcSwerveDrive extends FtcRobotDrive
         steerMotors = createSteerMotors();
         swerveModules = createSwerveModules();
         TrcSwerveDriveBase driveBase = new TrcSwerveDriveBase(
-            swerveModules[FtcRobotDrive.INDEX_LEFT_FRONT], swerveModules[FtcRobotDrive.INDEX_LEFT_BACK],
-            swerveModules[FtcRobotDrive.INDEX_RIGHT_FRONT], swerveModules[FtcRobotDrive.INDEX_RIGHT_BACK],
+            swerveModules[FtcRobotDrive.INDEX_FRONT_LEFT], swerveModules[FtcRobotDrive.INDEX_BACK_LEFT],
+            swerveModules[FtcRobotDrive.INDEX_FRONT_RIGHT], swerveModules[FtcRobotDrive.INDEX_BACK_RIGHT],
             gyro, swerveInfo.wheelBaseWidth, swerveInfo.wheelBaseLength);
         super.configDriveBase(driveBase);
         this.dashboard = FtcDashboard.getInstance();
@@ -220,20 +220,20 @@ public class FtcSwerveDrive extends FtcRobotDrive
                 lineNum++, "Count = %d", steerZeroCalibrationCount);
             dashboard.displayPrintf(
                 lineNum++, "Encoder: lf=%f/%f",
-                steerEncoders[FtcSwerveDrive.INDEX_LEFT_FRONT].getRawPosition(),
-                calSteerZeros[FtcSwerveDrive.INDEX_LEFT_FRONT] / steerZeroCalibrationCount);
+                steerEncoders[FtcSwerveDrive.INDEX_FRONT_LEFT].getRawPosition(),
+                calSteerZeros[FtcSwerveDrive.INDEX_FRONT_LEFT] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
                 lineNum++, "Encoder: rf=%f/%f",
-                steerEncoders[FtcSwerveDrive.INDEX_RIGHT_FRONT].getRawPosition(),
-                calSteerZeros[FtcSwerveDrive.INDEX_RIGHT_FRONT] / steerZeroCalibrationCount);
+                steerEncoders[FtcSwerveDrive.INDEX_FRONT_RIGHT].getRawPosition(),
+                calSteerZeros[FtcSwerveDrive.INDEX_FRONT_RIGHT] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
                 lineNum++, "Encoder: lb=%f/%f",
-                steerEncoders[FtcSwerveDrive.INDEX_LEFT_BACK].getRawPosition(),
-                calSteerZeros[FtcSwerveDrive.INDEX_LEFT_BACK] / steerZeroCalibrationCount);
+                steerEncoders[FtcSwerveDrive.INDEX_BACK_LEFT].getRawPosition(),
+                calSteerZeros[FtcSwerveDrive.INDEX_BACK_LEFT] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
                 lineNum++, "Encoder: rb=%f/%f",
-                steerEncoders[FtcSwerveDrive.INDEX_RIGHT_BACK].getRawPosition(),
-                calSteerZeros[FtcSwerveDrive.INDEX_RIGHT_BACK] / steerZeroCalibrationCount);
+                steerEncoders[FtcSwerveDrive.INDEX_BACK_RIGHT].getRawPosition(),
+                calSteerZeros[FtcSwerveDrive.INDEX_BACK_RIGHT] / steerZeroCalibrationCount);
         }
 
         return lineNum;
