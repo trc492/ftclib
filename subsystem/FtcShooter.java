@@ -101,14 +101,22 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param encoderName specifies the external encoder name, null if none.
+         * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
+         * @param encoderZeroOffset specifies the zero offset of the external absolute encoder.
          * @param tiltParams specifies tilt parameters.
          * @return this object for chaining.
          */
         public Params setTiltMotor(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted,
-            TrcShooter.PanTiltParams tiltParams)
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
+            boolean encoderInverted, double encoderZeroOffset, TrcShooter.PanTiltParams tiltParams)
         {
             this.tiltMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            if (encoderName != null)
+            {
+                tiltMotorParams.setExternalEncoder(encoderName, encoderInverted)
+                               .setPositionScaleAndOffset(360.0, 0.0, encoderZeroOffset);
+            }
             this.tiltParams = tiltParams;
             return this;
         }   //setTiltMotor
@@ -119,14 +127,22 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param encoderName specifies the external encoder name, null if none.
+         * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
+         * @param encoderZeroOffset specifies the zero offset of the external absolute encoder.
          * @param panParams specifies pan parameters.
          * @return this object for chaining.
          */
         public Params setPanMotor(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted,
-            TrcShooter.PanTiltParams panParams)
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
+            boolean encoderInverted, double encoderZeroOffset, TrcShooter.PanTiltParams panParams)
         {
             this.panMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            if (encoderName != null)
+            {
+                panMotorParams.setExternalEncoder(encoderName, encoderInverted)
+                              .setPositionScaleAndOffset(360.0, 0.0, encoderZeroOffset);
+            }
             this.panParams = panParams;
             return this;
         }   //setPanMotor
