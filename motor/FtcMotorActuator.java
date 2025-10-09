@@ -24,6 +24,7 @@ package ftclib.motor;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import ftclib.sensor.FtcAnalogEncoder;
@@ -44,18 +45,27 @@ public class FtcMotorActuator
         CRServo
     }   //enum MotorType
 
+    public static class MotorInfo
+    {
+        public String name = null;
+        public MotorType motorType = null;
+        public boolean inverted = false;
+
+        public MotorInfo(String name, MotorType motorType, boolean inverted)
+        {
+            this.name = name;
+            this.motorType = motorType;
+            this.inverted = inverted;
+        }   //MotorInfo
+    }   //class MotorInfo
+
     /**
      * This class contains all the parameters for creating the motor.
      */
     public static class Params
     {
-        public String primaryMotorName = null;
-        public MotorType primaryMotorType = null;
-        public boolean primaryMotorInverted = false;
-
-        public String followerMotorName = null;
-        public MotorType followerMotorType = null;
-        public boolean followerMotorInverted = false;
+        public MotorInfo primaryMotor = null;
+        public ArrayList<MotorInfo> followerMotors = null;
 
         public String lowerLimitSwitchName = null;
         public boolean lowerLimitSwitchInverted = false;
@@ -66,10 +76,6 @@ public class FtcMotorActuator
         public TrcEncoder externalEncoder = null;
         public String externalEncoderName = null;
         public boolean externalEncoderInverted = false;
-
-        public double positionScale = 1.0;
-        public double positionOffset = 0.0;
-        public double positionZeroOffset = 0.0;
 
         public double[] positionPresets = null;
         public double positionPresetTolerance = 0.0;
@@ -83,21 +89,14 @@ public class FtcMotorActuator
         @Override
         public String toString()
         {
-            return "primaryMotorName=" + primaryMotorName +
-                   ",primaryMotorType=" + primaryMotorType +
-                   ",primaryMotorInverted=" + primaryMotorInverted +
-                   "\nfollowerMotorName=" + primaryMotorName +
-                   ",followerMotorType=" + followerMotorType +
-                   ",followerMotorInverted=" + primaryMotorInverted +
+            return "primaryMotor=(" + primaryMotor +
+                   ")\nfollowerMotors=" + followerMotors +
                    "\nlowerLimitName=" + lowerLimitSwitchName +
                    ",lowerLimitInverted=" + lowerLimitSwitchInverted +
                    "\nupperLimitName=" + upperLimitSwitchName +
                    ",upperLimitInverted=" + upperLimitSwitchInverted +
                    "\nencoderName=" + externalEncoderName +
                    ",encoderInverted=" + externalEncoderInverted +
-                   "\nposScale=" + positionScale +
-                   ",posOffset=" + positionOffset +
-                   ",posZeroOffset=" + positionZeroOffset +
                    "\nposPresets=" + Arrays.toString(positionPresets) +
                    ",posPresetTolerance=" + positionPresetTolerance;
         }   //toString
@@ -117,27 +116,38 @@ public class FtcMotorActuator
                 throw new IllegalArgumentException("Must provide a valid primary motor name.");
             }
 
-            this.primaryMotorName = name;
-            this.primaryMotorType = motorType;
-            this.primaryMotorInverted = inverted;
+            if (primaryMotor != null)
+            {
+                throw new IllegalStateException("Primary motor is already set.");
+            }
+
+            primaryMotor = new MotorInfo(name, motorType, inverted);
             return this;
         }   //setPrimaryMotor
 
         /**
-         * This method sets the parameters of the follower motor.
+         * This method sets the parameters of an additional follower motor.
          *
          * @param name specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param inverted specifies true to invert the motor direction, false otherwise.
          * @return this object for chaining.
          */
-        public Params setFollowerMotor(String name, MotorType motorType, boolean inverted)
+        public Params addFollowerMotor(String name, MotorType motorType, boolean inverted)
         {
-            this.followerMotorName = name;
-            this.followerMotorType = motorType;
-            this.followerMotorInverted = inverted;
+            if (primaryMotor == null)
+            {
+                throw new IllegalStateException("Must set the primary motor first.");
+            }
+
+            if (followerMotors == null)
+            {
+                followerMotors = new ArrayList<>();
+            }
+
+            followerMotors.add(new MotorInfo(name, motorType, inverted));
             return this;
-        }   //setFollowerMotor
+        }   //addFollowerMotor
 
         /**
          * This method sets the lower limit switch parameters.
@@ -202,34 +212,6 @@ public class FtcMotorActuator
         }   //setExternalEncoder
 
         /**
-         * This method sets the position sensor scale factor and offset.
-         *
-         * @param scale specifies scale factor to multiply the position sensor reading.
-         * @param offset specifies offset added to the scaled sensor reading.
-         * @param zeroOffset specifies the zero offset for absolute encoder.
-         * @return this object for chaining.
-         */
-        public Params setPositionScaleAndOffset(double scale, double offset, double zeroOffset)
-        {
-            positionScale = scale;
-            positionOffset = offset;
-            positionZeroOffset = zeroOffset;
-            return this;
-        }   //setPositionScaleAndOffset
-
-        /**
-         * This method sets the position sensor scale factor and offset.
-         *
-         * @param scale specifies scale factor to multiply the position sensor reading.
-         * @param offset specifies offset added to the scaled sensor reading.
-         * @return this object for chaining.
-         */
-        public Params setPositionScaleAndOffset(double scale, double offset)
-        {
-            return setPositionScaleAndOffset(scale, offset, 0.0);
-        }   //setPositionScaleAndOffset
-
-        /**
          * This method sets an array of preset positions.
          *
          * @param tolerance specifies the preset tolerance.
@@ -245,7 +227,7 @@ public class FtcMotorActuator
 
     }   //class Params
 
-    private final TrcMotor primaryMotor;
+    private final TrcMotor motor;
 
     /**
      * Constructor: Create an instance of the object.
@@ -285,21 +267,21 @@ public class FtcMotorActuator
             }
         }
 
-        primaryMotor = createMotor(params.primaryMotorName, params.primaryMotorType, sensors);
-        primaryMotor.setMotorInverted(params.primaryMotorInverted);
+        motor = createMotor(params.primaryMotor, sensors);
+        motor.setMotorInverted(params.primaryMotor.inverted);
 
-        if (params.followerMotorName != null)
+        if (params.followerMotors != null)
         {
-            TrcMotor followerMotor = createMotor(params.followerMotorName, params.followerMotorType, null);
-            followerMotor.follow(primaryMotor, params.primaryMotorInverted != params.followerMotorInverted);
+            for (MotorInfo motorInfo: params.followerMotors)
+            {
+                TrcMotor followerMotor = createMotor(motorInfo, null);
+                followerMotor.follow(motor, params.primaryMotor.inverted != motorInfo.inverted);
+            }
         }
-
-        primaryMotor.setPositionSensorScaleAndOffset(
-            params.positionScale, params.positionOffset, params.positionZeroOffset);
 
         if (params.positionPresets != null)
         {
-            primaryMotor.setPresets(false, params.positionPresetTolerance, params.positionPresets);
+            motor.setPresets(false, params.positionPresetTolerance, params.positionPresets);
         }
     }   //FtcMotorActuator
 
@@ -310,32 +292,31 @@ public class FtcMotorActuator
      */
     public TrcMotor getMotor()
     {
-        return primaryMotor;
+        return motor;
     }   //getMotor
 
     /**
      * This method creates a motor with the specified parameters and initializes it.
      *
-     * @param name specifies the instance name of the motor.
-     * @param motorType specifies the motor type.
+     * @param motorInfo specifies the motor info.
      * @param sensors specifies external sensors, can be null if none.
      * @return created motor.
      */
-    public TrcMotor createMotor(String name, MotorType motorType, TrcMotor.ExternalSensors sensors)
+    public TrcMotor createMotor(MotorInfo motorInfo, TrcMotor.ExternalSensors sensors)
     {
         TrcMotor motor;
 
-        switch (motorType)
+        switch (motorInfo.motorType)
         {
             case DcMotor:
-                motor = new FtcDcMotor(name, sensors);
+                motor = new FtcDcMotor(motorInfo.name, sensors);
                 motor.resetFactoryDefault();
                 motor.setBrakeModeEnabled(true);
                 motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
                 break;
 
             case CRServo:
-                motor = new FtcCRServo(name, sensors);
+                motor = new FtcCRServo(motorInfo.name, sensors);
                 motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
                 break;
 

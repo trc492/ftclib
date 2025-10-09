@@ -80,23 +80,23 @@ public class FtcPidStorage
       }   //setPrimaryMotor
 
       /**
-       * This method sets the parameters of the follower motor.
+       * This method sets the parameters of an additional follower motor.
        *
        * @param motorName specifies the name of the motor.
        * @param motorType specifies the motor type.
        * @param inverted specifies true to invert the motor direction, false otherwise.
        * @return this object for chaining.
        */
-      public Params setFollowerMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
+      public Params addFollowerMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
       {
          if (motorParams == null)
          {
             throw new IllegalStateException("Must set the primary motor parameters first.");
          }
 
-         motorParams.setFollowerMotor(motorName, motorType, inverted);
+         motorParams.addFollowerMotor(motorName, motorType, inverted);
          return this;
-      }   //setFollowerMotor
+      }   //addFollowerMotor
 
       /**
        * This method sets the lower limit switch parameters.
@@ -133,25 +133,6 @@ public class FtcPidStorage
          motorParams.setUpperLimitSwitch(name, inverted);
          return this;
       }   //setUpperLimitSwitch
-
-      /**
-       * This method sets the position sensor scale factor and offset.
-       *
-       * @param scale specifies scale factor to multiply the position sensor reading.
-       * @param offset specifies offset added to the scaled sensor reading.
-       * @param zeroOffset specifies the zero offset for absolute encoder.
-       * @return this object for chaining.
-       */
-      public Params setPositionScaleAndOffset(double scale, double offset, double zeroOffset)
-      {
-         if (motorParams == null)
-         {
-            throw new IllegalStateException("Must set the primary motor parameters first.");
-         }
-
-         motorParams.setPositionScaleAndOffset(scale, offset, zeroOffset);
-         return this;
-      }   //setPositionScaleAndOffset
 
       /**
        * This method sets an array of preset positions.

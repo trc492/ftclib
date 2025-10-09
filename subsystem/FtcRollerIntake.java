@@ -82,23 +82,23 @@ public class FtcRollerIntake
       }   //setPrimaryMotor
 
       /**
-       * This method sets the parameters of the follower motor.
+       * This method sets the parameters of an additional follower motor.
        *
        * @param motorName specifies the name of the motor.
        * @param motorType specifies the motor type.
        * @param inverted specifies true to invert the motor direction, false otherwise.
        * @return this object for chaining.
        */
-      public Params setFollowerMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
+      public Params addFollowerMotor(String motorName, FtcMotorActuator.MotorType motorType, boolean inverted)
       {
          if (motorParams == null)
          {
             throw new IllegalStateException("Must set the primary motor parameters first.");
          }
 
-         motorParams.setFollowerMotor(motorName, motorType, inverted);
+         motorParams.addFollowerMotor(motorName, motorType, inverted);
          return this;
-      }   //setFollowerMotor
+      }   //addFollowerMotor
 
       /**
        * This method sets various power levels of the Roller Intake.

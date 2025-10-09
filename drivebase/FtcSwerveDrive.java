@@ -199,11 +199,11 @@ public class FtcSwerveDrive extends FtcRobotDrive
             FtcMotorActuator.Params motorParams= new FtcMotorActuator.Params()
                 .setPrimaryMotor(
                     swerveInfo.steerMotorNames[i], swerveInfo.steerMotorType, swerveInfo.steerMotorInverted[i])
-                .setExternalEncoder(steerEncoders[i])
-                .setPositionScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
+                .setExternalEncoder(steerEncoders[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
             motors[i].setPositionPidParameters(
                 swerveInfo.steerMotorPidCoeffs, swerveInfo.steerMotorPidTolerance, true, null);
+            motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
         }
 
         return motors;

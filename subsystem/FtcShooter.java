@@ -103,19 +103,17 @@ public class FtcShooter
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param encoderName specifies the external encoder name, null if none.
          * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
-         * @param encoderZeroOffset specifies the zero offset of the external absolute encoder.
          * @param tiltParams specifies tilt parameters.
          * @return this object for chaining.
          */
         public Params setTiltMotor(
             String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
-            boolean encoderInverted, double encoderZeroOffset, TrcShooter.PanTiltParams tiltParams)
+            boolean encoderInverted, TrcShooter.PanTiltParams tiltParams)
         {
             this.tiltMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             if (encoderName != null)
             {
-                tiltMotorParams.setExternalEncoder(encoderName, encoderInverted)
-                               .setPositionScaleAndOffset(360.0, 0.0, encoderZeroOffset);
+                tiltMotorParams.setExternalEncoder(encoderName, encoderInverted);
             }
             this.tiltParams = tiltParams;
             return this;
@@ -129,19 +127,17 @@ public class FtcShooter
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param encoderName specifies the external encoder name, null if none.
          * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
-         * @param encoderZeroOffset specifies the zero offset of the external absolute encoder.
          * @param panParams specifies pan parameters.
          * @return this object for chaining.
          */
         public Params setPanMotor(
             String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
-            boolean encoderInverted, double encoderZeroOffset, TrcShooter.PanTiltParams panParams)
+            boolean encoderInverted, TrcShooter.PanTiltParams panParams)
         {
             this.panMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
             if (encoderName != null)
             {
-                panMotorParams.setExternalEncoder(encoderName, encoderInverted)
-                              .setPositionScaleAndOffset(360.0, 0.0, encoderZeroOffset);
+                panMotorParams.setExternalEncoder(encoderName, encoderInverted);
             }
             this.panParams = panParams;
             return this;
@@ -159,7 +155,7 @@ public class FtcShooter
      */
     public FtcShooter(String instanceName, Params params)
     {
-        if (params.shooterMotor1Params == null || params.shooterMotor1Params.primaryMotorName == null)
+        if (params.shooterMotor1Params == null || params.shooterMotor1Params.primaryMotor == null)
         {
             throw new IllegalArgumentException("Shooter must have the primary motor.");
         }
@@ -169,7 +165,7 @@ public class FtcShooter
         shooterMotor1.setBrakeModeEnabled(false);
 
         TrcMotor shooterMotor2 = null;
-        if (params.shooterMotor2Params != null && params.shooterMotor2Params.primaryMotorName != null)
+        if (params.shooterMotor2Params != null && params.shooterMotor2Params.primaryMotor != null)
         {
             shooterMotor2 = new FtcMotorActuator(params.shooterMotor2Params).getMotor();
             // Use Coast Mode for shooter motor.
