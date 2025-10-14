@@ -120,6 +120,24 @@ public class FtcShooter
         }   //setTiltMotor
 
         /**
+         * This method sets the position presets for the Tilt Motor.
+         *
+         * @param presetTolerance specifies the preset position tolerance.
+         * @param posPresets specifies an array of preset positions.
+         * @return this object for chaining.
+         */
+        public Params setTiltMotorPosPresets(double presetTolerance, double... posPresets)
+        {
+            if (tiltMotorParams == null)
+            {
+                throw new IllegalStateException("Must call setTiltMotor first.");
+            }
+
+            tiltMotorParams.setPositionPresets(presetTolerance, posPresets);
+            return this;
+        }   //setTiltMotorPosPresets
+
+        /**
          * This method sets the parameters of pan if there is one.
          *
          * @param motorName specifies the name of the motor.
@@ -142,6 +160,24 @@ public class FtcShooter
             this.panParams = panParams;
             return this;
         }   //setPanMotor
+
+        /**
+         * This method sets the position presets for the Pan Motor.
+         *
+         * @param presetTolerance specifies the preset position tolerance.
+         * @param posPresets specifies an array of preset positions.
+         * @return this object for chaining.
+         */
+        public Params setPanMotorPosPresets(double presetTolerance, double... posPresets)
+        {
+            if (panMotorParams == null)
+            {
+                throw new IllegalStateException("Must call setPanMotor first.");
+            }
+
+            panMotorParams.setPositionPresets(presetTolerance, posPresets);
+            return this;
+        }   //setPanMotorPosPresets
 
     }   //class Params
 
