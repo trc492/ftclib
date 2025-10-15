@@ -30,10 +30,8 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -90,7 +88,7 @@ public class FtcLimelightVision
         public final ResultType resultType;
         public final double timestamp;
         public final Object result;
-        public final String label;
+        public final Object objId;
         public final TargetGroundOffset targetGroundOffset;
         public final TrcPose2D targetPose;
         public final TrcPose2D robotPose;
@@ -107,20 +105,20 @@ public class FtcLimelightVision
          * @param resultType specifies the detected object result type.
          * @param timestamp specifies the control hub result timestamp.
          * @param result specifies the detected object.
-         * @param label specifies the detected object label if there is one.
+         * @param objId specifies the detected object ID if there is one.
          * @param robotPose specifies the robot's 3D position.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
          * @param cameraPose specifies the camera position on the robot.
          */
         public DetectedObject(
-            LLResult llResult, ResultType resultType, double timestamp, Object result, String label, Pose3D robotPose,
+            LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId, Pose3D robotPose,
             TargetGroundOffset targetGroundOffset, TrcPose3D cameraPose)
         {
             this.llResult = llResult;
             this.resultType = resultType;
             this.timestamp = timestamp;
             this.result = result;
-            this.label = label;
+            this.objId = objId;
             this.targetGroundOffset = targetGroundOffset;
             this.targetPose = getTargetPose(cameraPose);
             this.robotPose = getRobotPose(robotPose, cameraPose);
@@ -157,7 +155,7 @@ public class FtcLimelightVision
         public String toString()
         {
             return "{resultType=" + resultType +
-                   ",label=" + label +
+                   ",objId=" + objId +
                    ",targetPose=" + targetPose +
                    ",robotPose=" + robotPose +
                    ",rect=" + targetRect +
@@ -362,10 +360,15 @@ public class FtcLimelightVision
             if (resultType == ResultType.Fiducial)
             {
                 LLResultTypes.FiducialResult fiducialResult = (LLResultTypes.FiducialResult) result;
-                Pose3D pose3D = fiducialResult.getTargetPoseCameraSpace();
-                Position position = pose3D.getPosition();
+                Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
+                Position posTargetFromCam = pose3DTargetFromCam.getPosition();
                 targetPose = TrcUtil.projectToFloorRobot(
-                    new Vector3D(position.x, position.y, position.z), cameraPose);
+                    new Vector3D(posTargetFromCam.x, posTargetFromCam.z, -posTargetFromCam.y), cameraPose);
+                TrcDbgTrace.globalTraceInfo(
+                    "Limelightvvvvv",
+                    "[" + fiducialResult.getFiducialId() + "], fromCam=" + posTargetFromCam);
+                TrcDbgTrace.globalTraceInfo("Limelight^^^^^", "Target=" + targetPose);
+                FtcDashboard.getInstance().displayPrintf(8, "TargetPose=" + targetPose);
             }
             else
             {
@@ -397,8 +400,6 @@ public class FtcLimelightVision
 //                    LLResultTypes.FiducialResult result = fiducialResults.get(i);
 //                }
 //            }
-
-
 
             return targetPose;
         }   //getTargetPose
@@ -548,11 +549,11 @@ public class FtcLimelightVision
      * This method returns the array of detected objects.
      *
      * @param resultType specifies the result type to detect for.
-     * @param label specifies the object label to look for, null if looking for any label.
+     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
      * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @return array list of detected objects.
      */
-    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, String label, Double robotHeading)
+    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, Object matchIds, Double robotHeading)
     {
         ArrayList<DetectedObject> detectedObjs = null;
         if (robotHeading != null)
@@ -610,40 +611,42 @@ public class FtcLimelightVision
                 {
                     for (Object obj: resultList)
                     {
-                        String objLabel;
+                        Object objId;
 
                         switch (resultType)
                         {
                             case Barcode:
-                                objLabel = ((LLResultTypes.BarcodeResult) obj).getData();
+                                objId = ((LLResultTypes.BarcodeResult) obj).getData();
                                 break;
 
                             case Classifier:
-                                objLabel = ((LLResultTypes.ClassifierResult) obj).getClassName();
+                                objId = ((LLResultTypes.ClassifierResult) obj).getClassName();
                                 break;
 
                             case Detector:
-                                objLabel = ((LLResultTypes.DetectorResult) obj).getClassName();
+                                objId = ((LLResultTypes.DetectorResult) obj).getClassName();
                                 break;
 
                             case Fiducial:
-                                objLabel = ((Integer) ((LLResultTypes.FiducialResult) obj).getFiducialId()).toString();
+                                objId = ((LLResultTypes.FiducialResult) obj).getFiducialId();
                                 break;
 
                             case Color:
                             default:
-                                objLabel = null;
+                                objId = null;
                                 break;
                         }
 
-                        if (label == null || label.equals(objLabel))
+                        if (matchIds == null ||
+                            resultType == ResultType.Fiducial && matchAprilTagId((int)objId, (int[])matchIds) != -1 ||
+                            resultType != ResultType.Fiducial && matchIds.equals(objId))
                         {
                             DetectedObject detectedObj =
                                 new DetectedObject(
-                                    llResult, resultType, resultTimestamp, obj, objLabel, robotPose, targetGroundOffset,
+                                    llResult, resultType, resultTimestamp, obj, objId, robotPose, targetGroundOffset,
                                     cameraPose);
                             detectedList.add(detectedObj);
-                            tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objLabel);
+                            tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }
                     }
 
@@ -668,6 +671,29 @@ public class FtcLimelightVision
     }   //getDetectedObjects
 
     /**
+     * This method finds a matching AprilTag ID in the specified array and returns the found index.
+     *
+     * @param id specifies the AprilTag ID to be matched.
+     * @param aprilTagIds specifies the AprilTag ID array to find the given ID.
+     * @return index in the array that matched the ID, -1 if not found.
+     */
+    private int matchAprilTagId(int id, int[] aprilTagIds)
+    {
+        int matchedIndex = -1;
+
+        for (int i = 0; i < aprilTagIds.length; i++)
+        {
+            if (id == aprilTagIds[i])
+            {
+                matchedIndex = i;
+                break;
+            }
+        }
+
+        return matchedIndex;
+    }   //matchAprilTagId
+
+    /**
      * This method returns the target info of the given detected target.
      *
      * @param target specifies the detected target
@@ -684,17 +710,17 @@ public class FtcLimelightVision
      * This method returns an array list of target info on the filtered detected targets.
      *
      * @param resultType specifies the result type to detect for.
-     * @param label specifies the object label to look for, null if looking for any label.
+     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
      * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return filtered target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        ResultType resultType, String label, Double robotHeading,
+        ResultType resultType, Object matchIds, Double robotHeading,
         Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label, robotHeading);
+        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, matchIds, robotHeading);
 
         if (detectedObjects != null)
         {
@@ -721,18 +747,18 @@ public class FtcLimelightVision
      * This method returns the target info of the best detected target.
      *
      * @param resultType specifies the result type to detect for.
-     * @param label specifies the object label to look for, null if looking for any label.
+     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
      * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
-        ResultType resultType, String label, Double robotHeading,
+        ResultType resultType, Object matchIds, Double robotHeading,
         Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(resultType, label, robotHeading, comparator);
+            getDetectedTargetsInfo(resultType, matchIds, robotHeading, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -742,6 +768,42 @@ public class FtcLimelightVision
         return bestTarget;
     }   //getBestDetectedTargetInfo
 
+//    /**
+//     * This method returns an array list of target info on the filtered detected targets.
+//     *
+//     * @param resultType specifies the result type to detect for.
+//     * @param label specifies the object label to look for, null if looking for any label.
+//     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
+//     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+//     * @return filtered target info array list.
+//     */
+//    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
+//        Double robotHeading, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator, int[] aprilTagIds)
+//    {
+//        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
+//        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label, robotHeading);
+//
+//        if (detectedObjects != null)
+//        {
+//            ArrayList<TrcVisionTargetInfo<DetectedObject>> targets = new ArrayList<>();
+//            for (DetectedObject obj : detectedObjects)
+//            {
+//                targets.add(getDetectedTargetInfo(obj));
+//            }
+//
+//            if (!targets.isEmpty())
+//            {
+//                if (comparator != null && targets.size() > 1)
+//                {
+//                    targets.sort(comparator);
+//                }
+//                targetsInfo = targets;
+//            }
+//        }
+//
+//        return targetsInfo;
+//    }   //getDetectedTargetsInfo
+//
     /**
      * This method update the dashboard with vision status.
      *
@@ -756,7 +818,7 @@ public class FtcLimelightVision
         {
             dashboard.displayPrintf(
                 lineNum++, "AprilTag[%s]: targetPose=%s, robotPose=%s",
-                object.detectedObj.label, object.detectedObj.targetPose, object.detectedObj.robotPose);
+                object.detectedObj.objId, object.detectedObj.targetPose, object.detectedObj.robotPose);
         }
         else
         {
