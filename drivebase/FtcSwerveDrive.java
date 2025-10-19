@@ -45,6 +45,12 @@ import trclib.sensor.TrcEncoder;
  */
 public class FtcSwerveDrive extends FtcRobotDrive
 {
+    public static class SwerveTuneParams
+    {
+        public TrcPidController.PidCoefficients steerMotorPidCoeffs = null;
+        public double steerMotorPidTolerance = 0.0;
+    }   //class SwerveTuneParams
+
     /**
      * This class contains Swerve Robot Info.
      */
@@ -59,8 +65,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public FtcMotorActuator.MotorType steerMotorType = null;
         public String[] steerMotorNames = null;
         public boolean[] steerMotorInverted = null;
-        public TrcPidController.PidCoefficients steerMotorPidCoeffs = null;
-        public double steerMotorPidTolerance = 0.0;
+        public SwerveTuneParams tuneParams = null;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
 
@@ -109,8 +114,9 @@ public class FtcSwerveDrive extends FtcRobotDrive
          */
         public SwerveInfo setSteerMotorPidParams(TrcPidController.PidCoefficients pidCoeffs, double pidTolerance)
         {
-            this.steerMotorPidCoeffs = pidCoeffs;
-            this.steerMotorPidTolerance = pidTolerance;
+            swerveTuneParams.steerMotorPidCoeffs = pidCoeffs;
+            swerveTuneParams.steerMotorPidTolerance = pidTolerance;
+            tuneParams = swerveTuneParams;
             return this;
         }   //setSteerMotorPidParams
 
@@ -128,6 +134,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
     }   //class SwerveInfo
 
     private static final String moduleName = FtcSwerveDrive.class.getSimpleName();
+    public static final SwerveTuneParams swerveTuneParams = new SwerveTuneParams();
 
     public final TrcDbgTrace tracer;
     public final SwerveInfo swerveInfo;
@@ -202,7 +209,8 @@ public class FtcSwerveDrive extends FtcRobotDrive
                 .setExternalEncoder(steerEncoders[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
             motors[i].setPositionPidParameters(
-                swerveInfo.steerMotorPidCoeffs, swerveInfo.steerMotorPidTolerance, true, null);
+                swerveInfo.tuneParams.steerMotorPidCoeffs, swerveInfo.tuneParams.steerMotorPidTolerance,
+                true, null);
             motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
         }
 
