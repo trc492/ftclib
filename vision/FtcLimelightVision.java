@@ -29,9 +29,13 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -347,6 +351,50 @@ public class FtcLimelightVision
             return vertices;
         }   //getRotatedRectVertices
 
+        public TrcPose2D projectCameraSpaceToFloor(Pose3D targetPoseCameraSpace, TrcPose3D cameraPose) {
+            // 1. Convert cameraPose to Apache types
+            Vector3D camPos = new Vector3D(cameraPose.x, cameraPose.y, cameraPose.z);
+
+            // Build camera rotation matrix using roll (X), pitch (Y), yaw (Z)
+            Rotation camRot = new Rotation(
+                RotationOrder.XYZ, // or XYZ depending on how you define your axes
+                RotationConvention.VECTOR_OPERATOR,
+                Math.toRadians(cameraPose.roll),
+                Math.toRadians(cameraPose.pitch),
+                Math.toRadians(cameraPose.yaw)
+            );
+
+            // 2. Convert targetPoseCameraSpace to Apache types
+            Position posTargetFromCam = targetPoseCameraSpace.getPosition();
+            Vector3D targetPos = new Vector3D(
+                posTargetFromCam.x,
+                posTargetFromCam.y,
+                posTargetFromCam.z
+            );
+
+            // For now assume target orientation is ignored; only position matters
+            // Compute vector from camera to target in camera frame
+            Vector3D dirCam = targetPos.subtract(camPos);
+
+            // 3. Rotate vector into world frame
+            Vector3D dirWorld = camRot.applyTo(dirCam);
+
+            // 4. Intersect ray with ground plane Z=0
+            double s = -camPos.getZ() / dirWorld.getZ();
+            if (s < 0) {
+                // Intersection is behind the camera — invalid
+                return null;
+            }
+
+            Vector3D floorPoint = camPos.add(dirWorld.scalarMultiply(s));
+            Vector3D delta = floorPoint.subtract(camPos);
+
+            // 5. Convert to TrcPose2D: Y forward, X right, angle CW from Y
+            double angleDeg = Math.toDegrees(Math.atan2(delta.getX(), delta.getY()));
+
+            return new TrcPose2D(delta.getX(), delta.getY(), angleDeg);
+        }
+
         /**
          * This method calculates the target pose of the detected object.
          *
@@ -356,22 +404,42 @@ public class FtcLimelightVision
         private TrcPose2D getTargetPose(TrcPose3D cameraPose)
         {
             TrcPose2D targetPose = null;
+            FtcDashboard dashboard = FtcDashboard.getInstance();
 
             if (resultType == ResultType.Fiducial)
             {
+                // AprilTag has accurate 3D info, use it.
                 LLResultTypes.FiducialResult fiducialResult = (LLResultTypes.FiducialResult) result;
+                int aprilTagId = fiducialResult.getFiducialId();
+                if (aprilTagId != 20) return null;
+
                 Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
                 Position posTargetFromCam = pose3DTargetFromCam.getPosition();
-                targetPose = TrcUtil.projectToFloorRobot(
-                    new Vector3D(posTargetFromCam.x, posTargetFromCam.z, -posTargetFromCam.y), cameraPose);
+                posTargetFromCam.x *= TrcUtil.INCHES_PER_METER;
+                posTargetFromCam.y *= TrcUtil.INCHES_PER_METER;
+                posTargetFromCam.z *= TrcUtil.INCHES_PER_METER;
+                targetPose = projectCameraSpaceToFloor(
+                    pose3DTargetFromCam,
+                    cameraPose);
+                if (targetPose != null)
+                {
+                    targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                }
+                dashboard.displayPrintf(4, "3DTargetPose=" + targetPose);
+                dashboard.displayPrintf(5, "x=" + (posTargetFromCam.x * TrcUtil.INCHES_PER_METER));
+                dashboard.displayPrintf(6, "y=" + (posTargetFromCam.z * TrcUtil.INCHES_PER_METER));
+                dashboard.displayPrintf(7, "z=" + (-posTargetFromCam.y * TrcUtil.INCHES_PER_METER));
+                TrcDbgTrace.globalTraceInfo(moduleName, "AprilTagId=" + aprilTagId);
+                TrcDbgTrace.globalTraceInfo(moduleName, "TargetPoseFrom3D=" + targetPose);
                 TrcDbgTrace.globalTraceInfo(
-                    "Limelightvvvvv",
-                    "[" + fiducialResult.getFiducialId() + "], fromCam=" + posTargetFromCam);
-                TrcDbgTrace.globalTraceInfo("Limelight^^^^^", "Target=" + targetPose);
-                FtcDashboard.getInstance().displayPrintf(8, "TargetPose=" + targetPose);
-            }
-            else
-            {
+                    moduleName,
+                    "posTargetFromCam(x=" + (posTargetFromCam.x * TrcUtil.INCHES_PER_METER) +
+                    ", y=" + (posTargetFromCam.z * TrcUtil.INCHES_PER_METER) +
+                    ", z=" + (-posTargetFromCam.y * TrcUtil.INCHES_PER_METER));
+//            }
+//            else
+//            {
+                // Other pipelines only have 2D info.
                 double camPitchRadians = Math.toRadians(cameraPose.pitch);
                 double targetPitchDegrees = llResult.getTy();
                 double targetYawDegrees = llResult.getTx();
@@ -384,22 +452,18 @@ public class FtcLimelightVision
                 targetPose = new TrcPose2D(
                     targetDepth * Math.sin(targetYawRadians), targetDepth * Math.cos(targetYawRadians),
                     targetYawDegrees);
-                TrcDbgTrace.globalTraceDebug(
+                TrcDbgTrace.globalTraceInfo(
                     "LimelightObject." + resultType,
                     "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetPitch=%.1f, targetDepth=%.1f, " +
                     "targetYaw=%.1f, targetPose=%s",
                     groundOffset, cameraPose.z, cameraPose.pitch, targetPitchDegrees, targetDepth, targetYawDegrees,
                     targetPose);
+                dashboard.displayPrintf(8, "AprilTagId=" + aprilTagId);
+                dashboard.displayPrintf(9, "2DTargetPose=" + targetPose);
+                dashboard.displayPrintf(10, "Tx=" + targetYawDegrees + ", Ty=" + targetPitchDegrees);
+                dashboard.displayPrintf(11, "targetHeight=" + groundOffset);
+                dashboard.displayPrintf(12, "camPitch=" + cameraPose.pitch + ", camHeight=" + cameraPose.z);
             }
-//            List<LLResultTypes.FiducialResult> fiducialResults = llResult.getFiducialResults();
-//
-//            if (fiducialResults != null && fiducialResults.size() > 0)
-//            {
-//                for (int i = 0; i < fiducialResults.size(); i++)
-//                {
-//                    LLResultTypes.FiducialResult result = fiducialResults.get(i);
-//                }
-//            }
 
             return targetPose;
         }   //getTargetPose
@@ -812,7 +876,8 @@ public class FtcLimelightVision
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(ResultType.Fiducial, null, null, null);
+        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(
+            ResultType.Fiducial, new int[]{22}, null, null);
 
         if (object != null)
         {
