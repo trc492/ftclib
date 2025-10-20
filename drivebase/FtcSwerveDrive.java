@@ -32,7 +32,6 @@ import java.util.Scanner;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcAnalogEncoder;
-import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcSwerveDriveBase;
 import trclib.drivebase.TrcSwerveModule;
 import trclib.motor.TrcMotor;
@@ -45,12 +44,6 @@ import trclib.sensor.TrcEncoder;
  */
 public class FtcSwerveDrive extends FtcRobotDrive
 {
-    public static class SwerveTuneParams
-    {
-        public TrcPidController.PidCoefficients steerMotorPidCoeffs = null;
-        public double steerMotorPidTolerance = 0.0;
-    }   //class SwerveTuneParams
-
     /**
      * This class contains Swerve Robot Info.
      */
@@ -65,9 +58,9 @@ public class FtcSwerveDrive extends FtcRobotDrive
         public FtcMotorActuator.MotorType steerMotorType = null;
         public String[] steerMotorNames = null;
         public boolean[] steerMotorInverted = null;
-        public SwerveTuneParams tuneParams = null;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
+        public TrcSwerveDriveBase.SwerveParams swerveParams = null;
 
         /**
          * This method sets steer encoder info.
@@ -106,19 +99,16 @@ public class FtcSwerveDrive extends FtcRobotDrive
         }   //setSteerMotorInfo
 
         /**
-         * This method sets the PID control parameters for the steer motors.
+         * This method sets the Swerve specific tunable parameters.
          *
-         * @param pidCoeffs specifies PID Coefficients for PID control.
-         * @param pidTolerance specifies PID Tolerance.
+         * @param swerveParams specifies the swerve tune parameters.
          * @return this object for chaining.
          */
-        public SwerveInfo setSteerMotorPidParams(TrcPidController.PidCoefficients pidCoeffs, double pidTolerance)
+        public SwerveInfo setSwerveParams(TrcSwerveDriveBase.SwerveParams swerveParams)
         {
-            swerveTuneParams.steerMotorPidCoeffs = pidCoeffs;
-            swerveTuneParams.steerMotorPidTolerance = pidTolerance;
-            tuneParams = swerveTuneParams;
+            this.swerveParams = swerveParams;
             return this;
-        }   //setSteerMotorPidParams
+        }   //setSwerveParams
 
         /**
          * This method sets the swerve module names.
@@ -134,7 +124,6 @@ public class FtcSwerveDrive extends FtcRobotDrive
     }   //class SwerveInfo
 
     private static final String moduleName = FtcSwerveDrive.class.getSimpleName();
-    public static final SwerveTuneParams swerveTuneParams = new SwerveTuneParams();
 
     public final TrcDbgTrace tracer;
     public final SwerveInfo swerveInfo;
@@ -209,7 +198,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
                 .setExternalEncoder(steerEncoders[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
             motors[i].setPositionPidParameters(
-                swerveInfo.tuneParams.steerMotorPidCoeffs, swerveInfo.tuneParams.steerMotorPidTolerance,
+                swerveInfo.swerveParams.steerMotorPidCoeffs, swerveInfo.swerveParams.steerMotorPidTolerance,
                 true, null);
             motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
         }

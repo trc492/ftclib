@@ -199,7 +199,7 @@ public class FtcRobotDrive
         public TrcDriveBaseOdometry absoluteOdometry = null;
         public Double headingWrapRangeLow = null, headingWrapRangeHigh = null;
         // DriveBase Parameters
-        public TrcDriveBase.TuneParams tuneParams = null;
+        public TrcDriveBase.BaseParams baseParams = null;
         // PID Ramp Rates
         public Double xDriveMaxPidRampRate = null;
         public Double yDriveMaxPidRampRate = null;
@@ -419,12 +419,12 @@ public class FtcRobotDrive
         /**
          * This method sets the Drive Base tunable parameters.
          *
-         * @param tuneParams specifies the tunable parameters.
+         * @param baseParams specifies the tunable parameters.
          * @return this object for chaining.
          */
-        public RobotInfo setTuneParams(TrcDriveBase.TuneParams tuneParams)
+        public RobotInfo setBaseParams(TrcDriveBase.BaseParams baseParams)
         {
-            this.tuneParams = tuneParams;
+            this.baseParams = baseParams;
             return this;
         }   //setTuneParams
 
@@ -581,11 +581,11 @@ public class FtcRobotDrive
         TrcPidController pidCtrl;
 
         this.driveBase = driveBase;
-        if (robotInfo.tuneParams.driveMotorVelPidCoeffs != null)
+        if (robotInfo.baseParams.driveMotorVelPidCoeffs != null)
         {
             driveBase.enableMotorVelocityControl(
-                robotInfo.tuneParams.driveMotorMaxVelocity, robotInfo.tuneParams.driveMotorVelPidCoeffs,
-                robotInfo.tuneParams.driveMotorVelPidTolerance, robotInfo.tuneParams.driveMotorSoftwarePid);
+                robotInfo.baseParams.driveMotorMaxVelocity, robotInfo.baseParams.driveMotorVelPidCoeffs,
+                robotInfo.baseParams.driveMotorVelPidTolerance, robotInfo.baseParams.driveMotorSoftwarePid);
         }
         else
         {
@@ -598,31 +598,31 @@ public class FtcRobotDrive
             {
                 pidDrive = new TrcPidDrive(
                     "pidDrive", driveBase,
-                    robotInfo.tuneParams.xDrivePidCoeffs, robotInfo.tuneParams.drivePidTolerance,
+                    robotInfo.baseParams.xDrivePidCoeffs, robotInfo.baseParams.drivePidTolerance,
                     driveBase::getXPosition,
-                    robotInfo.tuneParams.yDrivePidCoeffs, robotInfo.tuneParams.drivePidTolerance,
+                    robotInfo.baseParams.yDrivePidCoeffs, robotInfo.baseParams.drivePidTolerance,
                     driveBase::getYPosition,
-                    robotInfo.tuneParams.turnPidCoeffs, robotInfo.tuneParams.turnPidTolerance,
+                    robotInfo.baseParams.turnPidCoeffs, robotInfo.baseParams.turnPidTolerance,
                     driveBase::getHeading);
                 pidCtrl = pidDrive.getXPidCtrl();
-                pidCtrl.setOutputLimit(robotInfo.tuneParams.xDrivePowerLimit);
+                pidCtrl.setOutputLimit(robotInfo.baseParams.xDrivePowerLimit);
                 pidCtrl.setRampRate(robotInfo.xDriveMaxPidRampRate);
             }
             else
             {
                 pidDrive = new TrcPidDrive(
                     "pidDrive", driveBase,
-                    robotInfo.tuneParams.yDrivePidCoeffs, robotInfo.tuneParams.drivePidTolerance,
+                    robotInfo.baseParams.yDrivePidCoeffs, robotInfo.baseParams.drivePidTolerance,
                     driveBase::getYPosition,
-                    robotInfo.tuneParams.turnPidCoeffs, robotInfo.tuneParams.turnPidTolerance,
+                    robotInfo.baseParams.turnPidCoeffs, robotInfo.baseParams.turnPidTolerance,
                     driveBase::getHeading);
             }
             pidCtrl = pidDrive.getYPidCtrl();
-            pidCtrl.setOutputLimit(robotInfo.tuneParams.yDrivePowerLimit);
+            pidCtrl.setOutputLimit(robotInfo.baseParams.yDrivePowerLimit);
             pidCtrl.setRampRate(robotInfo.yDriveMaxPidRampRate);
 
             pidCtrl = pidDrive.getTurnPidCtrl();
-            pidCtrl.setOutputLimit(robotInfo.tuneParams.turnPowerLimit);
+            pidCtrl.setOutputLimit(robotInfo.baseParams.turnPowerLimit);
             pidCtrl.setRampRate(robotInfo.turnMaxPidRampRate);
             pidCtrl.setAbsoluteSetPoint(true);
             // AbsoluteTargetMode eliminates cumulative errors on multi-segment runs because drive base is keeping track
@@ -636,11 +636,11 @@ public class FtcRobotDrive
         {
             purePursuitDrive = new TrcPurePursuitDrive(
                 "purePursuitDrive", driveBase, robotInfo.ppdFollowingDistance,
-                robotInfo.tuneParams.drivePidTolerance, robotInfo.tuneParams.turnPidTolerance,
-                robotInfo.tuneParams.xDrivePidCoeffs, robotInfo.tuneParams.yDrivePidCoeffs,
-                robotInfo.tuneParams.turnPidCoeffs, robotInfo.tuneParams.velPidCoeffs);
-            purePursuitDrive.setMoveOutputLimit(robotInfo.tuneParams.yDrivePowerLimit);
-            purePursuitDrive.setRotOutputLimit(robotInfo.tuneParams.turnPowerLimit);
+                robotInfo.baseParams.drivePidTolerance, robotInfo.baseParams.turnPidTolerance,
+                robotInfo.baseParams.xDrivePidCoeffs, robotInfo.baseParams.yDrivePidCoeffs,
+                robotInfo.baseParams.turnPidCoeffs, robotInfo.baseParams.velPidCoeffs);
+            purePursuitDrive.setMoveOutputLimit(robotInfo.baseParams.yDrivePowerLimit);
+            purePursuitDrive.setRotOutputLimit(robotInfo.baseParams.turnPowerLimit);
             purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
             purePursuitDrive.setSquidModeEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
             purePursuitDrive.setFastModeEnabled(robotInfo.fastModeEnabled);
