@@ -581,7 +581,7 @@ public class FtcRobotDrive
         TrcPidController pidCtrl;
 
         this.driveBase = driveBase;
-        if (robotInfo.baseParams.driveMotorVelPidCoeffs != null)
+        if (robotInfo.baseParams.driveMotorVelControlEnabled && robotInfo.baseParams.driveMotorVelPidCoeffs != null)
         {
             driveBase.enableMotorVelocityControl(
                 robotInfo.baseParams.driveMotorMaxVelocity, robotInfo.baseParams.driveMotorVelPidCoeffs,
