@@ -33,9 +33,9 @@ import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -278,7 +278,7 @@ public class FtcLimelightVision
         @Override
         public TrcPose2D getObjectPose()
         {
-            return targetPose.clone();
+            return targetPose != null? targetPose.clone(): null;
         }   //getObjectPose
 
         /**
@@ -351,7 +351,15 @@ public class FtcLimelightVision
             return vertices;
         }   //getRotatedRectVertices
 
-        public TrcPose2D projectCameraSpaceToFloor(Pose3D targetPoseCameraSpace, TrcPose3D cameraPose) {
+        /**
+         * This method projects the target pose in Camera Space to Floor Space.
+         *
+         * @param targetPoseCameraSpace specifies the 3D target pose in Camera Space.
+         * @param cameraPose specifies 3D camera pose in Robot Space.
+         * @return target 2D pose in Floor Space.
+         */
+        public TrcPose2D projectCameraSpaceToFloor(Pose3D targetPoseCameraSpace, TrcPose3D cameraPose)
+        {
             // 1. Convert cameraPose to Apache types
             Vector3D camPos = new Vector3D(cameraPose.x, cameraPose.y, cameraPose.z);
 
@@ -404,65 +412,48 @@ public class FtcLimelightVision
         private TrcPose2D getTargetPose(TrcPose3D cameraPose)
         {
             TrcPose2D targetPose = null;
-            FtcDashboard dashboard = FtcDashboard.getInstance();
+            double targetYawDegrees = llResult.getTx();
+            double targetPitchDegrees = llResult.getTy();
+            double camPitchRadians = Math.toRadians(cameraPose.pitch);
+            double targetPitchRadians = Math.toRadians(targetPitchDegrees);
 
             if (resultType == ResultType.Fiducial)
             {
                 // AprilTag has accurate 3D info, use it.
                 LLResultTypes.FiducialResult fiducialResult = (LLResultTypes.FiducialResult) result;
-                int aprilTagId = fiducialResult.getFiducialId();
-                if (aprilTagId != 20) return null;
-
                 Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
-                Position posTargetFromCam = pose3DTargetFromCam.getPosition();
-                posTargetFromCam.x *= TrcUtil.INCHES_PER_METER;
-                posTargetFromCam.y *= TrcUtil.INCHES_PER_METER;
-                posTargetFromCam.z *= TrcUtil.INCHES_PER_METER;
-                targetPose = projectCameraSpaceToFloor(
-                    pose3DTargetFromCam,
-                    cameraPose);
-                if (targetPose != null)
-                {
-                    targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                }
-                dashboard.displayPrintf(4, "3DTargetPose=" + targetPose);
-                dashboard.displayPrintf(5, "x=" + (posTargetFromCam.x * TrcUtil.INCHES_PER_METER));
-                dashboard.displayPrintf(6, "y=" + (posTargetFromCam.z * TrcUtil.INCHES_PER_METER));
-                dashboard.displayPrintf(7, "z=" + (-posTargetFromCam.y * TrcUtil.INCHES_PER_METER));
-                TrcDbgTrace.globalTraceInfo(moduleName, "AprilTagId=" + aprilTagId);
-                TrcDbgTrace.globalTraceInfo(moduleName, "TargetPoseFrom3D=" + targetPose);
-                TrcDbgTrace.globalTraceInfo(
-                    moduleName,
-                    "posTargetFromCam(x=" + (posTargetFromCam.x * TrcUtil.INCHES_PER_METER) +
-                    ", y=" + (posTargetFromCam.z * TrcUtil.INCHES_PER_METER) +
-                    ", z=" + (-posTargetFromCam.y * TrcUtil.INCHES_PER_METER));
-//            }
-//            else
-//            {
-                // Other pipelines only have 2D info.
-                double camPitchRadians = Math.toRadians(cameraPose.pitch);
-                double targetPitchDegrees = llResult.getTy();
-                double targetYawDegrees = llResult.getTx();
-                double targetPitchRadians = Math.toRadians(targetPitchDegrees);
+                Position posTargetFromCam = pose3DTargetFromCam.getPosition().toUnit(DistanceUnit.INCH);
+
+                targetPose = new TrcPose2D(
+                    posTargetFromCam.x,
+                    posTargetFromCam.z * Math.cos(camPitchRadians + targetPitchRadians),
+                    targetYawDegrees);
+                targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                TrcDbgTrace.globalTraceDebug(
+                    moduleName, "TargetPose3DFromCam(Id=%d, Tx=%f, Ty=%f, position=%s, orientation=%s)",
+                    fiducialResult.getFiducialId(), targetYawDegrees, targetPitchDegrees, posTargetFromCam,
+                    pose3DTargetFromCam.getOrientation());
+                TrcDbgTrace.globalTraceDebug(
+                    moduleName, "TargetFloorPose(pose=%s, distance=%f)", targetPose, targetDepth);
+            }
+            else
+            {
+                // Other pipelines only have 2D info (less accurate and potentially sensitive to error).
                 double targetYawRadians = Math.toRadians(targetYawDegrees);
                 double groundOffset = targetGroundOffset.getOffset(resultType);
 
                 targetDepth =
                     (groundOffset - cameraPose.z) / Math.tan(camPitchRadians + targetPitchRadians);
                 targetPose = new TrcPose2D(
-                    targetDepth * Math.sin(targetYawRadians), targetDepth * Math.cos(targetYawRadians),
+                    targetDepth * Math.sin(targetYawRadians),
+                    targetDepth * Math.cos(targetYawRadians),
                     targetYawDegrees);
-                TrcDbgTrace.globalTraceInfo(
-                    "LimelightObject." + resultType,
+                TrcDbgTrace.globalTraceDebug(
+                    moduleName,
                     "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetPitch=%.1f, targetDepth=%.1f, " +
                     "targetYaw=%.1f, targetPose=%s",
                     groundOffset, cameraPose.z, cameraPose.pitch, targetPitchDegrees, targetDepth, targetYawDegrees,
                     targetPose);
-                dashboard.displayPrintf(8, "AprilTagId=" + aprilTagId);
-                dashboard.displayPrintf(9, "2DTargetPose=" + targetPose);
-                dashboard.displayPrintf(10, "Tx=" + targetYawDegrees + ", Ty=" + targetPitchDegrees);
-                dashboard.displayPrintf(11, "targetHeight=" + groundOffset);
-                dashboard.displayPrintf(12, "camPitch=" + cameraPose.pitch + ", camHeight=" + cameraPose.z);
             }
 
             return targetPose;
