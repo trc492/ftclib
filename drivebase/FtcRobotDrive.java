@@ -342,8 +342,8 @@ public class FtcRobotDrive
          * This method sets the parameters for Pinpoint Odometry.
          *
          * @param name specifies the Pinpoint Odometry name.
-         * @param yPodXOffset specifies the X offset of the Y Pod.
-         * @param xPodYOffset specifies the Y offset of the X Pod.
+         * @param yPodXOffset specifies the X offset of the Y Pod in mm.
+         * @param xPodYOffset specifies the Y offset of the X Pod in mm.
          * @param podType specifies the GoBilda odometry pod type.
          * @param yPodInverted specifies true if Y Pod is inverted, false otherwise.
          * @param xPodInverted specifies true if X Pod is inverted, false otherwise.
