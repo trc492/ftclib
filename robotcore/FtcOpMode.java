@@ -40,6 +40,7 @@ import trclib.robotcore.TrcPeriodicThread;
 import trclib.robotcore.TrcRobot;
 import trclib.robotcore.TrcTaskMgr;
 import trclib.subsystem.TrcSubsystem;
+import trclib.timer.TrcElapsedTimer;
 import trclib.timer.TrcTimer;
 import trclib.robotcore.TrcWatchdogMgr;
 
@@ -56,6 +57,7 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
     private static TrcDbgTrace globalTracer = null;
     private static FtcOpMode instance = null;
     private final Object startNotifier;
+    private final TrcElapsedTimer elapsedTimer;
 
     private static String opModeName = null;
     private Thread robotThread;
@@ -86,6 +88,7 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
         {
             throw new RuntimeException("Failed to access runningNotifier.");
         }
+        elapsedTimer = new TrcElapsedTimer("LoopTimeMonitor", 2.0);
     }   //FtcOpMode
 
     /**
@@ -380,8 +383,10 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             long nextSlowLoopNanoTime = TrcTimer.getNanoTime();
             startNanoTime = nextSlowLoopNanoTime;
             loopCount = 0;
+            elapsedTimer.reset();
             while (opModeIsActive())
             {
+                elapsedTimer.recordPeriodTime();
                 loopStartNanoTime = TrcTimer.getNanoTime();
                 loopCount++;
                 if (prevLoopStartTime > 0)
@@ -395,7 +400,10 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
                 if (slowPeriodicLoop)
                 {
                     nextSlowLoopNanoTime += SLOW_LOOP_INTERVAL_NANO;
-                    dashboard.displayPrintf(0, "%s: %.3f", opModeName, opModeElapsedTime);
+                    dashboard.displayPrintf(
+                        0, "%s: %.3f (%.3f/%.3f/%.3f)",
+                        opModeName, opModeElapsedTime, elapsedTimer.getAverageElapsedTime(),
+                        elapsedTimer.getMinElapsedTime(), elapsedTimer.getMaxElapsedTime());
                 }
                 //
                 // Pre-Periodic Task.
