@@ -39,6 +39,7 @@ import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcPeriodicThread;
 import trclib.robotcore.TrcRobot;
 import trclib.robotcore.TrcTaskMgr;
+import trclib.subsystem.TrcSubsystem;
 import trclib.timer.TrcTimer;
 import trclib.robotcore.TrcWatchdogMgr;
 
@@ -311,6 +312,14 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             globalTracer.traceWarn(
                 moduleName, "Odometry motors list is not empty (numMotors=" + TrcMotor.getNumOdometryMotors() + ")!");
             TrcMotor.clearOdometryMotorsList(true);
+        }
+
+        if (TrcSubsystem.getNumSubsystems() > 0)
+        {
+            globalTracer.traceWarn(
+                moduleName, "Subsystem list is not empty (numSubsystems=" + TrcSubsystem.getNumSubsystems() + ")!");
+            TrcSubsystem.clearSubsystemList();
+
         }
 
         setBulkCachingModeEnabled(true);
