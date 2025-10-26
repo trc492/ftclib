@@ -27,6 +27,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import ftclib.robotcore.FtcOpMode;
 import trclib.driverio.TrcGobildaIndicatorLight;
+import trclib.driverio.TrcPriorityIndicator;
 
 /**
  * This class implements a platform dependent Gobilda Indicator Light device. It provides platform dependent methods
@@ -34,7 +35,8 @@ import trclib.driverio.TrcGobildaIndicatorLight;
  */
 public class FtcGobildaIndicatorLight extends TrcGobildaIndicatorLight
 {
-    private static final Pattern offPattern = new Pattern("Off", Color.Black);
+    private static final TrcPriorityIndicator.Pattern offPattern =
+        new TrcPriorityIndicator.Pattern("Off", GobildaLedPattern.Black);
 
     private final Servo led;
     private Pattern currPattern = null;
@@ -109,7 +111,7 @@ public class FtcGobildaIndicatorLight extends TrcGobildaIndicatorLight
     {
         tracer.traceDebug(instanceName, "pattern=" + pattern);
         currPattern = pattern == null ? offPattern : pattern;
-        led.setPosition(currPattern.ledColor.value);
+        led.setPosition(((GobildaLedPattern) currPattern.devPattern).value);
     }   //setPattern
 
 }   //class FtcGobildaIndicatorLight

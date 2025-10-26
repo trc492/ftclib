@@ -32,13 +32,13 @@ import trclib.driverio.TrcPriorityIndicator;
  * This class implements a platform dependent priority indicator device using gamepad rumble. It provides platform
  * dependent methods that gets/sets the rumble pattern from/to the device.
  */
-public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Pattern>
+public class FtcGamepadRumble extends TrcPriorityIndicator
 {
     /**
      * This class contains information about a rumble pattern. A rumble pattern contains a pattern name and a custom
      * rumble effect array.
      */
-    public static class Pattern
+    public static class RumblePattern
     {
         public String name;
         public Gamepad.RumbleEffect rumbleEffect;
@@ -49,11 +49,11 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
          * @param name specifies the name of the pattern.
          * @param rumbleEffect specifies the gamepad rumble effect.
          */
-        public Pattern(String name, Gamepad.RumbleEffect rumbleEffect)
+        public RumblePattern(String name, Gamepad.RumbleEffect rumbleEffect)
         {
             this.name = name;
             this.rumbleEffect = rumbleEffect;
-        }   //Pattern
+        }   //RumblePattern
 
         /**
          * Constructor: Creates an instance of the object.
@@ -63,12 +63,12 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
          * @param rightRumble specifies rumble power for right rumble motor (0.0 - 1.0).
          * @param duration specifies duration to rumble for in seconds, or -1 for continuous.
          */
-        public Pattern(String name, double leftRumble, double rightRumble, double duration)
+        public RumblePattern(String name, double leftRumble, double rightRumble, double duration)
         {
             this.name = name;
             this.rumbleEffect = (new Gamepad.RumbleEffect.Builder()).addStep(
                 leftRumble, rightRumble, duration < 0.0? -1: (int)(duration * 1000)).build();
-        }   //Pattern
+        }   //RumblePattern
 
         /**
          * Constructor: Creates an instance of the object.
@@ -76,7 +76,7 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
          * @param name specifies the name of the pattern.
          * @param blipCount specifies the number of blips in the pattern.
          */
-        public Pattern(String name, int blipCount)
+        public RumblePattern(String name, int blipCount)
         {
             Gamepad.RumbleEffect.Builder builder = new Gamepad.RumbleEffect.Builder();
 
@@ -86,7 +86,7 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
                 builder.addStep(1.0, 0.0, 250).addStep(0.0, 0.0, 100);
             }
             this.rumbleEffect = builder.build();
-        }   //Pattern
+        }   //RumblePattern
 
         @NonNull
         @Override
@@ -94,8 +94,7 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
         {
             return name;
         }   //toString
-
-    }   //class Pattern
+    }   //class RumblePattern
 
     private final Gamepad gamepad;
     private Pattern currPattern = null;
@@ -169,7 +168,7 @@ public class FtcGamepadRumble extends TrcPriorityIndicator<FtcGamepadRumble.Patt
         currPattern = pattern;
         if (pattern != null)
         {
-            gamepad.runRumbleEffect(pattern.rumbleEffect);
+            gamepad.runRumbleEffect(((RumblePattern) pattern.devPattern).rumbleEffect);
         }
         else
         {

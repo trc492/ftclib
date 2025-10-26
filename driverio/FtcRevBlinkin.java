@@ -206,7 +206,7 @@ public class FtcRevBlinkin extends TrcRevBlinkin
     {
         tracer.traceDebug(instanceName, "pattern=" + pattern);
         currPattern = pattern == null ? offPattern : pattern;
-        blinkinLedDriver.setPattern(patternMap.get(currPattern.ledPattern));
+        blinkinLedDriver.setPattern(patternMap.get((RevLedPattern) currPattern.devPattern));
     }   //setPattern
 
 }   //class FtcRevBlinkin
