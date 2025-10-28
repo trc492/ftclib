@@ -81,14 +81,14 @@ public class FtcSensorTrigger
      * This method creates an analog input trigger.
      *
      * @param sensorName specifies the name of the sensor.
-     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param lowTriggerThreshold specifies the low trigger threshold value.
+     * @param highTriggerThreshold specifies the high trigger threshold value.
      * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
      *        trigger range to be triggered.
      * @return this object for chaining.
      */
     public FtcSensorTrigger setAnalogInputTrigger(
-        String sensorName, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod)
+        String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod)
     {
         if (trigger != null)
         {
@@ -97,7 +97,7 @@ public class FtcSensorTrigger
         analogInput = new FtcAnalogInput(sensorName);
         trigger = new TrcTriggerThresholdRange(sensorName + ".trigger", this::getAnalogValue);
         ((TrcTriggerThresholdRange) trigger).setTrigger(
-            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+            lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod);
         return this;
     }   //setAnalogInputTrigger
 
@@ -106,14 +106,14 @@ public class FtcSensorTrigger
      *
      * @param sourceName specifies the name of the data source.
      * @param analogSource specifies the method to call to get the analog data value.
-     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param lowTriggerThreshold specifies the low trigger threshold value.
+     * @param highTriggerThreshold specifies the high trigger threshold value.
      * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
      *        trigger range to be triggered.
      * @return this object for chaining.
      */
     public FtcSensorTrigger setAnalogSourceTrigger(
-        String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold, double upperTriggerThreshold,
+        String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
         double triggerSettlingPeriod)
     {
         if (trigger != null)
@@ -122,7 +122,7 @@ public class FtcSensorTrigger
         }
         trigger = new TrcTriggerThresholdRange(sourceName + ".trigger", analogSource);
         ((TrcTriggerThresholdRange) trigger).setTrigger(
-            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+            lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod);
         return this;
     }   //setAnalogSourceTrigger
 
@@ -149,14 +149,14 @@ public class FtcSensorTrigger
      * This method creates a motor current trigger.
      *
      * @param motor specifies the motor to get the current value from.
-     * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-     * @param upperTriggerThreshold specifies the upper trigger threshold value.
+     * @param lowTriggerThreshold specifies the low trigger threshold value.
+     * @param highTriggerThreshold specifies the high trigger threshold value.
      * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
      *        trigger range to be triggered.
      * @return this object for chaining.
      */
     public FtcSensorTrigger setMotorCurrentTrigger(
-        TrcMotor motor, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod)
+        TrcMotor motor, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod)
     {
         if (trigger != null)
         {
@@ -165,7 +165,7 @@ public class FtcSensorTrigger
         this.motor = motor;
         trigger = new TrcTriggerThresholdRange(motor.getName() + ".trigger", this::getAnalogValue);
         ((TrcTriggerThresholdRange) trigger).setTrigger(
-            lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+            lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod);
         return this;
     }   //setMotorCurrentTrigger
 

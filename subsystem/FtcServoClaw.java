@@ -146,14 +146,14 @@ public class FtcServoClaw
          * This method creates the analog input trigger.
          *
          * @param sensorName specifies the name of the sensor.
-         * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-         * @param upperTriggerThreshold specifies the upper trigger threshold value.
+         * @param lowTriggerThreshold specifies the low trigger threshold value.
+         * @param highTriggerThreshold specifies the high trigger threshold value.
          * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
          *        trigger range to be triggered.
          * @return this object for chaining.
          */
         public Params setAnalogInputTrigger(
-            String sensorName, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod)
+            String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod)
         {
             if (sensorTrigger != null)
             {
@@ -161,7 +161,7 @@ public class FtcServoClaw
             }
             sensorTrigger = new FtcSensorTrigger()
                 .setAnalogInputTrigger(
-                    sensorName, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod).getTrigger();
+                    sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger();
             return this;
         }   //setAnalogInputTrigger
 
@@ -170,15 +170,15 @@ public class FtcServoClaw
          *
          * @param sourceName specifies the name of the analog source.
          * @param analogSource specifies the method to call to get the analog source value.
-         * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-         * @param upperTriggerThreshold specifies the upper trigger threshold value.
+         * @param lowTriggerThreshold specifies the low trigger threshold value.
+         * @param highTriggerThreshold specifies the high trigger threshold value.
          * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
          *        trigger range to be triggered.
          * @return this object for chaining.
          */
         public Params setAnalogSourceTrigger(
-            String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
-            double upperTriggerThreshold, double triggerSettlingPeriod)
+            String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
+            double triggerSettlingPeriod)
         {
             if (sensorTrigger != null)
             {
@@ -186,8 +186,27 @@ public class FtcServoClaw
             }
             sensorTrigger = new FtcSensorTrigger()
                 .setAnalogSourceTrigger(
-                    sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
+                    sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
                     triggerSettlingPeriod).getTrigger();
+            return this;
+        }   //setAnalogSourceTrigger
+
+        /**
+         * This method creates the analog source trigger.
+         *
+         * @param sourceName specifies the name of the analog source.
+         * @param analogSource specifies the method to call to get the analog source value.
+         * @param thresholdPoints specifies an array of threshold points for the trigger.
+         * @return this object for chaining.
+         */
+        public Params setAnalogSourceTrigger(String sourceName, DoubleSupplier analogSource, double[] thresholdPoints)
+        {
+            if (sensorTrigger != null)
+            {
+                throw new IllegalStateException("You can only set one type of trigger.");
+            }
+            sensorTrigger = new FtcSensorTrigger()
+                .setAnalogSourceTrigger(sourceName, analogSource, thresholdPoints).getTrigger();
             return this;
         }   //setAnalogSourceTrigger
 

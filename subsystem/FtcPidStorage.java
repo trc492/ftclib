@@ -240,8 +240,8 @@ public class FtcPidStorage
        * This method creates the entry analog input trigger.
        *
        * @param sensorName specifies the name of the sensor.
-       * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-       * @param upperTriggerThreshold specifies the upper trigger threshold value.
+       * @param lowTriggerThreshold specifies the low trigger threshold value.
+       * @param highTriggerThreshold specifies the high trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
        *        trigger range to be triggered.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
@@ -250,7 +250,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setEntryAnalogInputTrigger(
-          String sensorName, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod,
+          String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod,
           boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (entryTriggerParams != null)
@@ -259,7 +259,7 @@ public class FtcPidStorage
          }
          entryTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogInputTrigger(
-                 sensorName, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod).getTrigger(),
+                 sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setEntryAnalogInputTrigger
@@ -269,8 +269,8 @@ public class FtcPidStorage
        *
        * @param sourceName specifies the name of the analog source.
        * @param analogSource specifies the method to call to get the analog source value.
-       * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-       * @param upperTriggerThreshold specifies the upper trigger threshold value.
+       * @param lowTriggerThreshold specifies the low trigger threshold value.
+       * @param highTriggerThreshold specifies the high trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
        *        trigger range to be triggered.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
@@ -279,9 +279,9 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setEntryAnalogSourceTrigger(
-          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
-          double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
-          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+          String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
+          double triggerSettlingPeriod, boolean advanceOnTrigger, TrcEvent.Callback triggerCallback,
+          Object triggerCallbackContext)
       {
          if (entryTriggerParams != null)
          {
@@ -289,7 +289,7 @@ public class FtcPidStorage
          }
          entryTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
@@ -372,8 +372,8 @@ public class FtcPidStorage
        * This method creates the exit analog input trigger.
        *
        * @param sensorName specifies the name of the sensor.
-       * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-       * @param upperTriggerThreshold specifies the upper trigger threshold value.
+       * @param lowTriggerThreshold specifies the low trigger threshold value.
+       * @param highTriggerThreshold specifies the high trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
        *        trigger range to be triggered.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
@@ -382,7 +382,7 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setExitAnalogInputTrigger(
-          String sensorName, double lowerTriggerThreshold, double upperTriggerThreshold, double triggerSettlingPeriod,
+          String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod,
           boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (exitTriggerParams != null)
@@ -391,7 +391,7 @@ public class FtcPidStorage
          }
          exitTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogInputTrigger(
-                 sensorName, lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod).getTrigger(),
+                 sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setExitAnalogInputTrigger
@@ -401,8 +401,8 @@ public class FtcPidStorage
        *
        * @param sourceName specifies the name of the analog source.
        * @param analogSource specifies the method to call to get the analog source value.
-       * @param lowerTriggerThreshold specifies the lower trigger threshold value.
-       * @param upperTriggerThreshold specifies the upper trigger threshold value.
+       * @param lowTriggerThreshold specifies the low trigger threshold value.
+       * @param highTriggerThreshold specifies the high trigger threshold value.
        * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
        *        trigger range to be triggered.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
@@ -411,9 +411,9 @@ public class FtcPidStorage
        * @return this object for chaining.
        */
       public Params setExitAnalogSourceTrigger(
-          String sourceName, DoubleSupplier analogSource, double lowerTriggerThreshold,
-          double upperTriggerThreshold, double triggerSettlingPeriod, boolean advanceOnTrigger,
-          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+          String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
+          double triggerSettlingPeriod, boolean advanceOnTrigger, TrcEvent.Callback triggerCallback,
+          Object triggerCallbackContext)
       {
          if (exitTriggerParams != null)
          {
@@ -421,7 +421,7 @@ public class FtcPidStorage
          }
          exitTriggerParams = new TrcPidStorage.TriggerParams(
              new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, analogSource, lowerTriggerThreshold, upperTriggerThreshold,
+                 sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
                  triggerSettlingPeriod).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
