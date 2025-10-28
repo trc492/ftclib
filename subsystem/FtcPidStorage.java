@@ -296,6 +296,31 @@ public class FtcPidStorage
       }   //setEntryAnalogSourceTrigger
 
       /**
+       * This method creates the entry analog source trigger.
+       *
+       * @param sourceName specifies the name of the analog source.
+       * @param analogSource specifies the method to call to get the analog source value.
+       * @param thresholdPoints specifies an array of threshold points for the trigger.
+       * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
+       * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
+       * @param triggerCallbackContext specifies the callback context object.
+       * @return this object for chaining.
+       */
+      public Params setEntryAnalogSourceTrigger(
+          String sourceName, DoubleSupplier analogSource, double[] thresholdPoints, boolean advanceOnTrigger,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+      {
+         if (entryTriggerParams != null)
+         {
+            throw new IllegalStateException("You can only set one type of trigger.");
+         }
+         entryTriggerParams = new TrcPidStorage.TriggerParams(
+             new FtcSensorTrigger().setAnalogSourceTrigger(sourceName, analogSource, thresholdPoints).getTrigger(),
+             advanceOnTrigger, triggerCallback, triggerCallbackContext);
+         return this;
+      }   //setEntryAnalogSourceTrigger
+
+      /**
        * This method creates the exit digital input trigger.
        *
        * @param sensorName specifies the name of the sensor.

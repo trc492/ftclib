@@ -30,6 +30,7 @@ import trclib.sensor.TrcTrigger;
 import trclib.sensor.TrcTriggerDigitalInput;
 import trclib.sensor.TrcTriggerDigitalSource;
 import trclib.sensor.TrcTriggerThresholdRange;
+import trclib.sensor.TrcTriggerThresholdZones;
 
 /**
  * This class creates an FTC platform specific Sensor Trigger with the specified parameters.
@@ -122,6 +123,25 @@ public class FtcSensorTrigger
         trigger = new TrcTriggerThresholdRange(sourceName + ".trigger", analogSource);
         ((TrcTriggerThresholdRange) trigger).setTrigger(
             lowerTriggerThreshold, upperTriggerThreshold, triggerSettlingPeriod);
+        return this;
+    }   //setAnalogSourceTrigger
+
+    /**
+     * This method creates an analog source trigger.
+     *
+     * @param sourceName specifies the name of the data source.
+     * @param analogSource specifies the method to call to get the analog data value.
+     * @param thresholdPoints specifies an array of threshold points for the trigger.
+     * @return this object for chaining.
+     */
+    public FtcSensorTrigger setAnalogSourceTrigger(
+        String sourceName, DoubleSupplier analogSource, double[] thresholdPoints)
+    {
+        if (trigger != null)
+        {
+            throw new IllegalStateException("You can only set one type of trigger.");
+        }
+        trigger = new TrcTriggerThresholdZones(sourceName + ".trigger", analogSource, thresholdPoints);
         return this;
     }   //setAnalogSourceTrigger
 
