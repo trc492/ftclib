@@ -30,6 +30,7 @@ import java.util.function.DoubleSupplier;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcSensorTrigger;
 import trclib.robotcore.TrcEvent;
+import trclib.sensor.TrcTriggerThresholdRange;
 import trclib.subsystem.TrcPidStorage;
 
 /**
@@ -240,26 +241,22 @@ public class FtcPidStorage
        * This method creates the entry analog input trigger.
        *
        * @param sensorName specifies the name of the sensor.
-       * @param lowTriggerThreshold specifies the low trigger threshold value.
-       * @param highTriggerThreshold specifies the high trigger threshold value.
-       * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
-       *        trigger range to be triggered.
+       * @param triggerParams specifies the trigger threshold range parameters.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
        * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
        * @param triggerCallbackContext specifies the callback context object.
        * @return this object for chaining.
        */
       public Params setEntryAnalogInputTrigger(
-          String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod,
-          boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+          String sensorName, TrcTriggerThresholdRange.TriggerParams triggerParams, boolean advanceOnTrigger,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (entryTriggerParams != null)
          {
             throw new IllegalStateException("You can only set one type of trigger.");
          }
          entryTriggerParams = new TrcPidStorage.TriggerParams(
-             new FtcSensorTrigger().setAnalogInputTrigger(
-                 sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger(),
+             new FtcSensorTrigger().setAnalogInputTrigger(sensorName, triggerParams).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setEntryAnalogInputTrigger
@@ -269,28 +266,22 @@ public class FtcPidStorage
        *
        * @param sourceName specifies the name of the analog source.
        * @param analogSource specifies the method to call to get the analog source value.
-       * @param lowTriggerThreshold specifies the low trigger threshold value.
-       * @param highTriggerThreshold specifies the high trigger threshold value.
-       * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
-       *        trigger range to be triggered.
+       * @param triggerParams specifies the trigger threshold range parameters.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
        * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
        * @param triggerCallbackContext specifies the callback context object.
        * @return this object for chaining.
        */
       public Params setEntryAnalogSourceTrigger(
-          String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
-          double triggerSettlingPeriod, boolean advanceOnTrigger, TrcEvent.Callback triggerCallback,
-          Object triggerCallbackContext)
+          String sourceName, DoubleSupplier analogSource, TrcTriggerThresholdRange.TriggerParams triggerParams,
+          boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (entryTriggerParams != null)
          {
             throw new IllegalStateException("You can only set one type of trigger.");
          }
          entryTriggerParams = new TrcPidStorage.TriggerParams(
-             new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
-                 triggerSettlingPeriod).getTrigger(),
+             new FtcSensorTrigger().setAnalogSourceTrigger(sourceName, analogSource, triggerParams).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setEntryAnalogSourceTrigger
@@ -372,26 +363,22 @@ public class FtcPidStorage
        * This method creates the exit analog input trigger.
        *
        * @param sensorName specifies the name of the sensor.
-       * @param lowTriggerThreshold specifies the low trigger threshold value.
-       * @param highTriggerThreshold specifies the high trigger threshold value.
-       * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
-       *        trigger range to be triggered.
+       * @param triggerParams specifies the trigger threshold range parameters.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
        * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
        * @param triggerCallbackContext specifies the callback context object.
        * @return this object for chaining.
        */
       public Params setExitAnalogInputTrigger(
-          String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod,
-          boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
+          String sensorName, TrcTriggerThresholdRange.TriggerParams triggerParams, boolean advanceOnTrigger,
+          TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (exitTriggerParams != null)
          {
             throw new IllegalStateException("You can only set one type of trigger.");
          }
          exitTriggerParams = new TrcPidStorage.TriggerParams(
-             new FtcSensorTrigger().setAnalogInputTrigger(
-                 sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger(),
+             new FtcSensorTrigger().setAnalogInputTrigger(sensorName, triggerParams).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setExitAnalogInputTrigger
@@ -401,28 +388,22 @@ public class FtcPidStorage
        *
        * @param sourceName specifies the name of the analog source.
        * @param analogSource specifies the method to call to get the analog source value.
-       * @param lowTriggerThreshold specifies the low trigger threshold value.
-       * @param highTriggerThreshold specifies the high trigger threshold value.
-       * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
-       *        trigger range to be triggered.
+       * @param triggerParams specifies the trigger threshold range parameters.
        * @param advanceOnTrigger specifies true to advance the storage on entry trigger.
        * @param triggerCallback specifies the method to call when the trigger occurs, can be null if no callback.
        * @param triggerCallbackContext specifies the callback context object.
        * @return this object for chaining.
        */
       public Params setExitAnalogSourceTrigger(
-          String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
-          double triggerSettlingPeriod, boolean advanceOnTrigger, TrcEvent.Callback triggerCallback,
-          Object triggerCallbackContext)
+          String sourceName, DoubleSupplier analogSource, TrcTriggerThresholdRange.TriggerParams triggerParams,
+          boolean advanceOnTrigger, TrcEvent.Callback triggerCallback, Object triggerCallbackContext)
       {
          if (exitTriggerParams != null)
          {
             throw new IllegalStateException("You can only set one type of trigger.");
          }
          exitTriggerParams = new TrcPidStorage.TriggerParams(
-             new FtcSensorTrigger().setAnalogSourceTrigger(
-                 sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
-                 triggerSettlingPeriod).getTrigger(),
+             new FtcSensorTrigger().setAnalogSourceTrigger(sourceName, analogSource, triggerParams).getTrigger(),
              advanceOnTrigger, triggerCallback, triggerCallbackContext);
          return this;
       }   //setExitAnalogSourceTrigger

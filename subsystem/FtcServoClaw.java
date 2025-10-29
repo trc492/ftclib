@@ -30,6 +30,7 @@ import java.util.function.DoubleSupplier;
 import ftclib.motor.FtcServoActuator;
 import ftclib.sensor.FtcSensorTrigger;
 import trclib.sensor.TrcTrigger;
+import trclib.sensor.TrcTriggerThresholdRange;
 import trclib.subsystem.TrcServoClaw;
 
 /**
@@ -146,22 +147,16 @@ public class FtcServoClaw
          * This method creates the analog input trigger.
          *
          * @param sensorName specifies the name of the sensor.
-         * @param lowTriggerThreshold specifies the low trigger threshold value.
-         * @param highTriggerThreshold specifies the high trigger threshold value.
-         * @param triggerSettlingPeriod specifies the settling period in seconds the sensor value must stay within
-         *        trigger range to be triggered.
+         * @param triggerParams specifies the trigger threshold range parameters.
          * @return this object for chaining.
          */
-        public Params setAnalogInputTrigger(
-            String sensorName, double lowTriggerThreshold, double highTriggerThreshold, double triggerSettlingPeriod)
+        public Params setAnalogInputTrigger(String sensorName, TrcTriggerThresholdRange.TriggerParams triggerParams)
         {
             if (sensorTrigger != null)
             {
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
-            sensorTrigger = new FtcSensorTrigger()
-                .setAnalogInputTrigger(
-                    sensorName, lowTriggerThreshold, highTriggerThreshold, triggerSettlingPeriod).getTrigger();
+            sensorTrigger = new FtcSensorTrigger().setAnalogInputTrigger(sensorName, triggerParams).getTrigger();
             return this;
         }   //setAnalogInputTrigger
 
@@ -170,24 +165,18 @@ public class FtcServoClaw
          *
          * @param sourceName specifies the name of the analog source.
          * @param analogSource specifies the method to call to get the analog source value.
-         * @param lowTriggerThreshold specifies the low trigger threshold value.
-         * @param highTriggerThreshold specifies the high trigger threshold value.
-         * @param triggerSettlingPeriod specifies the settling period in seconds the source value must stay within
-         *        trigger range to be triggered.
+         * @param triggerParams specifies the trigger threshold range parameters.
          * @return this object for chaining.
          */
         public Params setAnalogSourceTrigger(
-            String sourceName, DoubleSupplier analogSource, double lowTriggerThreshold, double highTriggerThreshold,
-            double triggerSettlingPeriod)
+            String sourceName, DoubleSupplier analogSource, TrcTriggerThresholdRange.TriggerParams triggerParams)
         {
             if (sensorTrigger != null)
             {
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
             sensorTrigger = new FtcSensorTrigger()
-                .setAnalogSourceTrigger(
-                    sourceName, analogSource, lowTriggerThreshold, highTriggerThreshold,
-                    triggerSettlingPeriod).getTrigger();
+                .setAnalogSourceTrigger(sourceName, analogSource, triggerParams).getTrigger();
             return this;
         }   //setAnalogSourceTrigger
 
