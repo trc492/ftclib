@@ -29,10 +29,17 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 
 import trclib.driverio.TrcDashboard;
+import trclib.robotcore.TrcDbgTrace;
+import trclib.robotcore.TrcRobot;
+import trclib.robotcore.TrcTaskMgr;
+import trclib.subsystem.TrcSubsystem;
+import trclib.timer.TrcTimer;
 
 /**
  * This class is a wrapper for the Telemetry class. In addition to providing a way to send named data to the Driver
@@ -45,29 +52,30 @@ import trclib.driverio.TrcDashboard;
  */
 public class FtcDashboard extends TrcDashboard
 {
-//    public interface StatusUpdate
-//    {
-//        /**
-//         * This method update the dashboard with status info.
-//         *
-//         * @param lineNum specifies the starting line number to print the subsystem status.
-//         * @param slowLoop specifies true if this is a slow loop, false otherwise.
-//         * @return updated line number for the next subsystem to print.
-//         */
-//        int statusUpdate(int lineNum, boolean slowLoop);
-//    }   //interface StatusUpdate
-//
-//    private static final String moduleName = FtcDashboard.class.getSimpleName();
-//    private static final long DASHBOARD_TASK_INTERVAL_MS = 10;      // in msec (100 Hz)
-//    public static final double DASHBOARD_UPDATE_INTERVAL = 0.2;    // in sec (5 Hz)
-//
-//    private final HashMap<String, StatusUpdate> statusUpdateMap = new HashMap<>();
-//    private final ArrayList<StatusUpdate> statusUpdateList = new ArrayList<>();
-//    private Double nextDashboardUpdateTime =  null;
-//    private int dashboardStartLineNum = 1;
-//    private boolean showSubsystemStatus = false;
-//    private boolean dashboardUpdateEnabled = false;
-//
+    public interface StatusUpdate
+    {
+        /**
+         * This method update the dashboard with status info.
+         *
+         * @param lineNum specifies the starting line number to print the subsystem status.
+         * @param slowLoop specifies true if this is a slow loop, false otherwise.
+         * @return updated line number for the next subsystem to print.
+         */
+        int statusUpdate(int lineNum, boolean slowLoop);
+    }   //interface StatusUpdate
+
+    private static final String moduleName = FtcDashboard.class.getSimpleName();
+    private static final long DASHBOARD_TASK_INTERVAL_MS = 10;      // in msec (100 Hz)
+    public static final double DASHBOARD_UPDATE_INTERVAL = 0.2;    // in sec (5 Hz)
+
+    private final HashMap<String, StatusUpdate> statusUpdateMap = new HashMap<>();
+    private final ArrayList<StatusUpdate> statusUpdateList = new ArrayList<>();
+    private TrcTaskMgr.TaskObject dashboardTaskObj = null;
+    private Double nextDashboardUpdateTime =  null;
+    private int dashboardStartLineNum = 1;
+    private boolean showSubsystemStatus = false;
+    private boolean dashboardUpdateEnabled = false;
+
     private final Telemetry telemetry;
     private Paint paint = null;
     private final Telemetry.Item[] display;
@@ -92,6 +100,13 @@ public class FtcDashboard extends TrcDashboard
             {
                 throw new IllegalArgumentException("Must provide Telemetry and number of dashboard lines.");
             }
+        }
+
+        FtcDashboard dashboard = (FtcDashboard) instance;
+        if (dashboard.dashboardTaskObj == null)
+        {
+            dashboard.dashboardTaskObj = TrcTaskMgr.createTask(moduleName + ".task", dashboard::dashboardTask);
+            dashboard.dashboardTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, DASHBOARD_TASK_INTERVAL_MS);
         }
 
         return (FtcDashboard) instance;
@@ -133,7 +148,7 @@ public class FtcDashboard extends TrcDashboard
         instance = this;
         this.telemetry = new MultipleTelemetry(
             telemetry, com.acmerobotics.dashboard.FtcDashboard.getInstance().getTelemetry());
-        telemetry.clearAll();
+//        telemetry.clearAll();
         telemetry.setAutoClear(false);
         display = new Telemetry.Item[numLines];
 
@@ -142,117 +157,116 @@ public class FtcDashboard extends TrcDashboard
             display[i] = telemetry.addData(String.format(Locale.US, displayKeyFormat, i), "");
         }
         setDisplayFormat(Telemetry.DisplayFormat.CLASSIC);
-//        TrcTaskMgr.TaskObject dashboardTaskObj = TrcTaskMgr.createTask(moduleName + ".task", this::dashboardTask);
-//        dashboardTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, DASHBOARD_TASK_INTERVAL_MS);
         telemetry.update();
     }   //FtcDashboard
 
-//    /**
-//     * This method enables Dashboard Update.
-//     *
-//     * @param startLineNum specifies line number of the dashboard to start the dashboard update.
-//     * @param showSubsystems specifies true to enable subsystem status, false to disable.
-//     */
-//    public void enableDashboardUpdate(int startLineNum, boolean showSubsystems)
-//    {
-//        TrcDbgTrace.globalTraceInfo(
-//            moduleName, "enableDashboardUpdate(start=%d, showSubsystem=%s)", startLineNum, showSubsystems);
-//        this.dashboardStartLineNum = startLineNum;
-//        this.showSubsystemStatus = showSubsystems;
-////        telemetry.clearAll();
-//        this.dashboardUpdateEnabled = true;
-//    }   //enableDashboardUpdate
-//
-//    /**
-//     * This method disables Dashboard Update.
-//     */
-//    public void disableDashboardUpdate()
-//    {
-//        this.dashboardUpdateEnabled = false;
-//        this.dashboardStartLineNum = 1;
-//        this.showSubsystemStatus = false;
-//        clearDisplay();
-//    }   //disableDashboardUpdate
-//
-//    /**
-//     * This method checks if Dashboard Update is enabled.
-//     *
-//     * @return true if update is enabled, false if disabled.
-//     */
-//    public boolean isDashboardUpdateEnabled()
-//    {
-//        return dashboardUpdateEnabled;
-//    }   //isDashboardUpdateEnabled
-//
-//    /**
-//     * This method adds a component for dashboard status update.
-//     *
-//     * @param name specifies the component name.
-//     * @param statusUpdate specifies the method to call for status update.
-//     * @return true if status update is added success, false if component is already in the list.
-//     */
-//    public boolean addStatusUpdate(String name, StatusUpdate statusUpdate)
-//    {
-//        boolean success = false;
-//
-//        if (!statusUpdateMap.containsKey(name))
-//        {
-//            statusUpdateMap.put(name, statusUpdate);
-//            statusUpdateList.add(statusUpdate);
-//            success = true;
-//        }
-//
-//        return success;
-//    }   //addStatusUpdate
-//
-//    /**
-//     * This methods is called periodically to run the task.
-//     *
-//     * @param taskType specifies the type of task being run.
-//     * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
-//     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
-//     *        false otherwise.
-//     */
-//    private void dashboardTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
-//    {
-//        double currTime = TrcTimer.getCurrentTime();
-//        boolean slowLoop = nextDashboardUpdateTime == null || currTime >= nextDashboardUpdateTime;
-//        double startTime;
-//
-//        if (slowLoop)
-//        {
-//            nextDashboardUpdateTime = currTime + DASHBOARD_UPDATE_INTERVAL;
-//        }
-//
-//        if (dashboardUpdateEnabled)
-//        {
-//            int lineNum = dashboardStartLineNum;
-//            if (showSubsystemStatus)
-//            {
-//                startTime = TrcTimer.getCurrentTime();
-//                lineNum = TrcSubsystem.updateStatusAll(lineNum, slowLoop);
-//                TrcDbgTrace.globalTraceInfo(
-//                    moduleName,
-//                    "SubsystemState: lineNum=" + lineNum + ", elapsed=" + (TrcTimer.getCurrentTime() - startTime));
-//            }
-//
-//            for (StatusUpdate update: statusUpdateList)
-//            {
-//                startTime = TrcTimer.getCurrentTime();
-//                lineNum = update.statusUpdate(lineNum, slowLoop);
-//                TrcDbgTrace.globalTraceInfo(
-//                    moduleName,
-//                    "statusUpdate: lineNum=%d, elapsed=%.6f",
-//                    lineNum, TrcTimer.getCurrentTime() - startTime);
-//            }
-//        }
-//
-//        if (slowLoop)
-//        {
-//            telemetry.update();
-//        }
-//    }   //dashboardTask
-//
+    /**
+     * This method terminates the Dashboard Task.
+     */
+    public void terminateDashboardTask()
+    {
+        if (dashboardTaskObj != null)
+        {
+            dashboardTaskObj.unregisterTask();
+            dashboardTaskObj = null;
+        }
+    }   //terminateDashboardTask
+
+    /**
+     * This method enables Dashboard Update.
+     *
+     * @param startLineNum specifies line number of the dashboard to start the dashboard update.
+     * @param showSubsystems specifies true to enable subsystem status, false to disable.
+     */
+    public void enableDashboardUpdate(int startLineNum, boolean showSubsystems)
+    {
+        TrcDbgTrace.globalTraceInfo(
+            moduleName, "enableDashboardUpdate(start=%d, showSubsystem=%s)", startLineNum, showSubsystems);
+        this.dashboardStartLineNum = startLineNum;
+        this.showSubsystemStatus = showSubsystems;
+        this.dashboardUpdateEnabled = true;
+    }   //enableDashboardUpdate
+
+    /**
+     * This method disables Dashboard Update.
+     */
+    public void disableDashboardUpdate()
+    {
+        this.dashboardUpdateEnabled = false;
+        this.dashboardStartLineNum = 1;
+        this.showSubsystemStatus = false;
+        clearDisplay();
+    }   //disableDashboardUpdate
+
+    /**
+     * This method checks if Dashboard Update is enabled.
+     *
+     * @return true if update is enabled, false if disabled.
+     */
+    public boolean isDashboardUpdateEnabled()
+    {
+        return dashboardUpdateEnabled;
+    }   //isDashboardUpdateEnabled
+
+    /**
+     * This method adds a component for dashboard status update.
+     *
+     * @param name specifies the component name.
+     * @param statusUpdate specifies the method to call for status update.
+     * @return true if status update is added success, false if component is already in the list.
+     */
+    public boolean addStatusUpdate(String name, StatusUpdate statusUpdate)
+    {
+        boolean success = false;
+
+        if (!statusUpdateMap.containsKey(name))
+        {
+            statusUpdateMap.put(name, statusUpdate);
+            statusUpdateList.add(statusUpdate);
+            success = true;
+        }
+
+        return success;
+    }   //addStatusUpdate
+
+    /**
+     * This methods is called periodically to run the task.
+     *
+     * @param taskType specifies the type of task being run.
+     * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).
+     * @param slowPeriodicLoop specifies true if it is running the slow periodic loop on the main robot thread,
+     *        false otherwise.
+     */
+    private void dashboardTask(TrcTaskMgr.TaskType taskType, TrcRobot.RunMode runMode, boolean slowPeriodicLoop)
+    {
+        double currTime = TrcTimer.getCurrentTime();
+        boolean slowLoop = nextDashboardUpdateTime == null || currTime >= nextDashboardUpdateTime;
+
+        if (slowLoop)
+        {
+            nextDashboardUpdateTime = currTime + DASHBOARD_UPDATE_INTERVAL;
+        }
+
+        if (dashboardUpdateEnabled)
+        {
+            int lineNum = dashboardStartLineNum;
+            if (showSubsystemStatus)
+            {
+                lineNum = TrcSubsystem.updateStatusAll(lineNum, slowLoop);
+            }
+
+            for (StatusUpdate update: statusUpdateList)
+            {
+                lineNum = update.statusUpdate(lineNum, slowLoop);
+            }
+        }
+
+        if (slowLoop)
+        {
+            telemetry.update();
+        }
+    }   //dashboardTask
+
     /**
      * This method returns the telemetry object for direct telemetry access.
      *
