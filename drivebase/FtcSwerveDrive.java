@@ -99,7 +99,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
         }   //setSteerMotorInfo
 
         /**
-         * This method sets the Swerve specific tunable parameters.
+         * This method sets the Swerve specific parameters.
          *
          * @param swerveParams specifies the swerve tune parameters.
          * @return this object for chaining.
@@ -197,9 +197,7 @@ public class FtcSwerveDrive extends FtcRobotDrive
                     swerveInfo.steerMotorNames[i], swerveInfo.steerMotorType, swerveInfo.steerMotorInverted[i])
                 .setExternalEncoder(steerEncoders[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
-            motors[i].setPositionPidParameters(
-                swerveInfo.swerveParams.steerMotorPidCoeffs, swerveInfo.swerveParams.steerMotorPidTolerance,
-                true, null);
+            motors[i].setPositionPidParameters(swerveInfo.swerveParams.steerMotorPidParams, null);
             motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
         }
 
