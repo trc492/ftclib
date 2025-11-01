@@ -494,6 +494,7 @@ public class FtcLimelightVision
     public final TargetGroundOffset targetGroundOffset;
     public final Limelight3A limelight;
     private int pipelineIndex = 0;
+    private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
     private Double lastResultTimestamp = null;
 
     /**
@@ -599,6 +600,16 @@ public class FtcLimelightVision
     {
         return pipelineIndex;
     }   //getPipeline
+
+    /**
+     * This method sets the status result type.
+     *
+     * @param resultType specifies status result type.
+     */
+    public void setStatusResultType(ResultType resultType)
+    {
+        this.statusResultType = resultType;
+    }   //setStatusResultType
 
     /**
      * This method returns the array of detected objects.
@@ -867,17 +878,20 @@ public class FtcLimelightVision
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(ResultType.Fiducial, null, null, null);
+        if (statusResultType != null)
+        {
+            TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(statusResultType, null, null, null);
 
-        if (object != null)
-        {
-            dashboard.displayPrintf(
-                lineNum++, "AprilTag[%s]: targetPose=%s, robotPose=%s",
-                object.detectedObj.objId, object.detectedObj.targetPose, object.detectedObj.robotPose);
-        }
-        else
-        {
-            dashboard.displayPrintf(lineNum++, "");
+            if (object != null)
+            {
+                dashboard.displayPrintf(
+                    lineNum++, "AprilTag[%s]: targetPose=%s, robotPose=%s",
+                    object.detectedObj.objId, object.detectedObj.targetPose, object.detectedObj.robotPose);
+            }
+            else
+            {
+                dashboard.displayPrintf(lineNum++, "");
+            }
         }
 
         return lineNum;
