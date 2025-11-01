@@ -107,9 +107,10 @@ public class FtcDashboard extends TrcDashboard
         {
             dashboard.dashboardTaskObj = TrcTaskMgr.createTask(moduleName + ".task", dashboard::dashboardTask);
             dashboard.dashboardTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, DASHBOARD_TASK_INTERVAL_MS);
+            dashboard.disableDashboardUpdate();
         }
 
-        return (FtcDashboard) instance;
+        return dashboard;
     }   //getInstance
 
     /**
@@ -148,8 +149,8 @@ public class FtcDashboard extends TrcDashboard
         instance = this;
         this.telemetry = new MultipleTelemetry(
             telemetry, com.acmerobotics.dashboard.FtcDashboard.getInstance().getTelemetry());
-//        telemetry.clearAll();
         telemetry.setAutoClear(false);
+//        telemetry.clearAll();
         display = new Telemetry.Item[numLines];
 
         for (int i = 0; i < display.length; i++)
@@ -157,7 +158,6 @@ public class FtcDashboard extends TrcDashboard
             display[i] = telemetry.addData(String.format(Locale.US, displayKeyFormat, i), "");
         }
         setDisplayFormat(Telemetry.DisplayFormat.CLASSIC);
-        telemetry.update();
     }   //FtcDashboard
 
     /**
@@ -168,6 +168,8 @@ public class FtcDashboard extends TrcDashboard
         if (dashboardTaskObj != null)
         {
             dashboardTaskObj.unregisterTask();
+            statusUpdateMap.clear();
+            statusUpdateList.clear();
             dashboardTaskObj = null;
         }
     }   //terminateDashboardTask
@@ -192,6 +194,7 @@ public class FtcDashboard extends TrcDashboard
      */
     public void disableDashboardUpdate()
     {
+        TrcDbgTrace.globalTraceInfo(moduleName, "disableDashboardUpdate()");
         this.dashboardUpdateEnabled = false;
         this.dashboardStartLineNum = 1;
         this.showSubsystemStatus = false;
@@ -247,6 +250,7 @@ public class FtcDashboard extends TrcDashboard
             nextDashboardUpdateTime = currTime + DASHBOARD_UPDATE_INTERVAL;
         }
 
+//        double startTime = TrcTimer.getCurrentTime();
         if (dashboardUpdateEnabled)
         {
             int lineNum = dashboardStartLineNum;
@@ -260,6 +264,7 @@ public class FtcDashboard extends TrcDashboard
                 lineNum = update.statusUpdate(lineNum, slowLoop);
             }
         }
+//        displayPrintf(10, "UpdateDashboardElapsedTime=%.6f", TrcTimer.getCurrentTime() - startTime);
 
         if (slowLoop)
         {
@@ -433,7 +438,6 @@ public class FtcDashboard extends TrcDashboard
                 text = rightJustified? rightJustifiedText(fieldWidth, text): centeredText(fieldWidth, text);
             }
             display[lineNum].setValue(text);
-            telemetry.update();
         }
     }   //displayText
 

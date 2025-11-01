@@ -313,6 +313,7 @@ public class FtcChoiceMenu<T> extends FtcMenu
                     item.getText() + (item.getChildMenu() != null? " ...": ""));
             }
         }
+        dashboard.refreshDisplay();
     }   //displayMenu
 
 }   //class FtcChoiceMenu

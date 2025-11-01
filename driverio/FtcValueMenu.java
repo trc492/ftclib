@@ -241,6 +241,7 @@ public class FtcValueMenu extends FtcMenu
             currValue = defaultValue.getValue();
         }
         dashboard.displayPrintf(0, "%s" + valueFormat + "%s", getTitle(), currValue, childMenu != null? " ...": "");
+        dashboard.refreshDisplay();
     }   //displayMenu
 
 }   //class FtcValueMenu
