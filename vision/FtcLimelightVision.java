@@ -867,8 +867,7 @@ public class FtcLimelightVision
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(
-            ResultType.Fiducial, new int[]{22}, null, null);
+        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(ResultType.Fiducial, null, null, null);
 
         if (object != null)
         {
