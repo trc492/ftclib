@@ -105,7 +105,7 @@ public class FtcDashboard extends TrcDashboard
         FtcDashboard dashboard = (FtcDashboard) instance;
         if (dashboard.dashboardTaskObj == null)
         {
-            telemetry.clearAll();
+//            telemetry.clearAll();
             dashboard.dashboardTaskObj = TrcTaskMgr.createTask(moduleName + ".task", dashboard::dashboardTask);
             dashboard.dashboardTaskObj.registerTask(TrcTaskMgr.TaskType.STANDALONE_TASK, DASHBOARD_TASK_INTERVAL_MS);
             dashboard.disableDashboardUpdate();
