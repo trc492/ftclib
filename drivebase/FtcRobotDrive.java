@@ -305,6 +305,19 @@ public class FtcRobotDrive
         }   //setMotorOdometry
 
         /**
+         * This method sets Drive Base Odometry to use drive motor encoders.
+         *
+         * @param yPosScale specifies the odometry scale in the Y direction.
+         * @return this object for chaining.
+         */
+        public RobotInfo setMotorOdometry(double yPosScale)
+        {
+            this.odometryType = TrcDriveBase.OdometryType.MotorOdometry;
+            this.yDrivePosScale = yPosScale;
+            return this;
+        }   //setMotorOdometry
+
+        /**
          * This method sets Drive Base Odometry to use Odometry Wheel pods and specifies their parameters.
          *
          * @param xScale specifies the odometry scale in the X direction.
