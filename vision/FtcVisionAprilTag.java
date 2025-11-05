@@ -485,8 +485,8 @@ public class FtcVisionAprilTag
         if (object != null)
         {
             dashboard.displayPrintf(
-                lineNum++, "AprilTag[%d]: targetPose=%s",
-                object.detectedObj.aprilTagDetection.id, object.detectedObj.getObjectPose());
+                lineNum++, "AprilTag[%d]: depth=%f, targetPose=%s",
+                object.detectedObj.aprilTagDetection.id, object.objDepth, object.detectedObj.getObjectPose());
         }
         else
         {

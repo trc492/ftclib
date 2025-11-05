@@ -245,8 +245,9 @@ public class FtcVisionEocvColorBlob
         if (object != null)
         {
             dashboard.displayPrintf(
-                lineNum++, "EocvColorBlob(%s): targetPose=%s, rotatedAngle=%f",
-                object.detectedObj.label, object.detectedObj.objPose,  object.detectedObj.rotatedRectAngle);
+                lineNum++, "EocvColorBlob(%s): depth=%f, targetPose=%s, rotatedAngle=%f",
+                object.detectedObj.label, object.objDepth, object.detectedObj.objPose,
+                object.detectedObj.rotatedRectAngle);
         }
         else
         {

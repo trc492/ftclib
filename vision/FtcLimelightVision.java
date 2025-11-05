@@ -885,8 +885,9 @@ public class FtcLimelightVision
             if (object != null)
             {
                 dashboard.displayPrintf(
-                    lineNum++, "AprilTag[%s]: targetPose=%s, robotPose=%s",
-                    object.detectedObj.objId, object.detectedObj.targetPose, object.detectedObj.robotPose);
+                    lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
+                    object.detectedObj.objId, object.objDepth, object.detectedObj.targetPose,
+                    object.detectedObj.robotPose);
             }
             else
             {
