@@ -510,17 +510,15 @@ public class FtcLimelightVision
      * Constructor: Create an instance of the object.
      *
      * @param hardwareMap specifies the global hardware map.
-     * @param instanceName specifies the Limelight camera name.
      * @param cameraInfo specifies the camera information.
      * @param targetGroundOffset specifies the method to call to get target ground offset.
      */
     public FtcLimelightVision(
-        HardwareMap hardwareMap, String instanceName, TrcVision.CameraInfo cameraInfo,
-        TargetGroundOffset targetGroundOffset)
+        HardwareMap hardwareMap, TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
-        this.instanceName = instanceName;
+        this.instanceName = cameraInfo.camName;
         this.cameraInfo = cameraInfo;
         this.targetGroundOffset = targetGroundOffset;
         limelight = hardwareMap.get(Limelight3A.class, instanceName);
@@ -530,14 +528,12 @@ public class FtcLimelightVision
     /**
      * Constructor: Create an instance of the object.
      *
-     * @param instanceName specifies the Limelight camera name.
      * @param cameraInfo specifies the camera information.
      * @param targetGroundOffset specifies the method to call to get the target ground offset.
      */
-    public FtcLimelightVision(
-        String instanceName, TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
+    public FtcLimelightVision(TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, cameraInfo, targetGroundOffset);
+        this(FtcOpMode.getInstance().hardwareMap, cameraInfo, targetGroundOffset);
     }   //FtcLimelightVision
 
     /**
