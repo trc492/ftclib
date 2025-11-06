@@ -24,8 +24,6 @@ package ftclib.drivebase;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
-import org.openftc.easyopencv.OpenCvCameraRotation;
-
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcImu;
 import ftclib.sensor.FtcOctoQuad;
@@ -36,12 +34,10 @@ import trclib.controller.TrcPidController;
 import trclib.drivebase.TrcDriveBase;
 import trclib.motor.TrcMotor;
 import trclib.pathdrive.TrcPidDrive;
-import trclib.pathdrive.TrcPose3D;
 import trclib.pathdrive.TrcPurePursuitDrive;
 import trclib.sensor.TrcDriveBaseOdometry;
 import trclib.sensor.TrcOdometryWheels;
-import trclib.vision.TrcHomographyMapper;
-import trclib.vision.TrcOpenCvDetector;
+import trclib.vision.TrcVision;
 
 /**
  * This class is intended to be extended by subclasses implementing different robot drive bases.
@@ -54,114 +50,6 @@ public class FtcRobotDrive
     public static final int INDEX_BACK_RIGHT = 3;
     public static final int INDEX_CENTER_LEFT = 4;
     public static final int INDEX_CENTER_RIGHT = 5;
-
-    /**
-     * This class contains Vision parameters of a camera.
-     */
-    public static class VisionInfo
-    {
-        public String camName = null;
-        public int camImageWidth = 0, camImageHeight = 0;
-        public Double camHFov = null, camVFov = null;
-        public TrcOpenCvDetector.LensInfo lensInfo = null;
-        public TrcPose3D camPose = null;
-        public TrcHomographyMapper.Rectangle cameraRect = null;
-        public TrcHomographyMapper.Rectangle worldRect = null;
-        // The following parameters are for OpenCvVision.
-        public OpenCvCameraRotation openCvCamOrientation = OpenCvCameraRotation.UPRIGHT;
-
-        /**
-         * This method sets the basic camera info.
-         *
-         * @param name specifies the name of the camera.
-         * @param imageWidth specifies the camera horizontal resolution in pixels.
-         * @param imageHeight specifies the camera vertical resolution in pixels.
-         * @return this object for chaining.
-         */
-        public VisionInfo setCameraInfo(String name, int imageWidth, int imageHeight)
-        {
-            this.camName = name;
-            this.camImageWidth = imageWidth;
-            this.camImageHeight = imageHeight;
-            return this;
-        }   //setCameraInfo
-
-        /**
-         * This method sets the camera's Field Of View.
-         *
-         * @param hFov specifies the horizontal field of view in degreees.
-         * @param vFov specifies the vertical field of view in degrees.
-         * @return this object for chaining.
-         */
-        public VisionInfo setCameraFOV(double hFov, double vFov)
-        {
-            this.camHFov = hFov;
-            this.camVFov = vFov;
-            return this;
-        }   //setCameraFOV
-
-        /**
-         * This method sets the camera lens properties for SolvePnP.
-         *
-         * @param lensInfo specifies the camera lens properties.
-         * @return this object for chaining.
-         */
-        public VisionInfo setLensProperties(TrcOpenCvDetector.LensInfo lensInfo)
-        {
-            this.lensInfo = lensInfo;
-            return this;
-        }   //setLensProperties
-
-        /**
-         * This method sets the camera lens properties for SolvePnP.
-         *
-         * @param fx specifies the focal length in x.
-         * @param fy specifies the focal length in y.
-         * @param cx specifies the principal point in x.
-         * @param cy specifies the principal point in y.
-         * @param distCoeffs specifies an array containing the lens distortion coefficients.
-         * @return this object for chaining.
-         */
-        public VisionInfo setLensProperties(double fx, double fy, double cx, double cy, double[] distCoeffs)
-        {
-            setLensProperties(
-                new TrcOpenCvDetector.LensInfo().setLensProperties(fx, fy, cx, cy)
-                                                .setDistortionCoefficents(distCoeffs));
-            return this;
-        }   //setLensProperties
-
-        /**
-         * This method sets the camera location relative to robot center on the ground.
-         *
-         * @param xOffset specifies the X offset from robot center (positive right).
-         * @param yOffset specifies the Y offset from robot center (positive forward).
-         * @param zOffset specifies the Z offset from the ground (positive up).
-         * @param yaw specifies yaw angle from robot forward (positive clockwise).
-         * @param pitch specifies pitch angle from horizontal (positive up).
-         * @param roll specifies roll angle from vertical (positive left wing up).
-         * @return this object for chaining.
-         */
-        public VisionInfo setCameraPose(
-            double xOffset, double yOffset, double zOffset, double yaw, double pitch, double roll)
-        {
-            this.camPose = new TrcPose3D(xOffset, yOffset, zOffset, yaw, pitch, roll);
-            return this;
-        }   //setCameraPose
-
-        public VisionInfo setHomographyParams(
-            TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect)
-        {
-            this.cameraRect = cameraRect;
-            this.worldRect = worldRect;
-            return this;
-        }   //setHomographyParams
-
-        public VisionInfo setOpenCvCameraOrientation(OpenCvCameraRotation camRotation)
-        {
-            this.openCvCamOrientation = camRotation;
-            return this;
-        }   //setOpenCvCameraOrientation
-    }   //class VisionInfo
 
     /**
      * This class contains the Common Robot Info.
@@ -215,9 +103,9 @@ public class FtcRobotDrive
         public double ppdFollowingDistance = 0.0;
         public boolean fastModeEnabled = true;
         // Vision
-        public VisionInfo webCam1 = null;
-        public VisionInfo webCam2 = null;
-        public VisionInfo limelight = null;
+        public TrcVision.CameraInfo webCam1 = null;
+        public TrcVision.CameraInfo webCam2 = null;
+        public TrcVision.CameraInfo limelight = null;
         // Miscellaneous
         public String[] indicatorNames = null;
 
@@ -507,7 +395,8 @@ public class FtcRobotDrive
          * @param limelight specifies limelight Vision Info, null if limelight does not exist.
          * @return this object for chaining.
          */
-        public RobotInfo setVisionInfo(VisionInfo webCam1, VisionInfo webCam2, VisionInfo limelight)
+        public RobotInfo setVisionInfo(
+            TrcVision.CameraInfo webCam1, TrcVision.CameraInfo webCam2, TrcVision.CameraInfo limelight)
         {
             this.webCam1 = webCam1;
             this.webCam2 = webCam2;

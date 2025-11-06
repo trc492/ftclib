@@ -50,6 +50,7 @@ import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcVision;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
@@ -112,11 +113,11 @@ public class FtcLimelightVision
          * @param objId specifies the detected object ID if there is one.
          * @param robotPose specifies the robot's 3D position.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
-         * @param cameraPose specifies the camera position on the robot.
+         * @param cameraInfo specifies the camera information.
          */
         public DetectedObject(
             LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId, Pose3D robotPose,
-            TargetGroundOffset targetGroundOffset, TrcPose3D cameraPose)
+            TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo)
         {
             this.llResult = llResult;
             this.resultType = resultType;
@@ -124,8 +125,7 @@ public class FtcLimelightVision
             this.result = result;
             this.objId = objId;
             this.targetGroundOffset = targetGroundOffset;
-            this.targetPose = getTargetPose(cameraPose);
-            this.robotPose = getRobotPose(robotPose, cameraPose);
+            this.robotPose = getRobotPose(robotPose, cameraInfo.camPose);
             this.vertices = getRotatedRectVertices();
 
             double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
@@ -146,6 +146,7 @@ public class FtcLimelightVision
             }
             this.targetRect = getObjectRect();
             this.targetArea = getObjectArea();
+            this.targetPose = getTargetPose(cameraInfo);
             // getTargetPose call above will also set targetDepth.
         }   //DetectedObject
 
@@ -206,35 +207,34 @@ public class FtcLimelightVision
         @Override
         public double getObjectArea()
         {
-            return llResult.getTa();
-//            double area;
-//
-//            switch (resultType)
-//            {
-//                case Barcode:
-//                    area = ((LLResultTypes.BarcodeResult) result).getTargetArea();
-//                    break;
-//
-//                case Detector:
-//                    area = ((LLResultTypes.DetectorResult) result).getTargetArea();
-//                    break;
-//
-//                case Fiducial:
-//                    area = ((LLResultTypes.FiducialResult) result).getTargetArea();
-//                    break;
-//
-//                case Color:
-//                    area = ((LLResultTypes.ColorResult) result).getTargetArea();
-//                    break;
-//
-//                case Classifier:
-//                default:
-//                    area = llResult.getTa();
-//                    break;
-//            }
-//            TrcDbgTrace.globalTraceInfo("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
-//
-//            return area;
+            double area;
+
+            switch (resultType)
+            {
+                case Barcode:
+                    area = ((LLResultTypes.BarcodeResult) result).getTargetArea();
+                    break;
+
+                case Detector:
+                    area = ((LLResultTypes.DetectorResult) result).getTargetArea();
+                    break;
+
+                case Fiducial:
+                    area = ((LLResultTypes.FiducialResult) result).getTargetArea();
+                    break;
+
+                case Color:
+                    area = ((LLResultTypes.ColorResult) result).getTargetArea();
+                    break;
+
+                case Classifier:
+                default:
+                    area = llResult.getTa();
+                    break;
+            }
+            TrcDbgTrace.globalTraceInfo("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
+
+            return area;
         }   //getObjectArea
 
         /**
@@ -406,15 +406,24 @@ public class FtcLimelightVision
         /**
          * This method calculates the target pose of the detected object.
          *
-         * @param cameraPose specifies the the camera position on the robot.
+         * @param cameraInfo specifies the camera information.
          * @return target pose from the camera.
          */
-        private TrcPose2D getTargetPose(TrcPose3D cameraPose)
+        private TrcPose2D getTargetPose(TrcVision.CameraInfo cameraInfo)
         {
             TrcPose2D targetPose = null;
-            double targetYawDegrees = llResult.getTx();
-            double targetPitchDegrees = llResult.getTy();
-            double camPitchRadians = Math.toRadians(cameraPose.pitch);
+
+            double halfImageWidth = cameraInfo.camImageWidth/2.0;
+            double halfImageHeight = cameraInfo.camImageHeight/2.0;
+            double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
+            double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
+            double targetXPixel = targetRect.x + targetRect.width/2.0 - halfImageWidth;
+            double targetYPixel = -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
+            double targetYawDegrees =
+                Math.toDegrees(Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth));
+            double targetPitchDegrees =
+                Math.toDegrees(Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight));
+            double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
             double targetPitchRadians = Math.toRadians(targetPitchDegrees);
 
             if (resultType == ResultType.Fiducial)
@@ -431,7 +440,7 @@ public class FtcLimelightVision
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
                 TrcDbgTrace.globalTraceDebug(
                     moduleName, "TargetPose3DFromCam(Id=%d, Tx=%f, Ty=%f, position=%s, orientation=%s)",
-                    fiducialResult.getFiducialId(), targetYawDegrees, targetPitchDegrees, posTargetFromCam,
+                    fiducialResult.getFiducialId(), llResult.getTx(), llResult.getTy(), posTargetFromCam,
                     pose3DTargetFromCam.getOrientation());
                 TrcDbgTrace.globalTraceDebug(
                     moduleName, "TargetFloorPose(pose=%s, distance=%f)", targetPose, targetDepth);
@@ -443,7 +452,7 @@ public class FtcLimelightVision
                 double groundOffset = targetGroundOffset.getOffset(resultType);
 
                 targetDepth =
-                    (groundOffset - cameraPose.z) / Math.tan(camPitchRadians + targetPitchRadians);
+                    (groundOffset - cameraInfo.camPose.z) / Math.tan(camPitchRadians + targetPitchRadians);
                 targetPose = new TrcPose2D(
                     targetDepth * Math.sin(targetYawRadians),
                     targetDepth * Math.cos(targetYawRadians),
@@ -452,8 +461,8 @@ public class FtcLimelightVision
                     moduleName,
                     "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetPitch=%.1f, targetDepth=%.1f, " +
                     "targetYaw=%.1f, targetPose=%s",
-                    groundOffset, cameraPose.z, cameraPose.pitch, targetPitchDegrees, targetDepth, targetYawDegrees,
-                    targetPose);
+                    groundOffset, cameraInfo.camPose.z, cameraInfo.camPose.pitch, targetPitchDegrees, targetDepth,
+                    targetYawDegrees, targetPose);
             }
 
             return targetPose;
@@ -490,7 +499,7 @@ public class FtcLimelightVision
     public final TrcDbgTrace tracer;
     private final FtcDashboard dashboard;
     private final String instanceName;
-    private final TrcPose3D cameraPose;
+    private final TrcVision.CameraInfo cameraInfo;
     public final TargetGroundOffset targetGroundOffset;
     public final Limelight3A limelight;
     private int pipelineIndex = 0;
@@ -502,16 +511,17 @@ public class FtcLimelightVision
      *
      * @param hardwareMap specifies the global hardware map.
      * @param instanceName specifies the Limelight camera name.
-     * @param cameraPose specifies the camera position on the robot.
+     * @param cameraInfo specifies the camera information.
      * @param targetGroundOffset specifies the method to call to get target ground offset.
      */
     public FtcLimelightVision(
-        HardwareMap hardwareMap, String instanceName, TrcPose3D cameraPose, TargetGroundOffset targetGroundOffset)
+        HardwareMap hardwareMap, String instanceName, TrcVision.CameraInfo cameraInfo,
+        TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
-        this.cameraPose = cameraPose;
+        this.cameraInfo = cameraInfo;
         this.targetGroundOffset = targetGroundOffset;
         limelight = hardwareMap.get(Limelight3A.class, instanceName);
         setPipeline(pipelineIndex);
@@ -521,12 +531,13 @@ public class FtcLimelightVision
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the Limelight camera name.
-     * @param cameraPose specifies the camera position on the robot.
+     * @param cameraInfo specifies the camera information.
      * @param targetGroundOffset specifies the method to call to get the target ground offset.
      */
-    public FtcLimelightVision(String instanceName, TrcPose3D cameraPose, TargetGroundOffset targetGroundOffset)
+    public FtcLimelightVision(
+        String instanceName, TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
     {
-        this(FtcOpMode.getInstance().hardwareMap, instanceName, cameraPose, targetGroundOffset);
+        this(FtcOpMode.getInstance().hardwareMap, instanceName, cameraInfo, targetGroundOffset);
     }   //FtcLimelightVision
 
     /**
@@ -710,7 +721,7 @@ public class FtcLimelightVision
                             DetectedObject detectedObj =
                                 new DetectedObject(
                                     llResult, resultType, resultTimestamp, obj, objId, robotPose, targetGroundOffset,
-                                    cameraPose);
+                                    cameraInfo);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }
@@ -726,7 +737,7 @@ public class FtcLimelightVision
                     DetectedObject detectedObj =
                         new DetectedObject(
                             llResult, resultType, resultTimestamp, pythonOutput, llResult.getPipelineType(), robotPose,
-                            targetGroundOffset, cameraPose);
+                            targetGroundOffset, cameraInfo);
                     detectedList.add(detectedObj);
                     detectedObjs = detectedList;
                 }
