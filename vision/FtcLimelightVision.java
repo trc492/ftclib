@@ -419,12 +419,11 @@ public class FtcLimelightVision
             double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
             double targetXPixel = targetRect.x + targetRect.width/2.0 - halfImageWidth;
             double targetYPixel = -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
-            double targetYawDegrees =
-                Math.toDegrees(Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth));
-            double targetPitchDegrees =
-                Math.toDegrees(Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight));
+            double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
+            double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
+            double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
+            double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
             double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
-            double targetPitchRadians = Math.toRadians(targetPitchDegrees);
 
             if (resultType == ResultType.Fiducial)
             {
@@ -435,10 +434,10 @@ public class FtcLimelightVision
 
                 targetPose = new TrcPose2D(
                     posTargetFromCam.x,
-                    posTargetFromCam.z * Math.cos(camPitchRadians + targetPitchRadians),
-                    targetYawDegrees);
+                    posTargetFromCam.z * Math.cos(camPitchRadians + targetElevationRadians),
+                    targetBearingDegrees);
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                TrcDbgTrace.globalTraceDebug(
+                TrcDbgTrace.globalTraceInfo(
                     moduleName, "TargetPose3DFromCam(Id=%d, Tx=%f, Ty=%f, position=%s, orientation=%s)",
                     fiducialResult.getFiducialId(), llResult.getTx(), llResult.getTy(), posTargetFromCam,
                     pose3DTargetFromCam.getOrientation());
@@ -448,21 +447,22 @@ public class FtcLimelightVision
             else
             {
                 // Other pipelines only have 2D info (less accurate and potentially sensitive to error).
-                double targetYawRadians = Math.toRadians(targetYawDegrees);
                 double groundOffset = targetGroundOffset.getOffset(resultType);
-
+                // This method is very inaccurate when the target is very close to the screen center vertically.
+                // Any error in the camPitch angle will be amplified. It can also potentially give a divide-by-zero
+                // error if the object is exactly at the screen center vertically.
                 targetDepth =
-                    (groundOffset - cameraInfo.camPose.z) / Math.tan(camPitchRadians + targetPitchRadians);
+                    (groundOffset - cameraInfo.camPose.z) / Math.tan(camPitchRadians + targetElevationRadians);
                 targetPose = new TrcPose2D(
-                    targetDepth * Math.sin(targetYawRadians),
-                    targetDepth * Math.cos(targetYawRadians),
-                    targetYawDegrees);
+                    targetDepth * Math.sin(targetBearingRadians),
+                    targetDepth * Math.cos(targetBearingRadians),
+                    targetBearingDegrees);
                 TrcDbgTrace.globalTraceDebug(
                     moduleName,
-                    "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetPitch=%.1f, targetDepth=%.1f, " +
-                    "targetYaw=%.1f, targetPose=%s",
-                    groundOffset, cameraInfo.camPose.z, cameraInfo.camPose.pitch, targetPitchDegrees, targetDepth,
-                    targetYawDegrees, targetPose);
+                    "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetElevation=%.1f, targetDepth=%.1f, " +
+                    "targetBearing=%.1f, targetPose=%s",
+                    groundOffset, cameraInfo.camPose.z, cameraInfo.camPose.pitch, targetElevationDegrees, targetDepth,
+                    targetBearingDegrees, targetPose);
             }
 
             return targetPose;
@@ -486,7 +486,7 @@ public class FtcLimelightVision
                 TrcPose2D cameraFieldPose = new TrcPose2D(
                     botPosition.x*TrcUtil.INCHES_PER_METER, botPosition.y*TrcUtil.INCHES_PER_METER,
                     -(botpose.getOrientation().getYaw() - 90.0));
-                robotPose = cameraFieldPose.subtractRelativePose(cameraPose2D);
+                robotPose = cameraFieldPose.addRelativePose(cameraPose2D.invert());
                 TrcDbgTrace.globalTraceDebug(
                     moduleName, "cameraFieldPose=%s, robotPose=%s", cameraFieldPose, robotPose);
             }
