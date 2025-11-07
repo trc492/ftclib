@@ -232,7 +232,7 @@ public class FtcLimelightVision
                     area = llResult.getTa();
                     break;
             }
-            TrcDbgTrace.globalTraceInfo("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
+            TrcDbgTrace.globalTraceDebug("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
 
             return area;
         }   //getObjectArea
@@ -437,7 +437,7 @@ public class FtcLimelightVision
                     posTargetFromCam.z * Math.cos(camPitchRadians + targetElevationRadians),
                     targetBearingDegrees);
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                TrcDbgTrace.globalTraceInfo(
+                TrcDbgTrace.globalTraceDebug(
                     moduleName, "TargetPose3DFromCam(Id=%d, Tx=%f, Ty=%f, position=%s, orientation=%s)",
                     fiducialResult.getFiducialId(), llResult.getTx(), llResult.getTy(), posTargetFromCam,
                     pose3DTargetFromCam.getOrientation());
