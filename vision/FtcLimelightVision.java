@@ -412,23 +412,27 @@ public class FtcLimelightVision
         private TrcPose2D getTargetPose(TrcVision.CameraInfo cameraInfo)
         {
             TrcPose2D targetPose = null;
-
+            double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
             double halfImageWidth = cameraInfo.camImageWidth/2.0;
             double halfImageHeight = cameraInfo.camImageHeight/2.0;
             double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
             double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
-            double targetXPixel = targetRect.x + targetRect.width/2.0 - halfImageWidth;
-            double targetYPixel = -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
+            LLResultTypes.FiducialResult fiducialResult =
+                resultType == ResultType.Fiducial? (LLResultTypes.FiducialResult) result: null;
+            double targetXPixel = fiducialResult != null?
+                fiducialResult.getTargetXPixels() - halfImageWidth:
+                targetRect.x + targetRect.width/2.0 - halfImageWidth;
+            double targetYPixel = fiducialResult != null?
+                -(fiducialResult.getTargetYPixels() - halfImageHeight):
+                -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
             double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
             double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
             double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
             double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
-            double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
 
-            if (resultType == ResultType.Fiducial)
+            if (fiducialResult != null)
             {
                 // AprilTag has accurate 3D info, use it.
-                LLResultTypes.FiducialResult fiducialResult = (LLResultTypes.FiducialResult) result;
                 Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
                 Position posTargetFromCam = pose3DTargetFromCam.getPosition().toUnit(DistanceUnit.INCH);
 
@@ -438,11 +442,12 @@ public class FtcLimelightVision
                     targetBearingDegrees);
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
                 TrcDbgTrace.globalTraceDebug(
-                    moduleName, "TargetPose3DFromCam(Id=%d, Tx=%f, Ty=%f, position=%s, orientation=%s)",
-                    fiducialResult.getFiducialId(), llResult.getTx(), llResult.getTy(), posTargetFromCam,
-                    pose3DTargetFromCam.getOrientation());
+                    moduleName,
+                    "TargetPose3DFromCam(Id=%d, Bearing=%f, Elevation=%f, targetPixel=%f/%f, pos=%s, orient=%s)",
+                    fiducialResult.getFiducialId(), targetBearingDegrees, targetElevationDegrees, targetXPixel,
+                    targetYPixel, posTargetFromCam, pose3DTargetFromCam.getOrientation());
                 TrcDbgTrace.globalTraceDebug(
-                    moduleName, "TargetFloorPose(pose=%s, distance=%f)", targetPose, targetDepth);
+                    moduleName, "TargetFloorPose(distance=%f, pose=%s)", targetDepth, targetPose);
             }
             else
             {
