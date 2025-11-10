@@ -317,7 +317,8 @@ public class FtcMotorActuator
 
             case CRServo:
                 motor = new FtcCRServo(motorInfo.name, sensors);
-                motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
+                // Servos are on regulated power source, so we should not do voltage compensation.
+//                motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
                 break;
 
             default:
