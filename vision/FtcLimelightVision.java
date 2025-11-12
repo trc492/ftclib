@@ -412,50 +412,77 @@ public class FtcLimelightVision
         private TrcPose2D getTargetPose(TrcVision.CameraInfo cameraInfo)
         {
             TrcPose2D targetPose = null;
-            double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
-            double halfImageWidth = cameraInfo.camImageWidth/2.0;
-            double halfImageHeight = cameraInfo.camImageHeight/2.0;
-            double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
-            double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
             LLResultTypes.FiducialResult fiducialResult =
                 resultType == ResultType.Fiducial? (LLResultTypes.FiducialResult) result: null;
-            double targetXPixel = fiducialResult != null?
-                fiducialResult.getTargetXPixels() - halfImageWidth:
-                targetRect.x + targetRect.width/2.0 - halfImageWidth;
-            double targetYPixel = fiducialResult != null?
-                -(fiducialResult.getTargetYPixels() - halfImageHeight):
-                -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
-            double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
-            double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
-            double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
-            double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
+            Pose3D pose3DTargetFromRobot = fiducialResult != null? fiducialResult.getTargetPoseRobotSpace(): null;
 
-            if (fiducialResult != null)
+            if (pose3DTargetFromRobot != null)
             {
                 // AprilTag has accurate 3D info, use it.
-                Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
-                Position posTargetFromCam = pose3DTargetFromCam.getPosition().toUnit(DistanceUnit.INCH);
-
+                Position posTargetFromRobot = pose3DTargetFromRobot.getPosition().toUnit(DistanceUnit.INCH);
                 targetPose = new TrcPose2D(
-                    posTargetFromCam.x,
-                    posTargetFromCam.z * Math.cos(camPitchRadians + targetElevationRadians),
-                    targetBearingDegrees);
+                    posTargetFromRobot.x, posTargetFromRobot.z,
+                    Math.toDegrees(Math.atan2(posTargetFromRobot.x, posTargetFromRobot.z)));
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                TrcDbgTrace.globalTraceDebug(
+                TrcDbgTrace.globalTraceInfo(
                     moduleName,
-                    "TargetPose3DFromCam(Id=%d, Bearing=%f, Elevation=%f, targetPixel=%f/%f, pos=%s, orient=%s)",
-                    fiducialResult.getFiducialId(), targetBearingDegrees, targetElevationDegrees, targetXPixel,
-                    targetYPixel, posTargetFromCam, pose3DTargetFromCam.getOrientation());
-                TrcDbgTrace.globalTraceDebug(
-                    moduleName, "TargetFloorPose(distance=%f, pose=%s)", targetDepth, targetPose);
+                    "TargetPose(Id=%d, 3dPos=%s, 3dOrient=%s, Tx/Ty=%.3f/%.3f, trcPose=%s, dist=%.3f)",
+                    fiducialResult.getFiducialId(), posTargetFromRobot, pose3DTargetFromRobot.getOrientation(),
+                    llResult.getTx(), llResult.getTy(), targetPose, targetDepth);
+//                double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
+//                double halfImageWidth = cameraInfo.camImageWidth/2.0;
+//                double halfImageHeight = cameraInfo.camImageHeight/2.0;
+//                double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
+//                double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
+//                double targetXPixel = fiducialResult.getTargetXPixels() - halfImageWidth;
+//                double targetYPixel = -(fiducialResult.getTargetYPixels() - halfImageHeight);
+//                double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
+//                double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
+//                double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
+//                double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
+//                Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
+//                Position posTargetFromCam = pose3DTargetFromCam.getPosition().toUnit(DistanceUnit.INCH);
+//
+//                targetPose = new TrcPose2D(
+//                    posTargetFromCam.x,
+//                    posTargetFromCam.z * Math.cos(camPitchRadians + targetElevationRadians),
+//                    targetBearingDegrees);
+//                targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
+//                TrcDbgTrace.globalTraceDebug(
+//                    moduleName,
+//                    "TargetPose3DFromCam(Id=%d, Bearing=%f/%f, Elevation=%f/%f, targetPixel=%f/%f, pos=%s, orient=%s)",
+//                    fiducialResult.getFiducialId(), llResult.getTx(), targetBearingDegrees, llResult.getTy(),
+//                    targetElevationDegrees,
+//                    targetXPixel,
+//                    targetYPixel, posTargetFromCam, pose3DTargetFromCam.getOrientation());
+//                TrcDbgTrace.globalTraceDebug(
+//                    moduleName, "TargetPose(distance=%f, pose=%s)", targetDepth, targetPose);
+//                TrcDbgTrace.globalTraceDebug(
+//                    moduleName,
+//                    "\n\ttargetPoseCamSpace=%s\n\ttargetPoseRobotSpace=%s," +
+//                    "\n\tcamPoseTargetSpace=%s\n\trobotPoseTargetSpace=%s",
+//                    fiducialResult.getTargetPoseCameraSpace(), fiducialResult.getTargetPoseRobotSpace(),
+//                    fiducialResult.getCameraPoseTargetSpace(), fiducialResult.getRobotPoseTargetSpace());
             }
             else
             {
                 // Other pipelines only have 2D info (less accurate and potentially sensitive to error).
-                double groundOffset = targetGroundOffset.getOffset(resultType);
-                // This method is very inaccurate when the target is very close to the screen center vertically.
+                // This method is very inaccurate when the target is at about the same height as the camera.
                 // Any error in the camPitch angle will be amplified. It can also potentially give a divide-by-zero
-                // error if the object is exactly at the screen center vertically.
+                // error if the object is at the exact same height as the camera.
+                double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
+                double halfImageWidth = cameraInfo.camImageWidth/2.0;
+                double halfImageHeight = cameraInfo.camImageHeight/2.0;
+                double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
+                double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
+                double targetXPixel = targetRect.x + targetRect.width/2.0 - halfImageWidth;
+                double targetYPixel = -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
+                double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
+                double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
+                double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
+                double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
+                double groundOffset = targetGroundOffset.getOffset(resultType);
+
                 targetDepth =
                     (groundOffset - cameraInfo.camPose.z) / Math.tan(camPitchRadians + targetElevationRadians);
                 targetPose = new TrcPose2D(
@@ -846,42 +873,6 @@ public class FtcLimelightVision
         return bestTarget;
     }   //getBestDetectedTargetInfo
 
-//    /**
-//     * This method returns an array list of target info on the filtered detected targets.
-//     *
-//     * @param resultType specifies the result type to detect for.
-//     * @param label specifies the object label to look for, null if looking for any label.
-//     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
-//     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-//     * @return filtered target info array list.
-//     */
-//    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-//        Double robotHeading, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator, int[] aprilTagIds)
-//    {
-//        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-//        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, label, robotHeading);
-//
-//        if (detectedObjects != null)
-//        {
-//            ArrayList<TrcVisionTargetInfo<DetectedObject>> targets = new ArrayList<>();
-//            for (DetectedObject obj : detectedObjects)
-//            {
-//                targets.add(getDetectedTargetInfo(obj));
-//            }
-//
-//            if (!targets.isEmpty())
-//            {
-//                if (comparator != null && targets.size() > 1)
-//                {
-//                    targets.sort(comparator);
-//                }
-//                targetsInfo = targets;
-//            }
-//        }
-//
-//        return targetsInfo;
-//    }   //getDetectedTargetsInfo
-//
     /**
      * This method update the dashboard with vision status.
      *

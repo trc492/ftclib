@@ -399,28 +399,14 @@ public class FtcVisionAprilTag
     }   //getVisionProcessor
 
     /**
-     * This method returns the target info of the given detected target.
-     *
-     * @param detection specifies the detected target.
-     * @return information about the detected target.
-     */
-    public TrcVisionTargetInfo<DetectedObject> getDetectedTargetInfo(AprilTagDetection detection)
-    {
-        TrcVisionTargetInfo<DetectedObject> targetInfo = new TrcVisionTargetInfo<>(new DetectedObject(detection));
-        tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
-
-        return targetInfo;
-    }   //getDetectedTargetInfo
-
-    /**
      * This method returns an array list of target info on the filtered detected targets.
      *
-     * @param id specifies the AprilTag ID to look for, null if match to any ID.
+     * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return sorted target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        Integer id, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        int[] aprilTagIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
         ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
@@ -432,9 +418,12 @@ public class FtcVisionAprilTag
             for (AprilTagDetection detection : targets)
             {
                 // Check for ID match if provided.
-                if (id == null || id == detection.id)
+                if (aprilTagIds == null || matchAprilTagId(detection.id, aprilTagIds) != -1)
                 {
-                    targetsList.add(getDetectedTargetInfo(detection));
+                    TrcVisionTargetInfo<DetectedObject> targetInfo =
+                        new TrcVisionTargetInfo<>(new DetectedObject(detection));
+                    tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
+                    targetsList.add(targetInfo);
                 }
             }
 
@@ -454,15 +443,16 @@ public class FtcVisionAprilTag
     /**
      * This method returns the target info of the best detected target.
      *
-     * @param id specifies the AprilTag ID to look for, null if match to any ID.
+     * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
-        Integer id, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        int[] aprilTagIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo(id, comparator);
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo(
+            aprilTagIds, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -471,6 +461,29 @@ public class FtcVisionAprilTag
 
         return bestTarget;
     }   //getBestDetectedTargetInfo
+
+    /**
+     * This method finds a matching AprilTag ID in the specified array and returns the found index.
+     *
+     * @param id specifies the AprilTag ID to be matched.
+     * @param aprilTagIds specifies the AprilTag ID array to find the given ID.
+     * @return index in the array that matched the ID, -1 if not found.
+     */
+    private int matchAprilTagId(int id, int[] aprilTagIds)
+    {
+        int matchedIndex = -1;
+
+        for (int i = 0; i < aprilTagIds.length; i++)
+        {
+            if (id == aprilTagIds[i])
+            {
+                matchedIndex = i;
+                break;
+            }
+        }
+
+        return matchedIndex;
+    }   //matchAprilTagId
 
     /**
      * This method update the dashboard with vision status.
