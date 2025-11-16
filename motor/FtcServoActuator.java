@@ -32,6 +32,43 @@ import trclib.motor.TrcServo;
 public class FtcServoActuator
 {
     /**
+     * This class contains tunable parameters of the servo.
+     */
+    public static class TuneParams
+    {
+        public double restPos = 0.0;
+        public double activatePos = 0.0;
+        public double activateDuration = 0.0;
+        public double retractTime = 0.0;
+
+        /**
+         * Constructor: Create an instance of the object.
+         *
+         * @param restPos specifies the physical rest position of the servo.
+         * @param activatePos specifies the physical activate position of the servo.
+         * @param activateDuration specifies the duration in seconds the servo will remain in activatePos before
+         * @param retractTime specifies the time it takes to retract the mechanism.
+         *        returning to restPos.
+         */
+        public TuneParams(double restPos, double activatePos, double activateDuration, double retractTime)
+        {
+            this.restPos = restPos;
+            this.activatePos = activatePos;
+            this.activateDuration = activateDuration;
+            this.retractTime = retractTime;
+        }   //TuneParams
+
+        @Override
+        public String toString()
+        {
+            return "(restPos=" + restPos +
+                   ",activatePos=" + activatePos +
+                   ",activateDuration=" + activateDuration +
+                   ",retractTime=" + retractTime + ")";
+        }   //toString
+    }   //TuneParams
+
+    /**
      * This class contains all the parameters for creating the servo.
      */
     public static class Params
@@ -40,6 +77,7 @@ public class FtcServoActuator
         private boolean primaryServoInverted = false;
         private String followerServoName = null;
         private boolean followerServoInverted = false;
+        private TuneParams tuneParams = null;
         private final TrcServo.Params servoParams = new TrcServo.Params();
 
         /**
@@ -55,7 +93,8 @@ public class FtcServoActuator
                    ",primaryServoInverted=" + primaryServoInverted +
                    "\nfollowerServoName=" + followerServoName +
                    ",followerServoInverted=" + followerServoInverted +
-                   "\nservoParams=(" + servoParams + ")";
+                   "\ntuneParams=(" + tuneParams +
+                   "\nservoParams=" + servoParams + ")";
         }   //toString
 
         /**
@@ -90,6 +129,18 @@ public class FtcServoActuator
             this.followerServoInverted = inverted;
             return this;
         }   //setFollowerServo
+
+        /**
+         * This method sets the servo's tunable parameters.
+         *
+         * @param tuneParams specifies the tune parameters.
+         * @return this object for chaining.
+         */
+        public Params setTuneParams(TuneParams tuneParams)
+        {
+            this.tuneParams = tuneParams;
+            return this;
+        }   //setTuneParams
 
         /**
          * This method sets the physical position range of the servo in real world physical unit.
