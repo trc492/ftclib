@@ -32,7 +32,7 @@ import java.util.Scanner;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcAnalogEncoder;
-import trclib.drivebase.TrcSwerveDriveBase;
+import trclib.drivebase.TrcSwerveDrive;
 import trclib.drivebase.TrcSwerveModule;
 import trclib.motor.TrcMotor;
 import trclib.robotcore.TrcDbgTrace;
@@ -60,7 +60,7 @@ public class FtcSwerveBase extends FtcRobotBase
         public boolean[] steerMotorInverted = null;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
-        public TrcSwerveDriveBase.SwerveParams swerveParams = null;
+        public TrcSwerveDrive.SwerveParams swerveParams = null;
 
         /**
          * This method sets steer encoder info.
@@ -104,7 +104,7 @@ public class FtcSwerveBase extends FtcRobotBase
          * @param swerveParams specifies the swerve tune parameters.
          * @return this object for chaining.
          */
-        public SwerveInfo setSwerveParams(TrcSwerveDriveBase.SwerveParams swerveParams)
+        public SwerveInfo setSwerveParams(TrcSwerveDrive.SwerveParams swerveParams)
         {
             this.swerveParams = swerveParams;
             return this;
@@ -151,7 +151,7 @@ public class FtcSwerveBase extends FtcRobotBase
         steerEncoders = createSteerEncoders();
         steerMotors = createSteerMotors();
         swerveModules = createSwerveModules();
-        TrcSwerveDriveBase driveBase = new TrcSwerveDriveBase(
+        TrcSwerveDrive driveBase = new TrcSwerveDrive(
             swerveModules[FtcRobotBase.INDEX_FRONT_LEFT], swerveModules[FtcRobotBase.INDEX_BACK_LEFT],
             swerveModules[FtcRobotBase.INDEX_FRONT_RIGHT], swerveModules[FtcRobotBase.INDEX_BACK_RIGHT],
             gyro, swerveInfo.wheelBaseWidth, swerveInfo.wheelBaseLength);
@@ -254,7 +254,7 @@ public class FtcSwerveBase extends FtcRobotBase
                 xModeOwner = owner;
             }
 
-            ((TrcSwerveDriveBase) driveBase).setXMode(owner);
+            ((TrcSwerveDrive) driveBase).setXMode(owner);
         }
         else if (xModeOwner != null)
         {

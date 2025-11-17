@@ -22,7 +22,7 @@
 
 package ftclib.drivebase;
 
-import trclib.drivebase.TrcMecanumDriveBase;
+import trclib.drivebase.TrcMecanumDrive;
 
 /**
  * This class creates the FtcMecanum drive base subsystem that consists of wheel motors and related objects for
@@ -38,7 +38,7 @@ public class FtcMecanumBase extends FtcRobotBase
     public FtcMecanumBase(RobotInfo robotInfo)
     {
         super(robotInfo);
-        TrcMecanumDriveBase driveBase = new TrcMecanumDriveBase(
+        TrcMecanumDrive driveBase = new TrcMecanumDrive(
             driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
             driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT], gyro);
         configDriveBase(driveBase);

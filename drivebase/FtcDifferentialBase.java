@@ -22,7 +22,7 @@
 
 package ftclib.drivebase;
 
-import trclib.drivebase.TrcSimpleDriveBase;
+import trclib.drivebase.TrcSimpleDrive;
 
 /**
  * This class creates the FtcDifferential drive base subsystem that consists of wheel motors and related objects for
@@ -38,23 +38,23 @@ public class FtcDifferentialBase extends FtcRobotBase
     public FtcDifferentialBase(RobotInfo robotInfo)
     {
         super(robotInfo);
-        TrcSimpleDriveBase driveBase;
+        TrcSimpleDrive driveBase;
         int numMotors = robotInfo.driveMotorNames.length;
 
         switch (numMotors)
         {
             case 2:
-                driveBase = new TrcSimpleDriveBase(driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_FRONT_RIGHT], gyro);
+                driveBase = new TrcSimpleDrive(driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_FRONT_RIGHT], gyro);
                 break;
 
             case 4:
-                driveBase = new TrcSimpleDriveBase(
+                driveBase = new TrcSimpleDrive(
                     driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
                     driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT], gyro);
                 break;
 
             case 6:
-                driveBase = new TrcSimpleDriveBase(
+                driveBase = new TrcSimpleDrive(
                     driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_CENTER_LEFT], driveMotors[INDEX_BACK_LEFT],
                     driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_CENTER_RIGHT], driveMotors[INDEX_BACK_RIGHT],
                     gyro);
