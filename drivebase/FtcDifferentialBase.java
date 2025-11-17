@@ -28,14 +28,14 @@ import trclib.drivebase.TrcSimpleDriveBase;
  * This class creates the FtcDifferential drive base subsystem that consists of wheel motors and related objects for
  * driving a differential robot.
  */
-public class FtcDifferentialDrive extends FtcRobotDrive
+public class FtcDifferentialBase extends FtcRobotBase
 {
     /**
      * Constructor: Create an instance of the object.
      *
      * @param robotInfo specifies the Differential Robot Info.
      */
-    public FtcDifferentialDrive(RobotInfo robotInfo)
+    public FtcDifferentialBase(RobotInfo robotInfo)
     {
         super(robotInfo);
         TrcSimpleDriveBase driveBase;
@@ -65,6 +65,6 @@ public class FtcDifferentialDrive extends FtcRobotDrive
         }
 
         configDriveBase(driveBase);
-    }   //FtcDifferentialDrive
+    }   //FtcDifferentialBase
 
 }   //class FtcDifferentDrive

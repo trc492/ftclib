@@ -28,20 +28,20 @@ import trclib.drivebase.TrcMecanumDriveBase;
  * This class creates the FtcMecanum drive base subsystem that consists of wheel motors and related objects for
  * driving a mecanum robot.
  */
-public class FtcMecanumDrive extends FtcRobotDrive
+public class FtcMecanumBase extends FtcRobotBase
 {
     /**
      * Constructor: Create an instance of the object.
      *
      * @param robotInfo specifies the Mecanum Robot Info.
      */
-    public FtcMecanumDrive(RobotInfo robotInfo)
+    public FtcMecanumBase(RobotInfo robotInfo)
     {
         super(robotInfo);
         TrcMecanumDriveBase driveBase = new TrcMecanumDriveBase(
             driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
             driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT], gyro);
         configDriveBase(driveBase);
-    }   //FtcMecanumDrive
+    }   //FtcMecanumBase
 
-}   //class FtcMecanumDrive
+}   //class FtcMecanumBase

@@ -42,7 +42,7 @@ import trclib.vision.TrcVision;
 /**
  * This class is intended to be extended by subclasses implementing different robot drive bases.
  */
-public class FtcRobotDrive
+public class FtcRobotBase
 {
     public static final int INDEX_FRONT_LEFT = 0;
     public static final int INDEX_FRONT_RIGHT = 1;
@@ -429,7 +429,7 @@ public class FtcRobotDrive
      *
      * @param robotInfo specifies the Robot Info.
      */
-    public FtcRobotDrive(RobotInfo robotInfo)
+    public FtcRobotBase(RobotInfo robotInfo)
     {
         this.robotInfo = robotInfo;
         gyro = robotInfo.imuName != null?
@@ -442,7 +442,7 @@ public class FtcRobotDrive
                     robotInfo.driveMotorNames[i], robotInfo.driveMotorType, robotInfo.driveMotorInverted[i]);
             driveMotors[i] = new FtcMotorActuator(motorParams).getMotor();
         }
-    }   //FtcRobotDrive
+    }   //FtcRobotBase
 
     /**
      * This method cancels any drive operation still in progress.
@@ -604,4 +604,4 @@ public class FtcRobotDrive
         }
     }   //configDriveBase
 
-}   //class FtcRobotDrive
+}   //class FtcRobotBase
