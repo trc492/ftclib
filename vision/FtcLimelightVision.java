@@ -424,7 +424,7 @@ public class FtcLimelightVision
                     posTargetFromRobot.x, posTargetFromRobot.z,
                     Math.toDegrees(Math.atan2(posTargetFromRobot.x, posTargetFromRobot.z)));
                 targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                TrcDbgTrace.globalTraceInfo(
+                TrcDbgTrace.globalTraceDebug(
                     moduleName,
                     "TargetPose(Id=%d, 3dPos=%s, 3dOrient=%s, Tx/Ty=%.3f/%.3f, trcPose=%s, dist=%.3f)",
                     fiducialResult.getFiducialId(), posTargetFromRobot, pose3DTargetFromRobot.getOrientation(),
@@ -520,7 +520,7 @@ public class FtcLimelightVision
                     -(botpose.getOrientation().getYaw() - 90.0));
                 robotPose = cameraFieldPose.addRelativePose(cameraPose2D.invert());
                 TrcDbgTrace.globalTraceDebug(
-                    moduleName, "cameraFieldPose=%s, robotPose=%s", cameraFieldPose, robotPose);
+                    moduleName, "botPose=%s, cameraFieldPose=%s, robotPose=%s", botpose, cameraFieldPose, robotPose);
             }
 
             return robotPose;
@@ -663,7 +663,8 @@ public class FtcLimelightVision
         ArrayList<DetectedObject> detectedObjs = null;
         if (robotHeading != null)
         {
-            limelight.updateRobotOrientation(-robotHeading);
+            // TODO: MegaTag2 doesn't work, need investigating!!!
+            limelight.updateRobotOrientation(-robotHeading + 90.0);
         }
 
         LLResult llResult = limelight.getLatestResult();
