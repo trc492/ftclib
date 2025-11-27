@@ -76,6 +76,7 @@ public class FtcMotorActuator
         public TrcEncoder externalEncoder = null;
         public String externalEncoderName = null;
         public boolean externalEncoderInverted = false;
+        public boolean externalEncoderWrapped = true;
 
         public double[] positionPresets = null;
         public double positionPresetTolerance = 0.0;
@@ -97,6 +98,7 @@ public class FtcMotorActuator
                    ",upperLimitInverted=" + upperLimitSwitchInverted +
                    "\nencoderName=" + externalEncoderName +
                    ",encoderInverted=" + externalEncoderInverted +
+                   ",encoderWrapped=" + externalEncoderWrapped +
                    "\nposPresets=" + Arrays.toString(positionPresets) +
                    ",posPresetTolerance=" + positionPresetTolerance;
         }   //toString
@@ -198,17 +200,31 @@ public class FtcMotorActuator
          *
          * @param name specifies the name of the analog encoder.
          * @param inverted specifies true if the encoder is inverted, false otherwise.
+         * @param wrapped specifies true if the encoder value is wrapped, false otherwise.
          * @return this object for chaining.
          */
-        public Params setExternalEncoder(String name, boolean inverted)
+        public Params setExternalEncoder(String name, boolean inverted, boolean wrapped)
         {
             if (this.externalEncoder != null)
             {
                 throw new IllegalStateException("Can only specify encoder or encode name but not both.");
             }
-            this.externalEncoderName = name;
+            externalEncoderName = name;
             externalEncoderInverted = inverted;
+            externalEncoderWrapped = wrapped;
             return this;
+        }   //setExternalEncoder
+
+        /**
+         * This method sets the external encoder parameters.
+         *
+         * @param name specifies the name of the analog encoder.
+         * @param inverted specifies true if the encoder is inverted, false otherwise.
+         * @return this object for chaining.
+         */
+        public Params setExternalEncoder(String name, boolean inverted)
+        {
+            return setExternalEncoder(name, inverted, true);
         }   //setExternalEncoder
 
         /**
@@ -242,7 +258,7 @@ public class FtcMotorActuator
             params.upperLimitSwitchName != null? new FtcDigitalInput(params.upperLimitSwitchName): null;
         TrcEncoder encoder =
             params.externalEncoderName != null?
-                new FtcAnalogEncoder(params.externalEncoderName, true): params.externalEncoder;
+                new FtcAnalogEncoder(params.externalEncoderName, params.externalEncoderWrapped): params.externalEncoder;
 
         TrcMotor.ExternalSensors sensors = null;
         if (lowerLimitSwitch != null || upperLimitSwitch != null || encoder != null)
