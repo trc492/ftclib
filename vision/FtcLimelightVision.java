@@ -111,12 +111,11 @@ public class FtcLimelightVision
          * @param timestamp specifies the control hub result timestamp.
          * @param result specifies the detected object.
          * @param objId specifies the detected object ID if there is one.
-         * @param robotPose specifies the robot's 3D position.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
          * @param cameraInfo specifies the camera information.
          */
         public DetectedObject(
-            LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId, Pose3D robotPose,
+            LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId,
             TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo)
         {
             this.llResult = llResult;
@@ -125,7 +124,9 @@ public class FtcLimelightVision
             this.result = result;
             this.objId = objId;
             this.targetGroundOffset = targetGroundOffset;
-            this.robotPose = getRobotPose(robotPose, cameraInfo.camPose);
+            this.robotPose = getRobotPose(
+                cameraInfo.camPose != null?
+                    new TrcPose2D(cameraInfo.camPose.x, cameraInfo.camPose.y, cameraInfo.camPose.yaw): null);
             this.vertices = getRotatedRectVertices();
 
             double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
@@ -411,7 +412,7 @@ public class FtcLimelightVision
          */
         private TrcPose2D getTargetPose(TrcVision.CameraInfo cameraInfo)
         {
-            TrcPose2D targetPose = null;
+            TrcPose2D targetPose;
             LLResultTypes.FiducialResult fiducialResult =
                 resultType == ResultType.Fiducial? (LLResultTypes.FiducialResult) result: null;
             Pose3D pose3DTargetFromRobot = fiducialResult != null? fiducialResult.getTargetPoseRobotSpace(): null;
@@ -429,40 +430,6 @@ public class FtcLimelightVision
                     "TargetPose(Id=%d, 3dPos=%s, 3dOrient=%s, Tx/Ty=%.3f/%.3f, trcPose=%s, dist=%.3f)",
                     fiducialResult.getFiducialId(), posTargetFromRobot, pose3DTargetFromRobot.getOrientation(),
                     llResult.getTx(), llResult.getTy(), targetPose, targetDepth);
-//                double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
-//                double halfImageWidth = cameraInfo.camImageWidth/2.0;
-//                double halfImageHeight = cameraInfo.camImageHeight/2.0;
-//                double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
-//                double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
-//                double targetXPixel = fiducialResult.getTargetXPixels() - halfImageWidth;
-//                double targetYPixel = -(fiducialResult.getTargetYPixels() - halfImageHeight);
-//                double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
-//                double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
-//                double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
-//                double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
-//                Pose3D pose3DTargetFromCam = fiducialResult.getTargetPoseCameraSpace();
-//                Position posTargetFromCam = pose3DTargetFromCam.getPosition().toUnit(DistanceUnit.INCH);
-//
-//                targetPose = new TrcPose2D(
-//                    posTargetFromCam.x,
-//                    posTargetFromCam.z * Math.cos(camPitchRadians + targetElevationRadians),
-//                    targetBearingDegrees);
-//                targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-//                TrcDbgTrace.globalTraceDebug(
-//                    moduleName,
-//                    "TargetPose3DFromCam(Id=%d, Bearing=%f/%f, Elevation=%f/%f, targetPixel=%f/%f, pos=%s, orient=%s)",
-//                    fiducialResult.getFiducialId(), llResult.getTx(), targetBearingDegrees, llResult.getTy(),
-//                    targetElevationDegrees,
-//                    targetXPixel,
-//                    targetYPixel, posTargetFromCam, pose3DTargetFromCam.getOrientation());
-//                TrcDbgTrace.globalTraceDebug(
-//                    moduleName, "TargetPose(distance=%f, pose=%s)", targetDepth, targetPose);
-//                TrcDbgTrace.globalTraceDebug(
-//                    moduleName,
-//                    "\n\ttargetPoseCamSpace=%s\n\ttargetPoseRobotSpace=%s," +
-//                    "\n\tcamPoseTargetSpace=%s\n\trobotPoseTargetSpace=%s",
-//                    fiducialResult.getTargetPoseCameraSpace(), fiducialResult.getTargetPoseRobotSpace(),
-//                    fiducialResult.getCameraPoseTargetSpace(), fiducialResult.getRobotPoseTargetSpace());
             }
             else
             {
@@ -503,26 +470,21 @@ public class FtcLimelightVision
         /**
          * This method returns the robot's field position as a TrcPose2D.
          *
-         * @param botpose specifies the robot's field position in 3D space.
-         * @param cameraPose specifies the camera position relative to robot ground center.
+         * @param camPose2dOnBot specifies the camera 2D position relative to robot center.
          * @return robot's 2D field position.
          */
-        private TrcPose2D getRobotPose(Pose3D botpose, TrcPose3D cameraPose)
+        private TrcPose2D getRobotPose(TrcPose2D camPose2dOnBot)
         {
             TrcPose2D robotPose = null;
+            Pose3D camFieldPose3d = llResult.getBotpose();   //getBotpose_MT2();
 
-            if (botpose != null && cameraPose != null)
+            if (camFieldPose3d != null && camPose2dOnBot != null)
             {
-                Position botPosition = botpose.getPosition();
-                TrcPose2D cameraPose2D = new TrcPose2D(cameraPose.x, cameraPose.y, cameraPose.yaw);
-                TrcPose2D cameraFieldPose = new TrcPose2D(
-                    botPosition.x*TrcUtil.INCHES_PER_METER, botPosition.y*TrcUtil.INCHES_PER_METER,
-                    -(botpose.getOrientation().getYaw() - 90.0));
-                robotPose = cameraFieldPose.addRelativePose(cameraPose2D.invert());
-                TrcDbgTrace.globalTraceDebug(
-                    moduleName, "botPose=%s, cameraFieldPose=%s, robotPose=%s", botpose, cameraFieldPose, robotPose);
+                Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
+                TrcPose2D camFieldPose2d = new TrcPose2D(
+                    camFieldPos.x, camFieldPos.y, 90.0 - camFieldPose3d.getOrientation().getYaw());
+                robotPose = camFieldPose2d.addRelativePose(camPose2dOnBot.invert());
             }
-
             return robotPose;
         }   //getRobotPose
 
@@ -612,6 +574,20 @@ public class FtcLimelightVision
     }   //isVisionEnabled
 
     /**
+     * This method is called periodically to update Limelight with the current robot heading for more accurate MT2
+     * robot pose.
+     *
+     * @param robotHeading specifies the robot heading in TRC coordinate convention.
+     */
+    public void updateRobotHeading(double robotHeading)
+    {
+        if (isVisionEnabled())
+        {
+            limelight.updateRobotOrientation(-robotHeading + 90.0);
+        }
+    }   //updateRobotHeading
+
+    /**
      * This method sets the vision pipeline.
      *
      * @param index specifies the pipeline index to be set active.
@@ -655,17 +631,11 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param matchIds specifies the object ID(s) to match for, null if no matching required.
-     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @return array list of detected objects.
      */
-    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, Object matchIds, Double robotHeading)
+    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, Object matchIds)
     {
         ArrayList<DetectedObject> detectedObjs = null;
-        if (robotHeading != null)
-        {
-            // TODO: MegaTag2 doesn't work, need investigating!!!
-            limelight.updateRobotOrientation(-robotHeading + 90.0);
-        }
 
         LLResult llResult = limelight.getLatestResult();
         // For some reason if the pipeline is Python script, llResult.isValid always returns false.
@@ -678,7 +648,6 @@ public class FtcLimelightVision
                 List<?> resultList = null;
                 double[] pythonOutput = null;
                 ArrayList<DetectedObject> detectedList = new ArrayList<>();
-                Pose3D robotPose = robotHeading != null? llResult.getBotpose_MT2(): llResult.getBotpose();
                 lastResultTimestamp = resultTimestamp;
 
                 switch (resultType)
@@ -709,7 +678,7 @@ public class FtcLimelightVision
                 }
                 tracer.traceDebug(
                     instanceName, "Tx=%.3f, Ty=%.3f, Ta=%.3f, BotPose=%s, ResultListLen(%s)=%d, PythonOutput=%s",
-                    llResult.getTx(), llResult.getTy(), llResult.getTa(), robotPose, resultType,
+                    llResult.getTx(), llResult.getTy(), llResult.getTa(), llResult.getBotpose(), resultType,
                     resultList != null? resultList.size(): 0,
                     pythonOutput != null? Arrays.toString(pythonOutput): "null");
 
@@ -749,8 +718,7 @@ public class FtcLimelightVision
                         {
                             DetectedObject detectedObj =
                                 new DetectedObject(
-                                    llResult, resultType, resultTimestamp, obj, objId, robotPose, targetGroundOffset,
-                                    cameraInfo);
+                                    llResult, resultType, resultTimestamp, obj, objId, targetGroundOffset, cameraInfo);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }
@@ -765,7 +733,7 @@ public class FtcLimelightVision
                 {
                     DetectedObject detectedObj =
                         new DetectedObject(
-                            llResult, resultType, resultTimestamp, pythonOutput, llResult.getPipelineType(), robotPose,
+                            llResult, resultType, resultTimestamp, pythonOutput, llResult.getPipelineType(),
                             targetGroundOffset, cameraInfo);
                     detectedList.add(detectedObj);
                     detectedObjs = detectedList;
@@ -817,16 +785,14 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param matchIds specifies the object ID(s) to match for, null if no matching required.
-     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return filtered target info array list.
      */
     public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        ResultType resultType, Object matchIds, Double robotHeading,
-        Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        ResultType resultType, Object matchIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, matchIds, robotHeading);
+        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, matchIds);
 
         if (detectedObjects != null)
         {
@@ -854,17 +820,15 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param matchIds specifies the object ID(s) to match for, null if no matching required.
-     * @param robotHeading specifies robot heading in degrees, can be null if not provided.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
     public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
-        ResultType resultType, Object matchIds, Double robotHeading,
-        Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+        ResultType resultType, Object matchIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
         ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(resultType, matchIds, robotHeading, comparator);
+            getDetectedTargetsInfo(resultType, matchIds, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -884,7 +848,7 @@ public class FtcLimelightVision
     {
         if (statusResultType != null)
         {
-            TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(statusResultType, null, null, null);
+            TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(statusResultType, null, null);
 
             if (object != null)
             {
