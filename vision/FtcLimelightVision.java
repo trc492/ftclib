@@ -113,10 +113,12 @@ public class FtcLimelightVision
          * @param objId specifies the detected object ID if there is one.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
          * @param cameraInfo specifies the camera information.
+         * @param hasInitialRobotHeading specifies true if vision has determined the robot's initial heading using
+         *        MT1, false otherwise.
          */
         public DetectedObject(
             LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId,
-            TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo)
+            TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo, boolean hasInitialRobotHeading)
         {
             this.llResult = llResult;
             this.resultType = resultType;
@@ -126,7 +128,8 @@ public class FtcLimelightVision
             this.targetGroundOffset = targetGroundOffset;
             this.robotPose = getRobotPose(
                 cameraInfo.camPose != null?
-                    new TrcPose2D(cameraInfo.camPose.x, cameraInfo.camPose.y, cameraInfo.camPose.yaw): null);
+                    new TrcPose2D(cameraInfo.camPose.x, cameraInfo.camPose.y, cameraInfo.camPose.yaw): null,
+                    hasInitialRobotHeading);
             this.vertices = getRotatedRectVertices();
 
             double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
@@ -471,12 +474,15 @@ public class FtcLimelightVision
          * This method returns the robot's field position as a TrcPose2D.
          *
          * @param camPose2dOnBot specifies the camera 2D position relative to robot center.
+         * @param hasInitialRobotHeading specifies true if vision has determined the robot's initial heading using
+         *        MT1, false otherwise.
          * @return robot's 2D field position.
          */
-        private TrcPose2D getRobotPose(TrcPose2D camPose2dOnBot)
+        private TrcPose2D getRobotPose(TrcPose2D camPose2dOnBot, boolean hasInitialRobotHeading)
         {
             TrcPose2D robotPose = null;
-            Pose3D camFieldPose3d = llResult.getBotpose();   //getBotpose_MT2();
+            // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
+            Pose3D camFieldPose3d = hasInitialRobotHeading? llResult.getBotpose_MT2(): llResult.getBotpose();
 
             if (camFieldPose3d != null && camPose2dOnBot != null)
             {
@@ -499,6 +505,7 @@ public class FtcLimelightVision
     private int pipelineIndex = 0;
     private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
     private Double lastResultTimestamp = null;
+    private boolean hasInitialRobotHeading = false;
 
     /**
      * Constructor: Create an instance of the object.
@@ -581,9 +588,24 @@ public class FtcLimelightVision
      */
     public void updateRobotHeading(double robotHeading)
     {
-        if (isVisionEnabled())
+        // If wd don't have initial robot heading, the robotHeading parameter from odometry is bogus, don't use it.
+        if (isVisionEnabled() && hasInitialRobotHeading)
         {
-            limelight.updateRobotOrientation(-robotHeading + 90.0);
+            // Adjust robotHeading from TrcLib coordinate system to FTC coordinate system.
+            double adjHeading = 90.0 - robotHeading;
+            // Do modulus of 360 to get a value from -360 to 360.
+            adjHeading -= ((int)(adjHeading/360.0)) * 360.0;
+            // Convert the range to -180 to 180.
+            if (adjHeading > 180.0)
+            {
+                adjHeading -= 360.0;
+            }
+            else if (adjHeading <= -180.0)
+            {
+                adjHeading += 360.0;
+            }
+            limelight.updateRobotOrientation(adjHeading);
+            tracer.traceDebug(instanceName, "robotHeading=%f, ftcHeading=%f", robotHeading, adjHeading);
         }
     }   //updateRobotHeading
 
@@ -718,7 +740,8 @@ public class FtcLimelightVision
                         {
                             DetectedObject detectedObj =
                                 new DetectedObject(
-                                    llResult, resultType, resultTimestamp, obj, objId, targetGroundOffset, cameraInfo);
+                                    llResult, resultType, resultTimestamp, obj, objId, targetGroundOffset, cameraInfo,
+                                    hasInitialRobotHeading);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }
@@ -734,7 +757,7 @@ public class FtcLimelightVision
                     DetectedObject detectedObj =
                         new DetectedObject(
                             llResult, resultType, resultTimestamp, pythonOutput, llResult.getPipelineType(),
-                            targetGroundOffset, cameraInfo);
+                            targetGroundOffset, cameraInfo, false);
                     detectedList.add(detectedObj);
                     detectedObjs = detectedList;
                 }
@@ -833,6 +856,16 @@ public class FtcLimelightVision
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
             bestTarget = detectedTargets.get(0);
+            if (!hasInitialRobotHeading && bestTarget != null &&
+                bestTarget.detectedObj.resultType == ResultType.Fiducial && bestTarget.detectedObj.robotPose != null)
+            {
+                // This is the first time we detected AprilTag, so we have run MT1 localization, flag it so that we
+                // can run MT2 localization moving forward.
+                hasInitialRobotHeading = true;
+                tracer.traceInfo(
+                    instanceName, "Determined initial robot heading: robotHeading=%f",
+                    bestTarget.detectedObj.robotPose.angle);
+            }
         }
 
         return bestTarget;
