@@ -87,7 +87,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void resetFactoryDefault()
     {
-        throw new UnsupportedOperationException("CRServo does not support resetFactoryDefault.");
+        throw new UnsupportedOperationException(instanceName + " does not support resetFactoryDefault.");
     }   //resetFactoryDefault
 
     /**
@@ -112,7 +112,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setCurrentLimit(double currentLimit, double triggerThresholdCurrent, double triggerThresholdTime)
     {
-        throw new UnsupportedOperationException("CRServo does not support setCurrentLimit.");
+        throw new UnsupportedOperationException(instanceName + " does not support setCurrentLimit.");
     }   //setCurrentLimit
 
     /**
@@ -123,7 +123,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setStatorCurrentLimit(double currentLimit)
     {
-        throw new UnsupportedOperationException("CRServo does not support setStatorCurrentLimit.");
+        throw new UnsupportedOperationException(instanceName + " does not support setStatorCurrentLimit.");
     }   //setStatorCurrentLimit
 
     /**
@@ -134,7 +134,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setCloseLoopRampRate(double rampTime)
     {
-        throw new UnsupportedOperationException("CRServo does not support setCloseLoopRampRate.");
+        throw new UnsupportedOperationException(instanceName + " does not support setCloseLoopRampRate.");
     }   //setCloseLoopRampRate
 
     /**
@@ -145,7 +145,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setOpenLoopRampRate(double rampTime)
     {
-        throw new UnsupportedOperationException("CRServo does not support setOpenLoopRampRate.");
+        throw new UnsupportedOperationException(instanceName + " does not support setOpenLoopRampRate.");
     }   //setOpenLoopRampRate
 
     /**
@@ -159,7 +159,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setBrakeModeEnabled(boolean enabled)
     {
-        throw new UnsupportedOperationException("CRServo does not support setBrakeModeEnabled.");
+        throw new UnsupportedOperationException(instanceName + " does not support setBrakeModeEnabled.");
     }   //setBrakeModeEnabled
 
     /**
@@ -170,7 +170,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void enableMotorRevLimitSwitch(boolean normalClose)
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //enableMotorRevLimitSwitch
 
     /**
@@ -181,7 +181,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void enableMotorFwdLimitSwitch(boolean normalClose)
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //enableMotorFwdLimitSwitch
 
     /**
@@ -190,7 +190,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void disableMotorRevLimitSwitch()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //disableMotorRevLimitSwitch
 
     /**
@@ -199,7 +199,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void disableMotorFwdLimitSwitch()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //disableMotorRevLimitSwitch
 
     /**
@@ -210,7 +210,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorRevLimitSwitchEnabled()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //isMotorRevLimitSwitchEnabled
 
     /**
@@ -221,7 +221,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorFwdLimitSwitchEnabled()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //isMotorFwdLimitSwitchEnabled
 
     /**
@@ -233,7 +233,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorRevLimitSwitchInverted(boolean inverted)
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //setMotorRevLimitSwitchInverted
 
     /**
@@ -245,7 +245,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorFwdLimitSwitchInverted(boolean inverted)
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //setMotorFwdLimitSwitchInverted
 
     /**
@@ -256,7 +256,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorRevLimitSwitchActive()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //isMotorRevLimitSwitchActive
 
     /**
@@ -267,7 +267,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorFwdLimitSwitchActive()
     {
-        throw new UnsupportedOperationException("CRServo does not support limit switches.");
+        throw new UnsupportedOperationException(instanceName + " does not support limit switches.");
     }   //isMotorFwdLimitSwitchActive
 
     /**
@@ -278,7 +278,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorRevSoftPositionLimit(Double limit)
     {
-        throw new UnsupportedOperationException("CRServo does not support soft limits.");
+        throw new UnsupportedOperationException(instanceName + " does not support soft limits.");
     }   //setMotorRevSoftPositionLimit
 
     /**
@@ -289,7 +289,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorFwdSoftPositionLimit(Double limit)
     {
-        throw new UnsupportedOperationException("CRServo does not support soft limits.");
+        throw new UnsupportedOperationException(instanceName + " does not support soft limits.");
     }   //setMotorFwdSoftPositionLimit
 
     /**
@@ -303,7 +303,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorPositionSensorInverted(boolean inverted)
     {
-        throw new UnsupportedOperationException("CRServo does not support position sensor.");
+        throw new UnsupportedOperationException(instanceName + " does not support position sensor.");
     }   //setMotorPositionSensorInverted
 
     /**
@@ -314,7 +314,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public boolean isMotorPositionSensorInverted()
     {
-        throw new UnsupportedOperationException("CRServo does not support position sensor.");
+        throw new UnsupportedOperationException(instanceName + " does not support position sensor.");
     }   //isMotorPositionSensorInverted
 
     /**
@@ -323,7 +323,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void resetMotorPosition()
     {
-        throw new UnsupportedOperationException("CRServo does not support position sensor.");
+        throw new UnsupportedOperationException(instanceName + " does not support position sensor.");
     }   //resetMotorPosition
 
     /**
@@ -380,7 +380,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorVelocity(double velocity, double acceleration, double feedForward)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorVelocity.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorVelocity.");
     }   //setMotorVelocity
 
     /**
@@ -391,7 +391,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public double getMotorVelocity()
     {
-        throw new UnsupportedOperationException("CRServo does not support getMotorVelocity.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorVelocity.");
     }   //getMotorVelocity
 
     /**
@@ -407,7 +407,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorPosition(double position, Double powerLimit, double velocity, double feedForward)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorPosition.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorPosition.");
     }   //setMotorPosition
 
     /**
@@ -418,7 +418,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public double getMotorPosition()
     {
-        throw new UnsupportedOperationException("CRServo does not support position sensor.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorPosition.");
     }   //getMotorPosition
 
     /**
@@ -429,7 +429,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorCurrent(double current)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorCurrent.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorCurrent.");
     }   //setMotorCurrent
 
     /**
@@ -440,7 +440,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public double getMotorCurrent()
     {
-        throw new UnsupportedOperationException("CRServo does not support getMotorCurrent.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorCurrent.");
     }   //getMotorCurrent
 
     /**
@@ -451,7 +451,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorVelocityPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorVelocityPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorVelocityPidCoefficients.");
     }   //setMotorVelocityPidCoefficients
 
     /**
@@ -462,7 +462,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorVelocityPidCoefficients()
     {
-        throw new UnsupportedOperationException("CRServo does not support getMotorVelocityPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorVelocityPidCoefficients.");
     }   //getMotorVelocityPidCoefficients
 
     /**
@@ -473,7 +473,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorPositionPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorPositionPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorPositionPidCoefficients.");
     }   //setMotorPositionPidCoefficients
 
     /**
@@ -484,7 +484,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorPositionPidCoefficients()
     {
-        throw new UnsupportedOperationException("CRServo does not support getMotorPositionPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorPositionPidCoefficients.");
     }   //getMotorPositionPidCoefficients
 
     /**
@@ -495,7 +495,7 @@ public class FtcCRServo extends TrcMotor
     @Override
     public void setMotorCurrentPidCoefficients(TrcPidController.PidCoefficients pidCoeff)
     {
-        throw new UnsupportedOperationException("CRServo does not support setMotorCurretPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorCurrentPidCoefficients.");
     }   //setMotorCurrentPidCoefficients
 
     /**
@@ -506,8 +506,74 @@ public class FtcCRServo extends TrcMotor
     @Override
     public TrcPidController.PidCoefficients getMotorCurrentPidCoefficients()
     {
-        throw new UnsupportedOperationException("CRServo does not support getMotorCurretPidCoefficients.");
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorCurrentPidCoefficients.");
     }   //geteMotorCurrentPidCoefficients
+
+    /**
+     * This method sets the FeedForward coefficients of the motor controller's velocity PID controller.
+     *
+     * @param ffCoeffs specifies the FeedForward coefficients to set.
+     */
+    @Override
+    public void setMotorVelocityFFCoefficients(TrcPidController.FFCoefficients ffCoeffs)
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorVelocityFFCoefficients.");
+    }   //setMotorVelocityFFCoefficients
+
+    /**
+     * This method returns the FeedForward coefficients of the motor controller's velocity PID controller.
+     *
+     * @return FeedForward coefficients of the motor's veloicty PID controller.
+     */
+    @Override
+    public TrcPidController.FFCoefficients getMotorVelocityFFCoefficients()
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorVelocityFFCoefficients.");
+    }   //getMotorVelocityFFCoefficients
+
+    /**
+     * This method sets the FeedForward coefficients of the motor controller's position PID controller.
+     *
+     * @param ffCoeffs specifies the FeedForward coefficients to set.
+     */
+    @Override
+    public void setMotorPositionFFCoefficients(TrcPidController.FFCoefficients ffCoeffs)
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorPositionFFCoefficients.");
+    }   //setMotorPositionFFCoefficients
+
+    /**
+     * This method returns the FeedForward coefficients of the motor controller's position PID controller.
+     *
+     * @return FeedForward coefficients of the motor's position PID controller.
+     */
+    @Override
+    public TrcPidController.FFCoefficients getMotorPositionFFCoefficients()
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorPositionFFCoefficients.");
+    }   //getMotorPositionFFCoefficients
+
+    /**
+     * This method sets the FeedForward coefficients of the motor controller's current PID controller.
+     *
+     * @param ffCoeffs specifies the FeedForward coefficients to set.
+     */
+    @Override
+    public void setMotorCurrentFFCoefficients(TrcPidController.FFCoefficients ffCoeffs)
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support setMotorCurrentFFCoefficients.");
+    }   //setMotorCurrentFFCoefficients
+
+    /**
+     * This method returns the FeedForward coefficients of the motor controller's current PID controller.
+     *
+     * @return FeedForward coefficients of the motor's current PID controller.
+     */
+    @Override
+    public TrcPidController.FFCoefficients getMotorCurrentFFCoefficients()
+    {
+        throw new UnsupportedOperationException(instanceName + " does not support getMotorCurrentFFCoefficients.");
+    }   //getMotorCurrentFFCoefficients
 
     //
     // The following methods override the software simulation in TrcMotor providing direct support in hardware.
