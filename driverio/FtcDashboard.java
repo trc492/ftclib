@@ -66,7 +66,7 @@ public class FtcDashboard extends TrcDashboard
 
     private static final String moduleName = FtcDashboard.class.getSimpleName();
     private static final long DASHBOARD_TASK_INTERVAL_MS = 10;      // in msec (100 Hz)
-    public static final double DASHBOARD_UPDATE_INTERVAL = 0.2;    // in sec (5 Hz)
+    public static final double DASHBOARD_UPDATE_INTERVAL = 0.2;     // in sec (5 Hz)
 
     private final HashMap<String, StatusUpdate> statusUpdateMap = new HashMap<>();
     private final ArrayList<StatusUpdate> statusUpdateList = new ArrayList<>();
