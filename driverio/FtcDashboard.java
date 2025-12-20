@@ -52,18 +52,6 @@ import trclib.timer.TrcTimer;
  */
 public class FtcDashboard extends TrcDashboard
 {
-    public interface StatusUpdate
-    {
-        /**
-         * This method update the dashboard with status info.
-         *
-         * @param lineNum specifies the starting line number to print the subsystem status.
-         * @param slowLoop specifies true if this is a slow loop, false otherwise.
-         * @return updated line number for the next subsystem to print.
-         */
-        int statusUpdate(int lineNum, boolean slowLoop);
-    }   //interface StatusUpdate
-
     private static final String moduleName = FtcDashboard.class.getSimpleName();
     private static final long DASHBOARD_TASK_INTERVAL_MS = 10;      // in msec (100 Hz)
     public static final double DASHBOARD_UPDATE_INTERVAL = 0.2;     // in sec (5 Hz)
