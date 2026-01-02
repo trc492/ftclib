@@ -430,7 +430,7 @@ public class FtcLimelightVision
                     moduleName,
                     "TargetPose(Id=%d, 3dPos=%s, 3dOrient=%s, Tx/Ty=%.3f/%.3f, trcPose=%s, dist=%.3f)",
                     fiducialResult.getFiducialId(), posTargetFromRobot, pose3DTargetFromRobot.getOrientation(),
-                    llResult.getTx(), llResult.getTy(), targetPose, targetDepth);
+                    fiducialResult.getTargetXDegrees(), fiducialResult.getTargetYDegrees(), targetPose, targetDepth);
             }
             else
             {
