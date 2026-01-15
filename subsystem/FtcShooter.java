@@ -86,12 +86,28 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param isFollower specifies true if motor2 is a follower of motor1, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor2(String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted)
+        public Params setShooterMotor2(
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean isFollower)
         {
-            this.shooterMotor2Params =
-                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            if (shooterMotor1Params == null)
+            {
+                throw new IllegalStateException("Need to set motor1 parameters first.");
+            }
+
+            if (isFollower)
+            {
+                shooterMotor1Params.addFollowerMotor(motorName, motorType, motorInverted);
+                this.shooterMotor2Params = null;
+            }
+            else
+            {
+                this.shooterMotor2Params =
+                    new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            }
+
             return this;
         }   //setShooterMotor2
 

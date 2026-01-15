@@ -78,6 +78,10 @@ public class FtcMotorActuator
         public boolean externalEncoderInverted = false;
         public boolean externalEncoderWrapped = true;
 
+        public double positionScale = 1.0;
+        public double positionOffset = 0.0;
+        public double positionZeroOffset = 0.0;
+
         public double[] positionPresets = null;
         public double positionPresetTolerance = 0.0;
 
@@ -99,6 +103,9 @@ public class FtcMotorActuator
                    "\nencoderName=" + externalEncoderName +
                    ",encoderInverted=" + externalEncoderInverted +
                    ",encoderWrapped=" + externalEncoderWrapped +
+                   "\nposScale=" + positionScale +
+                   ",posOffset=" + positionOffset +
+                   ",posZeroOffset=" + positionZeroOffset +
                    "\nposPresets=" + Arrays.toString(positionPresets) +
                    ",posPresetTolerance=" + positionPresetTolerance;
         }   //toString
@@ -228,6 +235,34 @@ public class FtcMotorActuator
         }   //setExternalEncoder
 
         /**
+         * This method sets the position sensor scale factor and offset.
+         *
+         * @param scale specifies scale factor to multiply the position sensor reading.
+         * @param offset specifies offset added to the scaled sensor reading.
+         * @param zeroOffset specifies the zero offset for absolute encoder.
+         * @return this object for chaining.
+         */
+        public Params setPositionScaleAndOffset(double scale, double offset, double zeroOffset)
+        {
+            positionScale = scale;
+            positionOffset = offset;
+            positionZeroOffset = zeroOffset;
+            return this;
+        }   //setPositionScaleAndOffset
+
+        /**
+         * This method sets the position sensor scale factor and offset.
+         *
+         * @param scale specifies scale factor to multiply the position sensor reading.
+         * @param offset specifies offset added to the scaled sensor reading.
+         * @return this object for chaining.
+         */
+        public Params setPositionScaleAndOffset(double scale, double offset)
+        {
+            return setPositionScaleAndOffset(scale, offset, 0.0);
+        }   //setPositionScaleAndOffset
+
+        /**
          * This method sets an array of preset positions.
          *
          * @param tolerance specifies the preset tolerance.
@@ -294,6 +329,8 @@ public class FtcMotorActuator
                 followerMotor.follow(motor, params.primaryMotor.inverted != motorInfo.inverted);
             }
         }
+
+        motor.setPositionSensorScaleAndOffset(params.positionScale, params.positionOffset, params.positionZeroOffset);
 
         if (params.positionPresets != null)
         {
