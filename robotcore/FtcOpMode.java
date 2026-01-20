@@ -322,7 +322,6 @@ public abstract class FtcOpMode extends LinearOpMode implements TrcRobot.RobotMo
             globalTracer.traceWarn(
                 moduleName, "Subsystem list is not empty (numSubsystems=" + TrcSubsystem.getNumSubsystems() + ")!");
             TrcSubsystem.clearSubsystemList();
-
         }
 
         setBulkCachingModeEnabled(true);
