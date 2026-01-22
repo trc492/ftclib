@@ -76,7 +76,7 @@ public class FtcShooter
         public Params setShooterMotor1(String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted)
         {
             this.shooterMotor1Params =
-                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
             return this;
         }   //setShooterMotor1
 
@@ -105,7 +105,7 @@ public class FtcShooter
             else
             {
                 this.shooterMotor2Params =
-                    new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+                    new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
             }
 
             return this;
@@ -127,7 +127,8 @@ public class FtcShooter
             String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
             boolean encoderInverted, boolean encoderWrapped, TrcShooter.PanTiltParams tiltParams)
         {
-            this.tiltMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            this.tiltMotorParams = new FtcMotorActuator.Params()
+                .setPrimaryMotor(motorName, motorType, motorInverted, true, true);
             if (encoderName != null)
             {
                 tiltMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
@@ -170,7 +171,8 @@ public class FtcShooter
             String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
             boolean encoderInverted, boolean encoderWrapped, TrcShooter.PanTiltParams panParams)
         {
-            this.panMotorParams = new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted);
+            this.panMotorParams = new FtcMotorActuator.Params()
+                .setPrimaryMotor(motorName, motorType, motorInverted, true, true);
             if (encoderName != null)
             {
                 panMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
