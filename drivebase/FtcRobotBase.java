@@ -103,9 +103,7 @@ public class FtcRobotBase
         public double ppdFollowingDistance = 0.0;
         public boolean fastModeEnabled = true;
         // Vision
-        public TrcVision.CameraInfo webCam1 = null;
-        public TrcVision.CameraInfo webCam2 = null;
-        public TrcVision.CameraInfo limelight = null;
+        public TrcVision.CameraInfo[] camInfos = null;
         // Miscellaneous
         public String[] indicatorNames = null;
 
@@ -390,17 +388,12 @@ public class FtcRobotBase
         /**
          * This method sets Vision Info for each camera.
          *
-         * @param webCam1 specifies web cam 1 Vision Info, null if web cam 1 does not exist.
-         * @param webCam2 specifies web cam 2 Vision Info, null if web cam 2 does not exist.
-         * @param limelight specifies limelight Vision Info, null if limelight does not exist.
+         * @param camInfos specifies an array of camera info for the cameras.
          * @return this object for chaining.
          */
-        public RobotInfo setVisionInfo(
-            TrcVision.CameraInfo webCam1, TrcVision.CameraInfo webCam2, TrcVision.CameraInfo limelight)
+        public RobotInfo setVisionInfo(TrcVision.CameraInfo[] camInfos)
         {
-            this.webCam1 = webCam1;
-            this.webCam2 = webCam2;
-            this.limelight = limelight;
+            this.camInfos = camInfos;
             return this;
         }   //setVisionInfo
 
