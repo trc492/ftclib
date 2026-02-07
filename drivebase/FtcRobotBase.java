@@ -391,7 +391,7 @@ public class FtcRobotBase
          * @param camInfos specifies an array of camera info for the cameras.
          * @return this object for chaining.
          */
-        public RobotInfo setVisionInfo(TrcVision.CameraInfo[] camInfos)
+        public RobotInfo setVisionInfo(TrcVision.CameraInfo... camInfos)
         {
             this.camInfos = camInfos;
             return this;
