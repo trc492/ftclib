@@ -33,6 +33,7 @@ import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
@@ -125,9 +126,7 @@ public class FtcLimelightVision
             this.result = result;
             this.objId = objId;
             this.targetGroundOffset = targetGroundOffset;
-            this.robotPose = getRobotPose(
-                cameraInfo.camPose != null?
-                    new TrcPose2D(cameraInfo.camPose.x, cameraInfo.camPose.y, cameraInfo.camPose.yaw): null, useMT2);
+            this.robotPose = getRobotPose(cameraInfo.camPose, useMT2);
             this.vertices = getRotatedRectVertices();
 
             double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
@@ -471,22 +470,46 @@ public class FtcLimelightVision
         /**
          * This method returns the robot's field position as a TrcPose2D.
          *
-         * @param camPose2dOnBot specifies the camera 2D position relative to robot center.
+         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
          * @param useMT2 specifies true to use MegaTag2 to determine robot pose, false to use MegaTag1.
          * @return robot's 2D field position.
          */
-        private TrcPose2D getRobotPose(TrcPose2D camPose2dOnBot, boolean useMT2)
+        private TrcPose2D getRobotPose(TrcPose3D camPose3dOnBot, boolean useMT2)
         {
             TrcPose2D robotPose = null;
             // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
             Pose3D camFieldPose3d = useMT2? llResult.getBotpose_MT2(): llResult.getBotpose();
 
-            if (camFieldPose3d != null && camPose2dOnBot != null)
+            if (camFieldPose3d != null)
             {
                 Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
-                TrcPose2D camFieldPose2d = new TrcPose2D(
-                    camFieldPos.x, camFieldPos.y, 90.0 - camFieldPose3d.getOrientation().getYaw());
-                robotPose = camFieldPose2d.addRelativePose(camPose2dOnBot.invert());
+                double trcX = camFieldPos.x;    // Distance Right in inches
+                double trcY = camFieldPos.y;    // Distance Forward in inches
+                double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
+                // Normalize angle output cleanly to the strict [-180, 180] range
+                trcAngle = (trcAngle + 180.0) % 360.0;
+                if (trcAngle < 0) trcAngle += 360.0;
+                trcAngle -= 180.0;
+                if (camPose3dOnBot != null)
+                {
+                    // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
+                    // Both are CW Positive, so they add together directly.
+                    double totalRotationRad = Math.toRadians(trcAngle + camPose3dOnBot.yaw);
+                    double cosHeading = Math.cos(totalRotationRad);
+                    double sinHeading = Math.sin(totalRotationRad);
+                    // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
+                    double globalCamOffsetX = (camPose3dOnBot.x * cosHeading) - (camPose3dOnBot.y * sinHeading);
+                    double globalCamOffsetY = (camPose3dOnBot.x * sinHeading) + (camPose3dOnBot.y * cosHeading);
+                    // Subtract the global offset values to shift the coordinate center back to the robot core
+                    double robotFieldX = trcX - globalCamOffsetX;
+                    double robotFieldY = trcY - globalCamOffsetY;
+
+                    robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
+                }
+                else
+                {
+                    robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                }
             }
             return robotPose;
         }   //getRobotPose
@@ -501,7 +524,7 @@ public class FtcLimelightVision
     public final Limelight3A limelight;
     private int pipelineIndex = 0;
     private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
-    private Double lastResultTimestamp = null;
+    private Double lastCapturedTimestamp = null;
     private boolean useMT2 = false;
 
     /**
@@ -520,6 +543,7 @@ public class FtcLimelightVision
         this.cameraInfo = cameraInfo;
         this.targetGroundOffset = targetGroundOffset;
         limelight = hardwareMap.get(Limelight3A.class, instanceName);
+        limelight.setPollRateHz(100);
         setPipeline(pipelineIndex);
     }   //FtcLimelightVision
 
@@ -581,29 +605,19 @@ public class FtcLimelightVision
      * This method is called periodically to update Limelight with the current robot heading for more accurate MT2
      * robot pose.
      *
-     * @param robotHeading specifies the robot heading in TRC coordinate convention.
+     * @param trcRobotHeading specifies the robot heading in TRC coordinate convention.
      */
-    public void updateRobotHeading(double robotHeading)
+    public void updateRobotHeading(double trcRobotHeading)
     {
-        // If wd don't have initial robot heading, the robotHeading parameter from odometry is bogus, don't use it.
         if (isVisionEnabled())
         {
-            // Adjust robotHeading from TrcLib coordinate system to FTC coordinate system.
-            double adjHeading = 90.0 - robotHeading;
-            // Do modulus of 360 to get a value from -360 to 360.
-            adjHeading -= ((int)(adjHeading/360.0)) * 360.0;
-            // Convert the range to -180 to 180.
-            if (adjHeading > 180.0)
-            {
-                adjHeading -= 360.0;
-            }
-            else if (adjHeading <= -180.0)
-            {
-                adjHeading += 360.0;
-            }
-            limelight.updateRobotOrientation(adjHeading);
-            tracer.traceDebug(instanceName, "robotHeading=%f, ftcHeading=%f", robotHeading, adjHeading);
-//            useMT2 = true;
+            double limelightYaw = -trcRobotHeading;
+
+            limelightYaw = (limelightYaw + 180.0) % 360.0;
+            if (limelightYaw < 0) limelightYaw += 360.0;
+            limelightYaw -= 180.0;
+            limelight.updateRobotOrientation(limelightYaw);
+            tracer.traceDebug(instanceName, "robotHeading=%f, ftcHeading=%f", trcRobotHeading, limelightYaw);
         }
     }   //updateRobotHeading
 
@@ -661,14 +675,16 @@ public class FtcLimelightVision
         // For some reason if the pipeline is Python script, llResult.isValid always returns false.
         if (llResult != null && (resultType == ResultType.Python || llResult.isValid()))
         {
-            double resultTimestamp = llResult.getTimestamp();
+            // Determine captured time in Control Hub clock.
+            double capturedTimestamp =
+                llResult.getControlHubTimeStamp() - llResult.getCaptureLatency() - llResult.getTargetingLatency();
             // Process only fresh detection.
-            if (lastResultTimestamp == null || resultTimestamp != lastResultTimestamp)
+            if (lastCapturedTimestamp == null || capturedTimestamp != lastCapturedTimestamp)
             {
                 List<?> resultList = null;
                 double[] pythonOutput = null;
                 ArrayList<DetectedObject> detectedList = new ArrayList<>();
-                lastResultTimestamp = resultTimestamp;
+                lastCapturedTimestamp = capturedTimestamp;
 
                 switch (resultType)
                 {
@@ -738,7 +754,7 @@ public class FtcLimelightVision
                         {
                             DetectedObject detectedObj =
                                 new DetectedObject(
-                                    llResult, resultType, resultTimestamp, obj, objId, targetGroundOffset, cameraInfo,
+                                    llResult, resultType, capturedTimestamp, obj, objId, targetGroundOffset, cameraInfo,
                                     useMT2);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
@@ -754,7 +770,7 @@ public class FtcLimelightVision
                 {
                     DetectedObject detectedObj =
                         new DetectedObject(
-                            llResult, resultType, resultTimestamp, pythonOutput, llResult.getPipelineType(),
+                            llResult, resultType, capturedTimestamp, pythonOutput, llResult.getPipelineType(),
                             targetGroundOffset, cameraInfo, false);
                     detectedList.add(detectedObj);
                     detectedObjs = detectedList;

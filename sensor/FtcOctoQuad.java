@@ -179,9 +179,11 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
 
     /**
      * This method resets the position of the specified encoder.
+     *
+     * @param position not applicable.
      */
     @Override
-    public void reset()
+    public void reset(double position)
     {
         tracer.traceDebug(instanceName, "Reset encoder " + encIndex);
         octoQuad.resetSinglePosition(encIndex);
@@ -306,7 +308,7 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
     public void resetOdometry(boolean resetHardware)
     {
         // External encoder doesn't support soft reset.
-        reset();
+        reset(0.0);
         synchronized (odometry)
         {
             odometry.prevTimestamp = odometry.currTimestamp = TrcTimer.getCurrentTime();

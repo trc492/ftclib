@@ -386,7 +386,6 @@ public class FtcMotorActuator
         {
             case DcMotor:
                 motor = new FtcDcMotor(motorInfo.name, sensors);
-                motor.resetFactoryDefault();
                 break;
 
             case CRServo:
@@ -400,6 +399,10 @@ public class FtcMotorActuator
 
         if (motor != null)
         {
+            // Perform motor configurations here.
+            // Most of the configurations are supported by all motors, but some may not and may throw
+            // UnsupportedOperationException. For those configurations, we will put them in a try-catch
+            // block and ignore the exception.
             motor.setMotorInverted(motorInfo.inverted);
 
             if (motorInfo.voltageCompEnabled)
@@ -407,9 +410,15 @@ public class FtcMotorActuator
                 motor.setVoltageCompensationEnabled(TrcUtil.BATTERY_NOMINAL_VOLTAGE);
             }
 
-            if (motorInfo.brakeModeEnabled != null)
+            try
             {
-                motor.setBrakeModeEnabled(motorInfo.brakeModeEnabled);
+                if (motorInfo.brakeModeEnabled != null)
+                {
+                    motor.setBrakeModeEnabled(motorInfo.brakeModeEnabled);
+                }
+            }
+            catch (UnsupportedOperationException ignored)
+            {
             }
         }
 

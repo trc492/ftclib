@@ -39,8 +39,8 @@ public class FtcMecanumBase extends FtcRobotBase
     {
         super(robotInfo);
         TrcMecanumDrive driveBase = new TrcMecanumDrive(
-            driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
-            driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT], gyro);
+            gyro, driveMotors[INDEX_FRONT_LEFT], driveMotors[INDEX_BACK_LEFT],
+            driveMotors[INDEX_FRONT_RIGHT], driveMotors[INDEX_BACK_RIGHT]);
         configDriveBase(driveBase);
     }   //FtcMecanumBase
 

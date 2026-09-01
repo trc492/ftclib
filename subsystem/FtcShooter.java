@@ -40,7 +40,9 @@ public class FtcShooter
     public static class Params
     {
         private FtcMotorActuator.Params shooterMotor1Params = null;
+        private boolean shooterMotor1HasVelTrigger = false;
         private FtcMotorActuator.Params shooterMotor2Params = null;
+        private boolean shooterMotor2HasVelTrigger = false;
 
         private FtcMotorActuator.Params tiltMotorParams = null;
         private TrcShooter.PanTiltParams tiltParams = null;
@@ -58,7 +60,9 @@ public class FtcShooter
         public String toString()
         {
             return "shooterMotor1Params=" + shooterMotor1Params +
+                    ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
                    "\nshooterMotor2Params=" + shooterMotor2Params +
+                    ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
                    "\ntiltMotorParams=" + tiltMotorParams +
                    ",tiltParams=" + tiltParams +
                    "\npanMotorParams=" + panMotorParams +
@@ -71,12 +75,15 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor1(String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted)
+        public Params setShooterMotor1(
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean hasVelocityTrigger)
         {
             this.shooterMotor1Params =
                 new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
+            this.shooterMotor1HasVelTrigger = hasVelocityTrigger;
             return this;
         }   //setShooterMotor1
 
@@ -86,11 +93,14 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
+         *        Not applicable if isFollower is true.
          * @param isFollower specifies true if motor2 is a follower of motor1, false otherwise.
          * @return this object for chaining.
          */
         public Params setShooterMotor2(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean isFollower)
+            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean hasVelocityTrigger,
+            boolean isFollower)
         {
             if (shooterMotor1Params == null)
             {
@@ -106,6 +116,7 @@ public class FtcShooter
             {
                 this.shooterMotor2Params =
                     new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
+                this.shooterMotor2HasVelTrigger = hasVelocityTrigger;
             }
 
             return this;
@@ -234,7 +245,8 @@ public class FtcShooter
             params.panMotorParams != null? new FtcMotorActuator(params.panMotorParams).getMotor(): null;
 
         shooter = new TrcShooter(
-            instanceName, shooterMotor1, shooterMotor2, tiltMotor, params.tiltParams, panMotor, params.panParams);
+            instanceName, shooterMotor1, params.shooterMotor1HasVelTrigger, shooterMotor2,
+            params.shooterMotor2HasVelTrigger, tiltMotor, params.tiltParams, panMotor, params.panParams);
     }   //FtcShooter
 
     /**

@@ -110,9 +110,11 @@ public class FtcAnalogEncoder implements TrcEncoder
 
     /**
      * This method resets the encoder revolution counter (Cardinal Converter).
+     *
+     * @param position not applicable.
      */
     @Override
-    public void reset()
+    public void reset(double position)
     {
         tracer.traceDebug(instanceName, "Reset encoder.");
         if (wrapValueConverter != null)
@@ -129,8 +131,7 @@ public class FtcAnalogEncoder implements TrcEncoder
     @Override
     public double getRawPosition()
     {
-        double pos = analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
-        return pos;
+        return analogInput.getRawData(0, DataType.NORMALIZED_DATA).value;
     }   //getRawPosition
 
     /**

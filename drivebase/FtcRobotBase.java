@@ -111,20 +111,20 @@ public class FtcRobotBase
          * This method sets basic robot info.
          *
          * @param robotName specifies robot name.
-         * @param robotLength specifies robot length.
          * @param robotWidth specifies robot width.
-         * @param wheelBaseLength specifies wheel base length.
+         * @param robotLength specifies robot length.
          * @param wheelBaseWidth specifies wheel base width.
+         * @param wheelBaseLength specifies wheel base length.
          * @return this object for chaining.
          */
         public RobotInfo setRobotInfo(
-            String robotName, double robotLength, double robotWidth, double wheelBaseLength, double wheelBaseWidth)
+            String robotName, double robotWidth, double robotLength, double wheelBaseWidth, double wheelBaseLength)
         {
             this.robotName = robotName;
-            this.robotLength = robotLength;
             this.robotWidth = robotWidth;
-            this.wheelBaseLength = wheelBaseLength;
+            this.robotLength = robotLength;
             this.wheelBaseWidth = wheelBaseWidth;
+            this.wheelBaseLength = wheelBaseLength;
             return this;
         }   //setRobotInfo
 

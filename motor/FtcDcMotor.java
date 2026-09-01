@@ -134,7 +134,7 @@ public class FtcDcMotor extends TrcMotor
     @Override
     public void setStatorCurrentLimit(double currentLimit)
     {
-        throw new UnsupportedOperationException("CRServo does not support setStatorCurrentLimit.");
+        throw new UnsupportedOperationException(instanceName + " does not support setStatorCurrentLimit.");
     }   //setStatorCurrentLimit
 
     /**
@@ -332,10 +332,15 @@ public class FtcDcMotor extends TrcMotor
      * This method resets the motor position sensor, typically an encoder. This is a synchronous call and will take
      * time. It should only be called at robot init time.
      *
-     * @param timeout specifies a timeout period in seconds.
+     * @param position specifies the motor position in rotations.
      */
-    public void resetMotorPosition(double timeout)
+    @Override
+    public void resetMotorPosition(double position)
     {
+        if (position != 0.0)
+        {
+            throw new UnsupportedOperationException(instanceName + " does not support resetMotorPosition to non-zero.");
+        }
         //
         // Resetting the encoder is done by setting the motor controller mode. This is a long operation and has side
         // effect of disabling the motor controller unless you do another setMode to re-enable it. Therefore,
@@ -346,7 +351,7 @@ public class FtcDcMotor extends TrcMotor
         DcMotor.RunMode prevMotorMode = motor.getMode();
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        double expiredTime = TrcTimer.getCurrentTime() + timeout;
+        double expiredTime = TrcTimer.getCurrentTime() + DEF_POS_RESET_TIMEOUT;
         int motorPos = 0;
         while (TrcTimer.getCurrentTime() < expiredTime)
         {
@@ -371,17 +376,7 @@ public class FtcDcMotor extends TrcMotor
         }
         // Restore previous motor mode.
         motor.setMode(prevMotorMode);
-        tracer.traceDebug(instanceName, "timeout=" + timeout + ",pos=" + motorPos);
-    }   //resetMotorPosition
-
-    /**
-     * This method resets the motor position sensor, typically an encoder. This is a synchronous call and will take
-     * time. It should only be called at robot init time.
-     */
-    @Override
-    public void resetMotorPosition()
-    {
-        resetMotorPosition(DEF_POS_RESET_TIMEOUT);
+        tracer.traceDebug(instanceName, "timeout=" + DEF_POS_RESET_TIMEOUT + ",pos=" + motorPos);
     }   //resetMotorPosition
 
     /**

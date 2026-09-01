@@ -318,10 +318,12 @@ public class FtcCRServo extends TrcMotor
     }   //isMotorPositionSensorInverted
 
     /**
-     * This method resets the motor position sensor, typically an encoder.
+     * This method resets the motor position sensor, typically an encoder to the given position.
+     *
+     * @param position specifies the motor position in rotations.
      */
     @Override
-    public void resetMotorPosition()
+    public void resetMotorPosition(double position)
     {
         throw new UnsupportedOperationException(instanceName + " does not support position sensor.");
     }   //resetMotorPosition
