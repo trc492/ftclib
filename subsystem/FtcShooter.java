@@ -25,6 +25,7 @@ package ftclib.subsystem;
 import androidx.annotation.NonNull;
 
 import ftclib.motor.FtcMotorActuator;
+import ftclib.motor.FtcMotorActuator.MotorType;
 import trclib.motor.TrcMotor;
 import trclib.subsystem.TrcShooter;
 
@@ -60,9 +61,9 @@ public class FtcShooter
         public String toString()
         {
             return "shooterMotor1Params=" + shooterMotor1Params +
-                    ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
+                   ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
                    "\nshooterMotor2Params=" + shooterMotor2Params +
-                    ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
+                   ",shooterMotor2HasVelTrigger=" + shooterMotor2HasVelTrigger +
                    "\ntiltMotorParams=" + tiltMotorParams +
                    ",tiltParams=" + tiltParams +
                    "\npanMotorParams=" + panMotorParams +
@@ -75,14 +76,18 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
          * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
          * @return this object for chaining.
          */
         public Params setShooterMotor1(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean hasVelocityTrigger)
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, boolean hasVelocityTrigger)
         {
             this.shooterMotor1Params =
-                new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
+                new FtcMotorActuator.Params().setPrimaryMotor(
+                    motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
             this.shooterMotor1HasVelTrigger = hasVelocityTrigger;
             return this;
         }   //setShooterMotor1
@@ -93,14 +98,16 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
          * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
          *        Not applicable if isFollower is true.
          * @param isFollower specifies true if motor2 is a follower of motor1, false otherwise.
          * @return this object for chaining.
          */
         public Params setShooterMotor2(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, boolean hasVelocityTrigger,
-            boolean isFollower)
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, boolean hasVelocityTrigger, boolean isFollower)
         {
             if (shooterMotor1Params == null)
             {
@@ -109,13 +116,15 @@ public class FtcShooter
 
             if (isFollower)
             {
-                shooterMotor1Params.addFollowerMotor(motorName, motorType, motorInverted);
+                shooterMotor1Params.addFollowerMotor(
+                    motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
                 this.shooterMotor2Params = null;
             }
             else
             {
                 this.shooterMotor2Params =
-                    new FtcMotorActuator.Params().setPrimaryMotor(motorName, motorType, motorInverted, true, false);
+                    new FtcMotorActuator.Params().setPrimaryMotor(
+                        motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
                 this.shooterMotor2HasVelTrigger = hasVelocityTrigger;
             }
 
@@ -128,6 +137,8 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
          * @param encoderName specifies the external encoder name, null if none.
          * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
          * @param encoderWrapped specifies true if encoder value wraps, false otherwise.
@@ -135,11 +146,12 @@ public class FtcShooter
          * @return this object for chaining.
          */
         public Params setTiltMotor(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
-            boolean encoderInverted, boolean encoderWrapped, TrcShooter.PanTiltParams tiltParams)
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, String encoderName, boolean encoderInverted, boolean encoderWrapped,
+            TrcShooter.PanTiltParams tiltParams)
         {
             this.tiltMotorParams = new FtcMotorActuator.Params()
-                .setPrimaryMotor(motorName, motorType, motorInverted, true, true);
+                .setPrimaryMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
             if (encoderName != null)
             {
                 tiltMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
@@ -172,6 +184,8 @@ public class FtcShooter
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
          * @param encoderName specifies the external encoder name, null if none.
          * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
          * @param encoderWrapped specifies true if encoder value wraps, false otherwise.
@@ -179,11 +193,12 @@ public class FtcShooter
          * @return this object for chaining.
          */
         public Params setPanMotor(
-            String motorName, FtcMotorActuator.MotorType motorType, boolean motorInverted, String encoderName,
-            boolean encoderInverted, boolean encoderWrapped, TrcShooter.PanTiltParams panParams)
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, String encoderName, boolean encoderInverted, boolean encoderWrapped,
+            TrcShooter.PanTiltParams panParams)
         {
             this.panMotorParams = new FtcMotorActuator.Params()
-                .setPrimaryMotor(motorName, motorType, motorInverted, true, true);
+                .setPrimaryMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
             if (encoderName != null)
             {
                 panMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
@@ -228,15 +243,11 @@ public class FtcShooter
         }
 
         TrcMotor shooterMotor1 = new FtcMotorActuator(params.shooterMotor1Params).getMotor();
-        // Use Coast Mode for shooter motor.
-        shooterMotor1.setBrakeModeEnabled(false);
 
         TrcMotor shooterMotor2 = null;
         if (params.shooterMotor2Params != null && params.shooterMotor2Params.primaryMotor != null)
         {
             shooterMotor2 = new FtcMotorActuator(params.shooterMotor2Params).getMotor();
-            // Use Coast Mode for shooter motor.
-            shooterMotor2.setBrakeModeEnabled(false);
         }
 
         TrcMotor tiltMotor =

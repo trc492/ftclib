@@ -44,22 +44,15 @@ import trclib.vision.TrcVision;
  */
 public class FtcRobotBase
 {
-    public static final int INDEX_FRONT_LEFT = 0;
-    public static final int INDEX_FRONT_RIGHT = 1;
-    public static final int INDEX_BACK_LEFT = 2;
-    public static final int INDEX_BACK_RIGHT = 3;
-    public static final int INDEX_CENTER_LEFT = 4;
-    public static final int INDEX_CENTER_RIGHT = 5;
-
     /**
      * This class contains the Common Robot Info.
      */
     public static class RobotInfo
     {
         public String robotName = null;
-        // Robot Dimensions
-        public double robotLength = 0.0, robotWidth = 0.0;
-        public double wheelBaseLength = 0.0, wheelBaseWidth = 0.0;
+        // Robot Characteristics.
+        public double robotWidth = 0.0, robotLength = 0.0;
+        public double wheelBaseWidth = 0.0, wheelBaseLength = 0.0;
         // IMU
         public String imuName = null;
         public RevHubOrientationOnRobot.LogoFacingDirection hubLogoDirection = null;
@@ -70,8 +63,6 @@ public class FtcRobotBase
         public boolean[] driveMotorInverted = null;
         // DriveBase Odometry
         public TrcDriveBase.OdometryType odometryType = null;
-        // Drive Motor Odometry
-        public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // Odometry Wheels
         public Double odWheelXScale = null;
         public Double odWheelYScale = null;
@@ -86,6 +77,8 @@ public class FtcRobotBase
         // Absolute Odometry
         public TrcDriveBaseOdometry absoluteOdometry = null;
         public Double headingWrapRangeLow = null, headingWrapRangeHigh = null;
+        // Drive Motor Odometry
+        public double xDrivePosScale = 1.0, yDrivePosScale = 1.0;
         // DriveBase Parameters
         public TrcDriveBase.BaseParams baseParams = null;
         // PID Ramp Rates
@@ -174,34 +167,6 @@ public class FtcRobotBase
             this.driveMotorInverted = motorInverted;
             return this;
         }   //setDriveMotorInfo
-
-        /**
-         * This method sets Drive Base Odometry to use drive motor encoders.
-         *
-         * @param xPosScale specifies the odometry scale in the X direction.
-         * @param yPosScale specifies the odometry scale in the Y direction.
-         * @return this object for chaining.
-         */
-        public RobotInfo setMotorOdometry(double xPosScale, double yPosScale)
-        {
-            this.odometryType = TrcDriveBase.OdometryType.MotorOdometry;
-            this.xDrivePosScale = xPosScale;
-            this.yDrivePosScale = yPosScale;
-            return this;
-        }   //setMotorOdometry
-
-        /**
-         * This method sets Drive Base Odometry to use drive motor encoders.
-         *
-         * @param yPosScale specifies the odometry scale in the Y direction.
-         * @return this object for chaining.
-         */
-        public RobotInfo setMotorOdometry(double yPosScale)
-        {
-            this.odometryType = TrcDriveBase.OdometryType.MotorOdometry;
-            this.yDrivePosScale = yPosScale;
-            return this;
-        }   //setMotorOdometry
 
         /**
          * This method sets Drive Base Odometry to use Odometry Wheel pods and specifies their parameters.
@@ -316,6 +281,34 @@ public class FtcRobotBase
         }   //setSparkfunOTOS
 
         /**
+         * This method sets Drive Base Odometry to use drive motor encoders.
+         *
+         * @param xPosScale specifies the odometry scale in the X direction.
+         * @param yPosScale specifies the odometry scale in the Y direction.
+         * @return this object for chaining.
+         */
+        public RobotInfo setMotorOdometry(double xPosScale, double yPosScale)
+        {
+            this.odometryType = TrcDriveBase.OdometryType.MotorOdometry;
+            this.xDrivePosScale = xPosScale;
+            this.yDrivePosScale = yPosScale;
+            return this;
+        }   //setMotorOdometry
+
+        /**
+         * This method sets Drive Base Odometry to use drive motor encoders.
+         *
+         * @param yPosScale specifies the odometry scale in the Y direction.
+         * @return this object for chaining.
+         */
+        public RobotInfo setMotorOdometry(double yPosScale)
+        {
+            this.odometryType = TrcDriveBase.OdometryType.MotorOdometry;
+            this.yDrivePosScale = yPosScale;
+            return this;
+        }   //setMotorOdometry
+
+        /**
          * This method sets the Drive Base tunable parameters.
          *
          * @param baseParams specifies the tunable parameters.
@@ -325,7 +318,7 @@ public class FtcRobotBase
         {
             this.baseParams = baseParams;
             return this;
-        }   //setTuneParams
+        }   //setBaseParams
 
         /**
          * This method sets the maximum ramp rate for each DOF.
@@ -388,7 +381,7 @@ public class FtcRobotBase
         /**
          * This method sets Vision Info for each camera.
          *
-         * @param camInfos specifies an array of camera info for the cameras.
+         * @param camInfos specifies an array of camera info.
          * @return this object for chaining.
          */
         public RobotInfo setVisionInfo(TrcVision.CameraInfo... camInfos)
@@ -408,6 +401,7 @@ public class FtcRobotBase
             this.indicatorNames = indicatorNames;
             return this;
         }   //setIndicators
+
     }   //class RobotInfo
 
     public final RobotInfo robotInfo;
@@ -513,6 +507,7 @@ public class FtcRobotBase
                     robotInfo.baseParams.turnPidCoeffs, robotInfo.baseParams.turnPidTolerance,
                     driveBase::getHeading);
             }
+
             pidCtrl = pidDrive.getYPidCtrl();
             pidCtrl.setOutputLimit(robotInfo.baseParams.yDrivePowerLimit);
             pidCtrl.setRampRate(robotInfo.yDriveMaxPidRampRate);
@@ -540,6 +535,10 @@ public class FtcRobotBase
             purePursuitDrive.setStallDetectionEnabled(robotInfo.pidStallDetectionEnabled);
             purePursuitDrive.setSquidModeEnabled(robotInfo.enablePurePursuitDriveSquareRootPid);
             purePursuitDrive.setFastModeEnabled(robotInfo.fastModeEnabled);
+            purePursuitDrive.setMotionProfileParameters(
+                robotInfo.baseParams.profiledMaxDriveVelocity,
+                robotInfo.baseParams.profiledMaxDriveAcceleration,
+                robotInfo.baseParams.profiledMaxDriveDeceleration);
         }
 
         if (robotInfo.odometryType == TrcDriveBase.OdometryType.OdometryWheels)

@@ -24,10 +24,7 @@ package ftclib.subsystem;
 
 import androidx.annotation.NonNull;
 
-import java.util.Arrays;
-
 import ftclib.motor.FtcServoActuator;
-import trclib.motor.TrcServo;
 import trclib.subsystem.TrcDifferentialServoWrist;
 
 /**

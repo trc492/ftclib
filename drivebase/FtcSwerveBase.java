@@ -32,6 +32,7 @@ import java.util.Scanner;
 import ftclib.driverio.FtcDashboard;
 import ftclib.motor.FtcMotorActuator;
 import ftclib.sensor.FtcAnalogEncoder;
+import trclib.drivebase.TrcDriveBase.MotorIndex;
 import trclib.drivebase.TrcSwerveDrive;
 import trclib.drivebase.TrcSwerveModule;
 import trclib.motor.TrcMotor;
@@ -58,9 +59,10 @@ public class FtcSwerveBase extends FtcRobotBase
         public FtcMotorActuator.MotorType steerMotorType = null;
         public String[] steerMotorNames = null;
         public boolean[] steerMotorInverted = null;
+        // Swerve Parameters.
+        public TrcSwerveDrive.SwerveParams swerveParams = null;
         // Swerve Module parameters.
         public String[] swerveModuleNames = null;
-        public TrcSwerveDrive.SwerveParams swerveParams = null;
 
         /**
          * This method sets steer encoder info.
@@ -121,6 +123,7 @@ public class FtcSwerveBase extends FtcRobotBase
             this.swerveModuleNames = moduleNames;
             return this;
         }   //setSwerveModuleNames
+
     }   //class SwerveInfo
 
     private static final String moduleName = FtcSwerveBase.class.getSimpleName();
@@ -153,8 +156,8 @@ public class FtcSwerveBase extends FtcRobotBase
         swerveModules = createSwerveModules();
         TrcSwerveDrive driveBase = new TrcSwerveDrive(
             gyro, swerveInfo.wheelBaseWidth, swerveInfo.wheelBaseLength,
-            swerveModules[FtcRobotBase.INDEX_FRONT_LEFT], swerveModules[FtcRobotBase.INDEX_BACK_LEFT],
-            swerveModules[FtcRobotBase.INDEX_FRONT_RIGHT], swerveModules[FtcRobotBase.INDEX_BACK_RIGHT]);
+            swerveModules[MotorIndex.FrontLeft.value], swerveModules[MotorIndex.BackLeft.value],
+            swerveModules[MotorIndex.FrontRight.value], swerveModules[MotorIndex.BackRight.value]);
         super.configDriveBase(driveBase);
         this.dashboard = FtcDashboard.getInstance();
     }   //FtcSwerveBase
@@ -183,7 +186,7 @@ public class FtcSwerveBase extends FtcRobotBase
     /**
      * This method creates and configures all steer motors.
      *
-     * @return an array of created steer servos.
+     * @return an array of created steer motors.
      */
     private TrcMotor[] createSteerMotors()
     {
@@ -198,8 +201,8 @@ public class FtcSwerveBase extends FtcRobotBase
                     false)
                 .setExternalEncoder(steerEncoders[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
-            motors[i].setPositionPidParameters(swerveInfo.swerveParams.steerMotorPidParams, null);
             motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
+            motors[i].setPositionPidParameters(swerveInfo.swerveParams.steerMotorPidParams, null);
         }
 
         return motors;
@@ -277,21 +280,21 @@ public class FtcSwerveBase extends FtcRobotBase
             dashboard.displayPrintf(
                 lineNum++, "Count = %d", steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: lf=%f/%f",
-                steerEncoders[FtcSwerveBase.INDEX_FRONT_LEFT].getRawPosition(),
-                calSteerZeros[FtcSwerveBase.INDEX_FRONT_LEFT]/steerZeroCalibrationCount);
+                lineNum++, "Encoder: fl=%.3f/%f",
+                steerEncoders[MotorIndex.FrontLeft.value].getRawPosition(),
+                calSteerZeros[MotorIndex.FrontLeft.value] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: rf=%f/%f",
-                steerEncoders[FtcSwerveBase.INDEX_FRONT_RIGHT].getRawPosition(),
-                calSteerZeros[FtcSwerveBase.INDEX_FRONT_RIGHT]/steerZeroCalibrationCount);
+                lineNum++, "Encoder: fr=%.3f/%f",
+                steerEncoders[MotorIndex.FrontRight.value].getRawPosition(),
+                calSteerZeros[MotorIndex.FrontRight.value] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: lb=%f/%f",
-                steerEncoders[FtcSwerveBase.INDEX_BACK_LEFT].getRawPosition(),
-                calSteerZeros[FtcSwerveBase.INDEX_BACK_LEFT]/steerZeroCalibrationCount);
+                lineNum++, "Encoder: bl=%.3f/%f",
+                steerEncoders[MotorIndex.BackLeft.value].getRawPosition(),
+                calSteerZeros[MotorIndex.BackLeft.value] / steerZeroCalibrationCount);
             dashboard.displayPrintf(
-                lineNum++, "Encoder: rb=%f/%f",
-                steerEncoders[FtcSwerveBase.INDEX_BACK_RIGHT].getRawPosition(),
-                calSteerZeros[FtcSwerveBase.INDEX_BACK_RIGHT]/steerZeroCalibrationCount);
+                lineNum++, "Encoder: br=%.3f/%f",
+                steerEncoders[MotorIndex.BackRight.value].getRawPosition(),
+                calSteerZeros[MotorIndex.BackRight.value] / steerZeroCalibrationCount);
         }
 
         return lineNum;
@@ -394,7 +397,7 @@ public class FtcSwerveBase extends FtcRobotBase
             catch (FileNotFoundException e)
             {
                 tracer.traceWarn(moduleName, "Steering calibration data file not found, using built-in defaults.");
-                steerZeros = null;
+                steerZeros = swerveInfo.steerEncoderZeros.clone();
             }
             catch (NumberFormatException e)
             {
