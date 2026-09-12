@@ -29,6 +29,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -37,8 +38,8 @@ import java.util.Comparator;
 
 import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
-import trclib.robotcore.TrcDbgTrace;
 import trclib.pathdrive.TrcPose2D;
+import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
@@ -64,27 +65,37 @@ public class FtcVisionAprilTag
         public DetectedObject(AprilTagDetection aprilTagDetection)
         {
             this.aprilTagDetection = aprilTagDetection;
-            double side1 = TrcUtil.magnitude(
-                aprilTagDetection.corners[1].x - aprilTagDetection.corners[0].x,
-                aprilTagDetection.corners[1].y - aprilTagDetection.corners[0].y);
-            double side2 = TrcUtil.magnitude(
-                aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x,
-                aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y);
-            if (side2 > side1)
+
+            if (aprilTagDetection instanceof AprilTagSingleDetection)
             {
-                pixelWidth = side1;
-                pixelHeight = side2;
-                rotatedRectAngle = Math.toDegrees(Math.atan(
-                    (aprilTagDetection.corners[1].y - aprilTagDetection.corners[0].y) /
-                    (aprilTagDetection.corners[1].x - aprilTagDetection.corners[0].x)));
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
+                double side1 = TrcUtil.magnitude(
+                    singleDet.corners[1].x - singleDet.corners[0].x,
+                    singleDet.corners[1].y - singleDet.corners[0].y);
+                double side2 = TrcUtil.magnitude(
+                    singleDet.corners[2].x - singleDet.corners[1].x,
+                    singleDet.corners[2].y - singleDet.corners[1].y);
+                if (side2 > side1)
+                {
+                    pixelWidth = side1;
+                    pixelHeight = side2;
+                    rotatedRectAngle = Math.toDegrees(Math.atan(
+                        (singleDet.corners[1].y - singleDet.corners[0].y) /
+                        (singleDet.corners[1].x - singleDet.corners[0].x)));
+                }
+                else
+                {
+                    pixelWidth = side2;
+                    pixelHeight = side1;
+                    rotatedRectAngle = Math.toDegrees(Math.atan(
+                        (singleDet.corners[2].y - singleDet.corners[1].y) /
+                        (singleDet.corners[2].x - singleDet.corners[1].x)));
+                }
             }
             else
             {
-                pixelWidth = side2;
-                pixelHeight = side1;
-                rotatedRectAngle = Math.toDegrees(Math.atan(
-                    (aprilTagDetection.corners[2].y - aprilTagDetection.corners[1].y) /
-                    (aprilTagDetection.corners[2].x - aprilTagDetection.corners[1].x)));
+                // Can't determine rect width, height and angle with cluster detection.
+                pixelWidth = pixelHeight = rotatedRectAngle = 0.0;
             }
         }   //DetectedObject
 
@@ -98,19 +109,24 @@ public class FtcVisionAprilTag
         {
             Rect rect = null;
 
-            if (at.corners != null && at.corners.length > 0)
+            if (at instanceof AprilTagSingleDetection)
             {
-                double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
-                double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) at;
 
-                for (Point point: at.corners)
+                if (singleDet.corners != null && singleDet.corners.length > 0)
                 {
-                    if (point.x < xMin) xMin = point.x;
-                    if (point.x > xMax) xMax = point.x;
-                    if (point.y < yMin) yMin = point.y;
-                    if (point.y > yMax) yMax = point.y;
+                    double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
+                    double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
+                    for (Point point: singleDet.corners)
+                    {
+                        if (point.x < xMin) xMin = point.x;
+                        if (point.x > xMax) xMax = point.x;
+                        if (point.y < yMin) yMin = point.y;
+                        if (point.y > yMax) yMax = point.y;
+                    }
+                    rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
                 }
-                rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
             }
 
             return rect;
@@ -187,7 +203,7 @@ public class FtcVisionAprilTag
             {
                 // Get pose from AprilTag detection ftcPose.
                 pose = new TrcPose2D(
-                    aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.yaw);
+                    aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.bearing);
             }
 
             return pose;
@@ -201,8 +217,8 @@ public class FtcVisionAprilTag
         @Override
         public Double getObjectWidth()
         {
-            // AprilTag detection does not provide detected object width.
-            return null;
+            return aprilTagDetection instanceof AprilTagSingleDetection?
+                ((AprilTagSingleDetection) aprilTagDetection).metadata.tagsize: null;
         }   //getObjectWidth
 
         /**
@@ -213,8 +229,7 @@ public class FtcVisionAprilTag
         @Override
         public Double getObjectDepth()
         {
-            // AprilTag detection does not provide detected object depth.
-            return null;
+            return aprilTagDetection.ftcPose.range;
         }   //getObjectDepth
 
         /**
@@ -227,17 +242,22 @@ public class FtcVisionAprilTag
         {
             Point[] vertices = null;
 
-            if (aprilTagDetection.corners != null)
+            if (aprilTagDetection instanceof AprilTagSingleDetection)
             {
-                if (aprilTagDetection.corners.length == 4)
+                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
+
+                if (singleDet.corners != null)
                 {
-                    vertices = aprilTagDetection.corners;
-                }
-                else
-                {
-                    throw new RuntimeException(
-                        "Object rectangle should have only 4 corners but found " + aprilTagDetection.corners.length +
-                        "corners.");
+                    if (singleDet.corners.length == 4)
+                    {
+                        vertices = singleDet.corners;
+                    }
+                    else
+                    {
+                        throw new RuntimeException(
+                            "Object rectangle should have only 4 corners but found " + singleDet.corners.length +
+                            "corners.");
+                    }
                 }
             }
 
@@ -255,10 +275,7 @@ public class FtcVisionAprilTag
         {
             if (aprilTagDetection.ftcPose != null)
             {
-                return "{id=" + aprilTagDetection.id +
-                       ",center=" + aprilTagDetection.center +
-                       ",rect=" + getObjectRect() +
-                       ",ftcPose=(x=" + aprilTagDetection.ftcPose.x +
+                return "{ftcPose=(x=" + aprilTagDetection.ftcPose.x +
                        ",y=" + aprilTagDetection.ftcPose.y +
                        ",z=" + aprilTagDetection.ftcPose.z +
                        ",yaw=" + aprilTagDetection.ftcPose.yaw +
@@ -266,20 +283,25 @@ public class FtcVisionAprilTag
                        ",roll=" + aprilTagDetection.ftcPose.roll +
                        ",range=" + aprilTagDetection.ftcPose.range +
                        ",bearing=" + aprilTagDetection.ftcPose.bearing +
-                       ",elevation=" + aprilTagDetection.ftcPose.elevation +
-                       ",fieldPos=" + aprilTagDetection.metadata.fieldPosition +
-                       ",hamming=" + aprilTagDetection.hamming +
-                       ",decisionMargin=" + aprilTagDetection.decisionMargin +
-                       "},rotatedRect=(width=" + getPixelWidth() +
+                       ",elevation=" + aprilTagDetection.ftcPose.elevation + ")" +
+
+                       ",robotPose=(" + aprilTagDetection.robotPose + ")" +
+                       ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
+                       ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
+
+                       ",rect=" + getObjectRect() +
+                       ",rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
-                       ",angle=" + getRotatedRectAngle();
+                       ",angle=" + getRotatedRectAngle() + ")";
             }
             else
             {
-                return "{id=" + aprilTagDetection.id +
-                       ",center=" + aprilTagDetection.center +
+                return "{robotPose=" + aprilTagDetection.robotPose +
+                       ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
+                       ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
+
                        ",rect=" + getObjectRect() +
-                       "},rotatedRect=(width=" + getPixelWidth() +
+                       ",rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
                        ",angle=" + getRotatedRectAngle();
             }
@@ -415,13 +437,13 @@ public class FtcVisionAprilTag
         {
             ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsList = new ArrayList<>();
 
-            for (AprilTagDetection detection : targets)
+            for (AprilTagDetection aprilTagDet: targets)
             {
-                // Check for ID match if provided.
-                if (aprilTagIds == null || matchAprilTagId(detection.id, aprilTagIds) != -1)
+                if (aprilTagIds == null || aprilTagDet instanceof AprilTagSingleDetection &&
+                    matchAprilTagId(((AprilTagSingleDetection) aprilTagDet).id, aprilTagIds) != -1)
                 {
                     TrcVisionTargetInfo<DetectedObject> targetInfo =
-                        new TrcVisionTargetInfo<>(new DetectedObject(detection));
+                        new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet));
                     tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
                     targetsList.add(targetInfo);
                 }
@@ -497,9 +519,12 @@ public class FtcVisionAprilTag
 
         if (object != null)
         {
+            AprilTagSingleDetection singleDet =
+                object.detectedObj.aprilTagDetection instanceof AprilTagSingleDetection?
+                    (AprilTagSingleDetection) object.detectedObj.aprilTagDetection: null;
             dashboard.displayPrintf(
-                lineNum++, "AprilTag[%d]: depth=%f, targetPose=%s",
-                object.detectedObj.aprilTagDetection.id, object.objDepth, object.detectedObj.getObjectPose());
+                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s",
+                singleDet != null? singleDet.id: "cluster", object.objDepth, object.detectedObj.getObjectPose());
         }
         else
         {
