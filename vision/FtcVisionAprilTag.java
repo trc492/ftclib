@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
@@ -55,6 +56,7 @@ public class FtcVisionAprilTag
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public AprilTagDetection aprilTagDetection;
+        public Object id;
         public double pixelWidth, pixelHeight, rotatedRectAngle;
 
         /**
@@ -75,6 +77,8 @@ public class FtcVisionAprilTag
                 double side2 = TrcUtil.magnitude(
                     singleDet.corners[2].x - singleDet.corners[1].x,
                     singleDet.corners[2].y - singleDet.corners[1].y);
+
+                id = singleDet.id;
                 if (side2 > side1)
                 {
                     pixelWidth = side1;
@@ -94,6 +98,9 @@ public class FtcVisionAprilTag
             }
             else
             {
+                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDetection;
+
+                id = clusterDet.metadata.name;
                 // Can't determine rect width, height and angle with cluster detection.
                 pixelWidth = pixelHeight = rotatedRectAngle = 0.0;
             }
@@ -289,6 +296,7 @@ public class FtcVisionAprilTag
                        ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
                        ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
 
+                       ",id=" + id +
                        ",rect=" + getObjectRect() +
                        ",rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
@@ -300,6 +308,7 @@ public class FtcVisionAprilTag
                        ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
                        ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
 
+                       ",id=" + id +
                        ",rect=" + getObjectRect() +
                        ",rotatedRect=(width=" + getPixelWidth() +
                        ",height=" + getPixelHeight() +
@@ -439,8 +448,52 @@ public class FtcVisionAprilTag
 
             for (AprilTagDetection aprilTagDet: targets)
             {
-                if (aprilTagIds == null || aprilTagDet instanceof AprilTagSingleDetection &&
-                    matchAprilTagId(((AprilTagSingleDetection) aprilTagDet).id, aprilTagIds) != -1)
+                if (aprilTagDet instanceof AprilTagSingleDetection &&
+                    (aprilTagIds == null ||
+                     matchAprilTagId(((AprilTagSingleDetection) aprilTagDet).id, aprilTagIds) != -1))
+                {
+                    TrcVisionTargetInfo<DetectedObject> targetInfo =
+                        new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet));
+                    tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
+                    targetsList.add(targetInfo);
+                }
+            }
+
+            if (!targetsList.isEmpty())
+            {
+                if (comparator != null && targetsList.size() > 1)
+                {
+                    targetsList.sort(comparator);
+                }
+                targetsInfo = targetsList;
+            }
+        }
+
+        return targetsInfo;
+    }   //getDetectedTargetsInfo
+
+    /**
+     * This method returns an array list of target info on the filtered detected targets.
+     *
+     * @param clusterName specifies the name of the cluster to look for, null if match to any cluster.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+     * @return sorted target info array list.
+     */
+    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
+        String clusterName, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    {
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
+        ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
+
+        if (targets != null)
+        {
+            ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsList = new ArrayList<>();
+
+            for (AprilTagDetection aprilTagDet: targets)
+            {
+                if (aprilTagDet instanceof AprilTagClusterDetection &&
+                    (clusterName == null ||
+                     clusterName.equals(((AprilTagClusterDetection) aprilTagDet).metadata.name)))
                 {
                     TrcVisionTargetInfo<DetectedObject> targetInfo =
                         new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet));
