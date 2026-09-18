@@ -671,6 +671,11 @@ public class FtcLimelightVision
     {
         ArrayList<DetectedObject> detectedObjs = null;
 
+        if (resultType == ResultType.Python && matchIds != null)
+        {
+            limelight.updatePythonInputs((double[]) matchIds);
+        }
+
         LLResult llResult = limelight.getLatestResult();
         // For some reason if the pipeline is Python script, llResult.isValid always returns false.
         if (llResult != null && (resultType == ResultType.Python || llResult.isValid()))
