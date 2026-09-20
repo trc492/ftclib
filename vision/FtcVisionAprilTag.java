@@ -27,6 +27,8 @@ import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -40,7 +42,9 @@ import java.util.Comparator;
 import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcVision;
 import trclib.vision.TrcVisionTargetInfo;
 
 /**
@@ -56,18 +60,24 @@ public class FtcVisionAprilTag
     public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
     {
         public AprilTagDetection aprilTagDetection;
+        public double timestampSec;
         public Object id;
+        public TrcPose2D robotPose;
         public double pixelWidth, pixelHeight, rotatedRectAngle;
 
         /**
          * Constructor: Creates an instance of the object.
          *
          * @param aprilTagDetection specifies the detected april tag object.
+         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
          */
-        public DetectedObject(AprilTagDetection aprilTagDetection)
+        public DetectedObject(AprilTagDetection aprilTagDetection, TrcPose3D camPose3dOnBot)
         {
+            Pose3D robotPose3d = aprilTagDetection.robotPose;
             this.aprilTagDetection = aprilTagDetection;
+            this.timestampSec = aprilTagDetection.frameAcquisitionNanoTime/1000000000.0;
 
+            this.robotPose = getRobotPose(aprilTagDetection.robotPose, camPose3dOnBot);
             if (aprilTagDetection instanceof AprilTagSingleDetection)
             {
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
@@ -105,6 +115,52 @@ public class FtcVisionAprilTag
                 pixelWidth = pixelHeight = rotatedRectAngle = 0.0;
             }
         }   //DetectedObject
+
+        /**
+         * This method returns the robot's field position as a TrcPose2D.
+         *
+         * @param robotPose3d specifies the robot 3D pose from the pose solver.
+         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
+         * @return robot's 2D field position.
+         */
+        private TrcPose2D getRobotPose(Pose3D robotPose3d, TrcPose3D camPose3dOnBot)
+        {
+            TrcPose2D robotPose = null;
+
+            if (robotPose3d != null)
+            {
+                Position camFieldPos = robotPose3d.getPosition().toUnit(DistanceUnit.INCH);
+                double trcX = camFieldPos.x;    // Distance Right in inches
+                double trcY = camFieldPos.y;    // Distance Forward in inches
+                double trcAngle = -robotPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
+                // Normalize angle output cleanly to the strict [-180, 180] range
+                trcAngle = (trcAngle + 180.0) % 360.0;
+                if (trcAngle < 0) trcAngle += 360.0;
+                trcAngle -= 180.0;
+                if (camPose3dOnBot != null)
+                {
+                    // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
+                    // Both are CW Positive, so they add together directly.
+                    double totalRotationRad = Math.toRadians(trcAngle + camPose3dOnBot.yaw);
+                    double cosHeading = Math.cos(totalRotationRad);
+                    double sinHeading = Math.sin(totalRotationRad);
+                    // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
+                    double globalCamOffsetX = (camPose3dOnBot.x * cosHeading) - (camPose3dOnBot.y * sinHeading);
+                    double globalCamOffsetY = (camPose3dOnBot.x * sinHeading) + (camPose3dOnBot.y * cosHeading);
+                    // Subtract the global offset values to shift the coordinate center back to the robot core
+                    double robotFieldX = trcX - globalCamOffsetX;
+                    double robotFieldY = trcY - globalCamOffsetY;
+
+                    robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
+                }
+                else
+                {
+                    robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                }
+            }
+
+            return robotPose;
+        }   //getRobotPose
 
         /**
          * This method calculates the rectangle of the detected AprilTag.
@@ -374,6 +430,7 @@ public class FtcVisionAprilTag
     public final TrcDbgTrace tracer;
     private final FtcDashboard dashboard;
     private final String instanceName;
+    private final TrcVision.CameraInfo cameraInfo;
     private final AprilTagProcessor aprilTagProcessor;
 
     /**
@@ -382,11 +439,12 @@ public class FtcVisionAprilTag
      * @param params specifies the AprilTag parameters, can be null if using default parameters.
      * @param tagFamily specifies the tag family.
      */
-    public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily)
+    public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily, TrcVision.CameraInfo cameraInfo)
     {
         tracer = new TrcDbgTrace();
         dashboard = FtcDashboard.getInstance();
         instanceName = tagFamily.name();
+        this.cameraInfo = cameraInfo;
         // Create the AprilTag processor.
         AprilTagProcessor.Builder builder = new AprilTagProcessor.Builder().setTagFamily(tagFamily);
         if (params != null)
@@ -430,42 +488,24 @@ public class FtcVisionAprilTag
     }   //getVisionProcessor
 
     /**
-     * This method returns an array list of target info on the filtered detected targets.
+     * This method returns an array list of target info on the detected targets.
      *
-     * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
-     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return sorted target info array list.
      */
-    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        int[] aprilTagIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo()
     {
         ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
         ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
 
-        if (targets != null)
+        if (targets != null && !targets.isEmpty())
         {
-            ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsList = new ArrayList<>();
-
+            targetsInfo = new ArrayList<>();
             for (AprilTagDetection aprilTagDet: targets)
             {
-                if (aprilTagDet instanceof AprilTagSingleDetection &&
-                    (aprilTagIds == null ||
-                     matchAprilTagId(((AprilTagSingleDetection) aprilTagDet).id, aprilTagIds) != -1))
-                {
-                    TrcVisionTargetInfo<DetectedObject> targetInfo =
-                        new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet));
-                    tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
-                    targetsList.add(targetInfo);
-                }
-            }
-
-            if (!targetsList.isEmpty())
-            {
-                if (comparator != null && targetsList.size() > 1)
-                {
-                    targetsList.sort(comparator);
-                }
-                targetsInfo = targetsList;
+                TrcVisionTargetInfo<DetectedObject> targetInfo =
+                    new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet, cameraInfo.camPose));
+                tracer.traceDebug(instanceName, "AprilTagInfo=%s", targetInfo);
+                targetsInfo.add(targetInfo);
             }
         }
 
@@ -473,69 +513,84 @@ public class FtcVisionAprilTag
     }   //getDetectedTargetsInfo
 
     /**
-     * This method returns an array list of target info on the filtered detected targets.
-     *
-     * @param clusterName specifies the name of the cluster to look for, null if match to any cluster.
-     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @return sorted target info array list.
-     */
-    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        String clusterName, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
-    {
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-        ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
-
-        if (targets != null)
-        {
-            ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsList = new ArrayList<>();
-
-            for (AprilTagDetection aprilTagDet: targets)
-            {
-                if (aprilTagDet instanceof AprilTagClusterDetection &&
-                    (clusterName == null ||
-                     clusterName.equals(((AprilTagClusterDetection) aprilTagDet).metadata.name)))
-                {
-                    TrcVisionTargetInfo<DetectedObject> targetInfo =
-                        new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet));
-                    tracer.traceDebug(instanceName, "TargetInfo=%s", targetInfo);
-                    targetsList.add(targetInfo);
-                }
-            }
-
-            if (!targetsList.isEmpty())
-            {
-                if (comparator != null && targetsList.size() > 1)
-                {
-                    targetsList.sort(comparator);
-                }
-                targetsInfo = targetsList;
-            }
-        }
-
-        return targetsInfo;
-    }   //getDetectedTargetsInfo
-
-    /**
-     * This method returns the target info of the best detected target.
+     * This method returns the target info of the best detected AprilTag.
      *
      * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
+    public TrcVisionTargetInfo<DetectedObject> getBestDetectedAprilTagInfo(
         int[] aprilTagIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
     {
         TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo(
-            aprilTagIds, comparator);
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo();
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
-            bestTarget = detectedTargets.get(0);
+            for (int i = detectedTargets.size() - 1; i >= 0; i--)
+            {
+                TrcVisionTargetInfo<DetectedObject> targetInfo = detectedTargets.get(i);
+                if (targetInfo.detectedObj.aprilTagDetection instanceof AprilTagClusterDetection ||
+                    aprilTagIds != null && matchAprilTagId((int) targetInfo.detectedObj.id, aprilTagIds) == -1)
+                {
+                    // Not the one we want, remove it from the list.
+                    detectedTargets.remove(i);
+                }
+            }
+
+            if (comparator != null && detectedTargets.size() > 1)
+            {
+                detectedTargets.sort(comparator);
+            }
+
+            if (!detectedTargets.isEmpty())
+            {
+                bestTarget = detectedTargets.get(0);
+            }
         }
 
         return bestTarget;
-    }   //getBestDetectedTargetInfo
+    }   //getBestDetectedAprilTagInfo
+
+    /**
+     * This method returns the target info of the best detected AprilTag cluster.
+     *
+     * @param clusterName specifies the name of the cluster to look for, null if matching for any.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+     * @return information about the best detected target.
+     */
+    public TrcVisionTargetInfo<DetectedObject> getBestDetectedClusterInfo(
+        String clusterName, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    {
+        TrcVisionTargetInfo<DetectedObject> bestTarget = null;
+        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo();
+
+        if (detectedTargets != null && !detectedTargets.isEmpty())
+        {
+            for (int i = detectedTargets.size() - 1; i >= 0; i--)
+            {
+                TrcVisionTargetInfo<DetectedObject> targetInfo = detectedTargets.get(i);
+                if (targetInfo.detectedObj.aprilTagDetection instanceof AprilTagSingleDetection ||
+                    clusterName != null && !clusterName.equals(targetInfo.detectedObj.id))
+                {
+                    // Not the one we want, remove it from the list.
+                    detectedTargets.remove(i);
+                }
+            }
+
+            if (comparator != null && detectedTargets.size() > 1)
+            {
+                detectedTargets.sort(comparator);
+            }
+
+            if (!detectedTargets.isEmpty())
+            {
+                bestTarget = detectedTargets.get(0);
+            }
+        }
+
+        return bestTarget;
+    }   //getBestDetectedClusterInfo
 
     /**
      * This method finds a matching AprilTag ID in the specified array and returns the found index.
@@ -568,16 +623,27 @@ public class FtcVisionAprilTag
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(null, null);
-
+        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedAprilTagInfo(null, null);
         if (object != null)
         {
-            AprilTagSingleDetection singleDet =
-                object.detectedObj.aprilTagDetection instanceof AprilTagSingleDetection?
-                    (AprilTagSingleDetection) object.detectedObj.aprilTagDetection: null;
+            AprilTagSingleDetection singleDet = (AprilTagSingleDetection) object.detectedObj.aprilTagDetection;
             dashboard.displayPrintf(
-                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s",
-                singleDet != null? singleDet.id: "cluster", object.objDepth, object.detectedObj.getObjectPose());
+                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
+                singleDet.id, object.objDepth, object.detectedObj.getObjectPose(), object.detectedObj.robotPose);
+        }
+        else
+        {
+            dashboard.displayPrintf(lineNum++, "");
+        }
+
+        object = getBestDetectedClusterInfo(null, null);
+        if (object != null)
+        {
+            AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) object.detectedObj.aprilTagDetection;
+            dashboard.displayPrintf(
+                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
+                clusterDet.metadata.name, object.objDepth, object.detectedObj.getObjectPose(),
+                object.detectedObj.robotPose);
         }
         else
         {

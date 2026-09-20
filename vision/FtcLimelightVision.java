@@ -92,7 +92,7 @@ public class FtcLimelightVision
     {
         public final LLResult llResult;
         public final ResultType resultType;
-        public final double timestamp;
+        public final double timestampSec;
         public final Object result;
         public final Object objId;
         public final TargetGroundOffset targetGroundOffset;
@@ -109,7 +109,7 @@ public class FtcLimelightVision
          *
          * @param llResult specifies the Limelight detection result.
          * @param resultType specifies the detected object result type.
-         * @param timestamp specifies the control hub result timestamp.
+         * @param timestampSec specifies the control hub result timestamp in seconds.
          * @param result specifies the detected object.
          * @param objId specifies the detected object ID if there is one.
          * @param targetGroundOffset specifies the method to call to get target ground offset.
@@ -117,12 +117,12 @@ public class FtcLimelightVision
          * @param useMT2 specifies true to use MegaTag2 to determine robot pose, false to use MegaTag1.
          */
         public DetectedObject(
-            LLResult llResult, ResultType resultType, double timestamp, Object result, Object objId,
+            LLResult llResult, ResultType resultType, double timestampSec, Object result, Object objId,
             TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo, boolean useMT2)
         {
             this.llResult = llResult;
             this.resultType = resultType;
-            this.timestamp = timestamp;
+            this.timestampSec = timestampSec;
             this.result = result;
             this.objId = objId;
             this.targetGroundOffset = targetGroundOffset;
@@ -524,7 +524,7 @@ public class FtcLimelightVision
     public final Limelight3A limelight;
     private int pipelineIndex = 0;
     private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
-    private Double lastCapturedTimestamp = null;
+    private Double lastCapturedTimestampSec = null;
     private boolean useMT2 = false;
 
     /**
@@ -680,16 +680,17 @@ public class FtcLimelightVision
         // For some reason if the pipeline is Python script, llResult.isValid always returns false.
         if (llResult != null && (resultType == ResultType.Python || llResult.isValid()))
         {
-            // Determine captured time in Control Hub clock.
-            double capturedTimestamp =
-                llResult.getControlHubTimeStamp() - llResult.getCaptureLatency() - llResult.getTargetingLatency();
+            // Determine captured time in Control Hub clock in seconds.
+            double capturedTimestampSec =
+                (llResult.getControlHubTimeStamp() - llResult.getCaptureLatency() - llResult.getTargetingLatency())
+                /1000.0;
             // Process only fresh detection.
-            if (lastCapturedTimestamp == null || capturedTimestamp != lastCapturedTimestamp)
+            if (lastCapturedTimestampSec == null || capturedTimestampSec != lastCapturedTimestampSec)
             {
                 List<?> resultList = null;
                 double[] pythonOutput = null;
                 ArrayList<DetectedObject> detectedList = new ArrayList<>();
-                lastCapturedTimestamp = capturedTimestamp;
+                lastCapturedTimestampSec = capturedTimestampSec;
 
                 switch (resultType)
                 {
@@ -759,7 +760,7 @@ public class FtcLimelightVision
                         {
                             DetectedObject detectedObj =
                                 new DetectedObject(
-                                    llResult, resultType, capturedTimestamp, obj, objId, targetGroundOffset, cameraInfo,
+                                    llResult, resultType, capturedTimestampSec, obj, objId, targetGroundOffset, cameraInfo,
                                     useMT2);
                             detectedList.add(detectedObj);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
@@ -775,7 +776,7 @@ public class FtcLimelightVision
                 {
                     DetectedObject detectedObj =
                         new DetectedObject(
-                            llResult, resultType, capturedTimestamp, pythonOutput, llResult.getPipelineType(),
+                            llResult, resultType, capturedTimestampSec, pythonOutput, llResult.getPipelineType(),
                             targetGroundOffset, cameraInfo, false);
                     detectedList.add(detectedObj);
                     detectedObjs = detectedList;
