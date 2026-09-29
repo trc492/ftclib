@@ -51,8 +51,8 @@ import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
+import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcVision;
-import trclib.vision.TrcVisionTargetInfo;
 
 /**
  * This class implements vision detection using Limelight 3A.
@@ -60,19 +60,6 @@ import trclib.vision.TrcVisionTargetInfo;
 public class FtcLimelightVision
 {
     private static final String moduleName = FtcLimelightVision.class.getSimpleName();
-
-    public interface TargetGroundOffset
-    {
-        /**
-         * This method is called to get the target offset from ground so that vision can accurately calculate the
-         * target position from the camera.
-         *
-         * @param resultType specifies the detected object result type.
-         * @return target ground offset in inches.
-         */
-        double getOffset(ResultType resultType);
-
-    }   //interface TargetGroundOffset
 
     public enum ResultType
     {
@@ -85,24 +72,20 @@ public class FtcLimelightVision
     }   //enum ResultType
 
     /**
-     * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
-     * it to provide a method to return the detected object rect and area.
+     * This class encapsulates info of the detected target. It extends TrcVision.TargetInfo that requires this class
+     * to provide methods to return info of the detected target.
      */
-    public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
+    public static class TargetInfo extends TrcVision.TargetInfo
     {
+        private static final boolean USE_MT2 = false;
         public final LLResult llResult;
         public final ResultType resultType;
         public final double timestampSec;
         public final Object result;
         public final Object objId;
-        public final TargetGroundOffset targetGroundOffset;
-        public final TrcPose2D targetPose;
-        public final TrcPose2D robotPose;
-        public final Point[] vertices;
-        public final double pixelWidth, pixelHeight, rotatedRectAngle;
-        public final Rect targetRect;
-        public final double targetArea;
-        public double targetDepth;
+        private final Double targetKnownWidth;
+        private final double targetGroundOffset;
+        private final TrcHomographyMapper homographyMapper;
 
         /**
          * Constructor: Creates an instance of the object.
@@ -112,44 +95,27 @@ public class FtcLimelightVision
          * @param timestampSec specifies the control hub result timestamp in seconds.
          * @param result specifies the detected object.
          * @param objId specifies the detected object ID if there is one.
-         * @param targetGroundOffset specifies the method to call to get target ground offset.
-         * @param cameraInfo specifies the camera information.
-         * @param useMT2 specifies true to use MegaTag2 to determine robot pose, false to use MegaTag1.
+         * @param cameraInfo specifies camera info.
+         * @param targetKnownWidth specifies the target's known width in real world unit, can be null if not provided.
+         * @param targetGroundOffset specifies the target offset from ground, can be zero if target is on the ground.
+         * @param homographyMapper specifies Homography Mapper to be used to determine target pose, can be null
+         *        if not provided.
          */
-        public DetectedObject(
+        public TargetInfo(
             LLResult llResult, ResultType resultType, double timestampSec, Object result, Object objId,
-            TargetGroundOffset targetGroundOffset, TrcVision.CameraInfo cameraInfo, boolean useMT2)
+            TrcVision.CameraInfo cameraInfo, Double targetKnownWidth, double targetGroundOffset,
+            TrcHomographyMapper homographyMapper)
         {
+            super(objId != null? objId.toString(): "null", cameraInfo);
             this.llResult = llResult;
             this.resultType = resultType;
             this.timestampSec = timestampSec;
             this.result = result;
             this.objId = objId;
+            this.targetKnownWidth = targetKnownWidth;
             this.targetGroundOffset = targetGroundOffset;
-            this.robotPose = getRobotPose(cameraInfo.camPose, useMT2);
-            this.vertices = getRotatedRectVertices();
-
-            double side1 = TrcUtil.magnitude(vertices[1].x - vertices[0].x, vertices[1].y - vertices[0].y);
-            double side2 = TrcUtil.magnitude(vertices[2].x - vertices[1].x, vertices[2].y - vertices[1].y);
-            if (side2 > side1)
-            {
-                pixelWidth = side1;
-                pixelHeight = side2;
-                rotatedRectAngle = Math.toDegrees(Math.atan(
-                    (vertices[1].y - vertices[0].y) / (vertices[1].x - vertices[0].x)));
-            }
-            else
-            {
-                pixelWidth = side2;
-                pixelHeight = side1;
-                rotatedRectAngle = Math.toDegrees(Math.atan(
-                    (vertices[2].y - vertices[1].y) / (vertices[2].x - vertices[1].x)));
-            }
-            this.targetRect = getObjectRect();
-            this.targetArea = getObjectArea();
-            this.targetPose = getTargetPose(cameraInfo);
-            // getTargetPose call above will also set targetDepth.
-        }   //DetectedObject
+            this.homographyMapper = homographyMapper;
+        }   //TargetInfo
 
         /**
          * This method returns the string form of the target info.
@@ -160,196 +126,418 @@ public class FtcLimelightVision
         @Override
         public String toString()
         {
-            return "{resultType=" + resultType +
+            return super.toString() +
+                   ",resultType=" + resultType +
+                   ",timestamp=" + timestampSec +
                    ",objId=" + objId +
-                   ",targetPose=" + targetPose +
-                   ",robotPose=" + robotPose +
-                   ",rect=" + targetRect +
-                   ",area=" + targetArea +
-                   ",depth=" + targetDepth +
-                   "},rotatedRect=(width=" + getPixelWidth() +
-                   ",height=" + getPixelHeight() +
-                   ",angle=" + getRotatedRectAngle();
+                   ",knownWidth=" + targetKnownWidth +
+                   ",groundOffset=" + targetGroundOffset;
         }   //toString
 
+        //
+        // Implement TrcVision.TargetInfo abstract methods.
+        //
+
         /**
-         * This method returns the rect of the detected object.
+         * This method returns the robot field pose on the ground.
          *
-         * @return rect of the detected object.
+         * @return robot field pose, null if not supported.
          */
         @Override
-        public Rect getObjectRect()
+        public TrcPose2D getRobotPose()
         {
-            Rect rect = null;
-
-            if (vertices != null)
+            if (robotPose == null)
             {
-                double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
-                double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+                // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
+                Pose3D camFieldPose3d = USE_MT2? llResult.getBotpose_MT2(): llResult.getBotpose();
 
-                for (Point vertex: vertices)
+                if (camFieldPose3d != null)
                 {
-                    if (vertex.x < xMin) xMin = vertex.x;
-                    if (vertex.x > xMax) xMax = vertex.x;
-                    if (vertex.y < yMin) yMin = vertex.y;
-                    if (vertex.y > yMax) yMax = vertex.y;
+                    Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
+                    double trcX = camFieldPos.x;    // Distance Right in inches
+                    double trcY = camFieldPos.y;    // Distance Forward in inches
+                    double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
+                    // Normalize angle output cleanly to the strict [-180, 180] range
+                    trcAngle = (trcAngle + 180.0) % 360.0;
+                    if (trcAngle < 0) trcAngle += 360.0;
+                    trcAngle -= 180.0;
+                    if (cameraInfo.camPose != null)
+                    {
+                        // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
+                        // Both are CW Positive, so they add together directly.
+                        double totalRotationRad = Math.toRadians(trcAngle + cameraInfo.camPose.yaw);
+                        double cosHeading = Math.cos(totalRotationRad);
+                        double sinHeading = Math.sin(totalRotationRad);
+                        // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
+                        double globalCamOffsetX =
+                            (cameraInfo.camPose.x * cosHeading) - (cameraInfo.camPose.y * sinHeading);
+                        double globalCamOffsetY =
+                            (cameraInfo.camPose.x * sinHeading) + (cameraInfo.camPose.y * cosHeading);
+                        // Subtract the global offset values to shift the coordinate center back to the robot core
+                        double robotFieldX = trcX - globalCamOffsetX;
+                        double robotFieldY = trcY - globalCamOffsetY;
+
+                        robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
+                    }
+                    else
+                    {
+                        robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                    }
                 }
-                rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
             }
 
-            return rect;
-        }   //getObjectRect
+            return robotPose != null? robotPose.clone(): null;
+        }   //getRobotPose
 
         /**
-         * This method returns the area of the detected object.
+         * This method returns the projected 2D pose on the ground of the detected target relative to the camera.
          *
-         * @return area of the detected object.
+         * @return pose of the detected target relative to camera, null if not supported.
          */
         @Override
-        public double getObjectArea()
+        public TrcPose2D getTargetPose()
         {
-            double area;
-
-            switch (resultType)
+            if (targetPose == null)
             {
-                case Barcode:
-                    area = ((LLResultTypes.BarcodeResult) result).getTargetArea();
-                    break;
+                if (resultType == ResultType.Python)
+                {
+                    double[] pythonOutput = llResult.getPythonOutput();
+                    if (pythonOutput.length == 8 && pythonOutput[0] == 1.0)
+                    {
+                        double bearingDeg = pythonOutput[5];
+                        double bearingRad = Math.toRadians(bearingDeg);
+                        targetDistance = pythonOutput[4];
+                        targetPose = new TrcPose2D(
+                            targetDistance*Math.sin(bearingRad),
+                            targetDistance*Math.cos(bearingRad),
+                            bearingDeg);
+                        TrcDbgTrace.globalTraceDebug(
+                            moduleName, "TargetPose(Id=%.0f, trcPose=%s, dist=%.3f)",
+                            pythonOutput[7], targetPose, targetDistance);
+                    }
+                }
+                else if (resultType == ResultType.Detector)
+                {
+                    LLResultTypes.DetectorResult detectorResult = (LLResultTypes.DetectorResult) result;
+                    if (targetKnownWidth != null)
+                    {
+                        targetPose = getTargetPoseByKnownWidth(targetKnownWidth);
+                    }
+                    else if (homographyMapper != null)
+                    {
+                        // Good but needs camera fixed and Homography calibration.
+                        targetPose = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
+                    }
+                    else if (cameraInfo != null)
+                    {
+                        // Worst because it depends on the camera pitch. The flatter the camera pitch, the bigger
+                        // the error.
+                        targetPose = getTargetPoseByPixelPosition(targetGroundOffset);
+                    }
 
-                case Detector:
-                    area = ((LLResultTypes.DetectorResult) result).getTargetArea();
-                    break;
+                    if (targetPose != null)
+                    {
+                        targetDistance = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                        TrcDbgTrace.globalTraceDebug(
+                            moduleName, "TargetPose(Id=%s, trcPose=%s, dist=%.3f)",
+                            detectorResult.getClassName(), targetPose, targetDistance);
+                    }
+                }
+                else
+                {
+                    Pose3D targetPose3dFromRobot = null;
+                    String id = null;
 
-                case Fiducial:
-                    area = ((LLResultTypes.FiducialResult) result).getTargetArea();
-                    break;
+                    switch (resultType)
+                    {
+                        case Fiducial:
+                            targetPose3dFromRobot = ((LLResultTypes.FiducialResult) result).getTargetPoseRobotSpace();
+                            id = Integer.toString(((LLResultTypes.FiducialResult) result).getFiducialId());
+                            break;
 
-                case Color:
-                    area = ((LLResultTypes.ColorResult) result).getTargetArea();
-                    break;
+                        case Color:
+                            targetPose3dFromRobot = ((LLResultTypes.ColorResult) result).getTargetPoseRobotSpace();
+                            id = resultType.toString();
+                            break;
+                    }
 
-                case Classifier:
-                default:
-                    area = llResult.getTa();
-                    break;
+                    if (targetPose3dFromRobot != null)
+                    {
+                        // AprilTag has accurate 3D info, use it.
+                        Position posTargetFromRobot =
+                            targetPose3dFromRobot.getPosition().toUnit(DistanceUnit.INCH);
+                        targetPose = new TrcPose2D(
+                            posTargetFromRobot.x, posTargetFromRobot.z,
+                            Math.toDegrees(Math.atan2(posTargetFromRobot.x, posTargetFromRobot.z)));
+                        TrcDbgTrace.globalTraceDebug(
+                            moduleName, "TargetPose(Id=%s, 3dPos=%s, 3dOrient=%s, trcPose=%s, dist=%.3f)",
+                            id, posTargetFromRobot, targetPose3dFromRobot.getOrientation(), targetPose, targetDistance);
+                    }
+                    else if (targetKnownWidth != null)
+                    {
+                        targetPose = getTargetPoseByKnownWidth(targetKnownWidth);
+                    }
+                    else if (homographyMapper != null)
+                    {
+                        targetPose = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
+                    }
+                    else if (cameraInfo != null)
+                    {
+                        targetPose = getTargetPoseByPixelPosition(targetGroundOffset);
+                    }
+
+                    if (targetPose != null)
+                    {
+                        targetDistance = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                        if (targetPose3dFromRobot == null)
+                        {
+                            TrcDbgTrace.globalTraceDebug(
+                                moduleName, "TargetPose(Id=%s, trcPose=%s, dist=%.3f)",
+                                id, targetPose, targetDistance);
+                        }
+                    }
+                }
             }
-            TrcDbgTrace.globalTraceDebug("Limelight", resultType + ": area=" + area + ", Ta=" + llResult.getTa());
 
-            return area;
-        }   //getObjectArea
+            return targetPose != null? targetPose.clone(): null;
+        }   //getTargetPose
 
         /**
-         * This method returns the object's pixel width.
+         * This method returns the target's real world ground distance from the camera.
          *
-         * @return object pixel width, null if not supported.
+         * @return target real world ground distance, null if not supported.
+         */
+        @Override
+        public Double getTargetDistance()
+        {
+            if (targetDistance == null)
+            {
+                // getTargetPose will calculate targetDistance.
+                getTargetPose();
+            }
+
+            return targetDistance;
+        }   //getTargetDistance
+
+        /**
+         * This method returns the target's real world width.
+         *
+         * @return target real world width, null if not supported.
+         */
+        @Override
+        public Double getTargetWidth()
+        {
+            if (targetWidth == null)
+            {
+                // If caller provided known width, use that.
+                targetWidth = targetKnownWidth;
+                if (targetWidth == null)
+                {
+                    // Caller did not provide known width, calculate it from pixel width, camera focal length and
+                    // real world distance.
+                    if (targetDistance == null) getTargetDistance();
+                    if (pixelWidth == null) getPixelWidth();
+                    if (targetDistance != null && pixelWidth != null)
+                    {
+                        targetWidth = targetDistance*pixelWidth/cameraInfo.lensInfo.fx;
+                    }
+                }
+            }
+
+            return targetWidth;
+        }   //getTargetWidth
+
+        /**
+         * This method returns the normalized area percent of the detected target.
+         *
+         * @return normalized area percent of the detected target (0.0 to 1.0), null if not supported.
+         */
+        @Override
+        public Double getNormalizedTargetArea()
+        {
+            if (normalizedTargetArea == null)
+            {
+                switch (resultType)
+                {
+                    case Barcode:
+                        normalizedTargetArea = ((LLResultTypes.BarcodeResult) result).getTargetArea();
+                        break;
+
+                    case Detector:
+                        normalizedTargetArea = ((LLResultTypes.DetectorResult) result).getTargetArea()/100.0;
+                        break;
+
+                    case Fiducial:
+                        normalizedTargetArea = ((LLResultTypes.FiducialResult) result).getTargetArea()/100.0;
+                        break;
+
+                    case Color:
+                        normalizedTargetArea = ((LLResultTypes.ColorResult) result).getTargetArea()/100.0;
+                        break;
+
+                    case Classifier:
+                    default:
+                        normalizedTargetArea = llResult.getTa()/100.0;
+                        break;
+                }
+                TrcDbgTrace.globalTraceDebug(
+                    "Limelight", resultType + ": targetArea=" + normalizedTargetArea +
+                    ", Ta=" + llResult.getTa()/100.0);
+            }
+
+            return normalizedTargetArea;
+        }   //getNormalizedTargetArea
+
+        /**
+         * This method returns the pixel rect of the detected target.
+         *
+         * @return pixel rect of the detected target, null if not supported.
+         */
+        @Override
+        public Rect getPixelRect()
+        {
+            if (pixelRect == null)
+            {
+                // getRotatedRectVertices will calculate pixelRect.
+                getRotatedRectVertices();
+            }
+
+            return pixelRect;
+        }   //getPixelRect
+
+        /**
+         * This method returns the pixel width of the detected target.
+         *
+         * @return target pixel width, null if not supported.
          */
         @Override
         public Double getPixelWidth()
         {
+            if (pixelWidth == null)
+            {
+                // getRotatedRectVertices will calculate pixelWidth.
+                getRotatedRectVertices();
+            }
+
             return pixelWidth;
         }   //getPixelWidth
 
         /**
-         * This method returns the object's pixel height.
+         * This method returns the pixel height of the detected target.
          *
-         * @return object pixel height, null if not supported.
+         * @return target pixel height, null if not supported.
          */
         @Override
         public Double getPixelHeight()
         {
+            if (pixelHeight == null)
+            {
+                // getRotatedRectVertices will calculate pixelHeight.
+                getRotatedRectVertices();
+            }
+
             return pixelHeight;
         }   //getPixelHeight
 
         /**
-         * This method returns the object's rotated rectangle angle.
+         * This method returns the target's rotated rectangle angle.
          *
-         * @return rotated rectangle angle.
+         * @return rotated rectangle angle, null if not supported.
          */
         @Override
         public Double getRotatedRectAngle()
         {
+            if (rotatedRectAngle == null)
+            {
+                // getRotatedRectVertices will calculate ritatedRectAngle.
+                getRotatedRectVertices();
+            }
+
             return rotatedRectAngle;
         }   //getRotatedRectAngle
 
         /**
-         * This method returns the pose of the detected object relative to the camera.
+         * This method returns the rotated rect vertices of the detected target.
          *
-         * @return pose of the detected object relative to camera.
-         */
-        @Override
-        public TrcPose2D getObjectPose()
-        {
-            return targetPose != null? targetPose.clone(): null;
-        }   //getObjectPose
-
-        /**
-         * This method returns the objects real world width.
-         *
-         * @return object real world width, null if not supported.
-         */
-        @Override
-        public Double getObjectWidth()
-        {
-            return null;
-        }   //getObjectWidth
-
-        /**
-         * This method returns the objects real world depth.
-         *
-         * @return object real world depth, null if not supported.
-         */
-        @Override
-        public Double getObjectDepth()
-        {
-            return targetDepth;
-        }   //getObjectDepth
-
-        /**
-         * This method returns the rotated rect vertices of the detected object.
-         *
-         * @return rotated rect vertices.
+         * @return rotated rect vertices, null if not supported.
          */
         @Override
         public Point[] getRotatedRectVertices()
         {
-            Point[] vertices = null;
-            List<List<Double>> corners;
-
-            switch (resultType)
+            if (rotatedRectVertices == null)
             {
-                case Barcode:
-                    corners = ((LLResultTypes.BarcodeResult) result).getTargetCorners();
-                    break;
+                List<List<Double>> corners;
 
-                case Detector:
-                    corners = ((LLResultTypes.DetectorResult) result).getTargetCorners();
-                    break;
-
-                case Fiducial:
-                    corners = ((LLResultTypes.FiducialResult) result).getTargetCorners();
-                    break;
-
-                case Color:
-                    corners = ((LLResultTypes.ColorResult) result).getTargetCorners();
-                    break;
-
-                case Classifier:
-                default:
-                    corners = null;
-                    break;
-            }
-
-            if (corners != null && !corners.isEmpty())
-            {
-                vertices = new Point[corners.size()];
-                for (int i = 0; i < vertices.length; i++)
+                switch (resultType)
                 {
-                    List<Double> vertex = corners.get(i);
-                    vertices[i] = new Point(vertex.get(0), vertex.get(1));
+                    case Barcode:
+                        corners = ((LLResultTypes.BarcodeResult) result).getTargetCorners();
+                        break;
+
+                    case Detector:
+                        corners = ((LLResultTypes.DetectorResult) result).getTargetCorners();
+                        break;
+
+                    case Fiducial:
+                        corners = ((LLResultTypes.FiducialResult) result).getTargetCorners();
+                        break;
+
+                    case Color:
+                        corners = ((LLResultTypes.ColorResult) result).getTargetCorners();
+                        break;
+
+                    case Classifier:
+                    default:
+                        corners = null;
+                        break;
+                }
+
+                if (corners != null && !corners.isEmpty())
+                {
+                    double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
+                    double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
+                    rotatedRectVertices = new Point[corners.size()];
+                    for (int i = 0; i < rotatedRectVertices.length; i++)
+                    {
+                        List<Double> vertex = corners.get(i);
+                        double x = vertex.get(0);
+                        double y = vertex.get(1);
+
+                        rotatedRectVertices[i] = new Point(x, y);
+                        if (x < xMin) xMin = x;
+                        if (x > xMax) xMax = x;
+                        if (y < yMin) yMin = y;
+                        if (y > yMax) yMax = y;
+                    }
+                    // Calculate vertices related info: pixelWidth, pixelHeight and rotatedRectAngle.
+                    double side1 = TrcUtil.magnitude(
+                        rotatedRectVertices[1].x - rotatedRectVertices[0].x,
+                        rotatedRectVertices[1].y - rotatedRectVertices[0].y);
+                    double side2 = TrcUtil.magnitude(
+                        rotatedRectVertices[2].x - rotatedRectVertices[1].x,
+                        rotatedRectVertices[2].y - rotatedRectVertices[1].y);
+                    if (side2 > side1)
+                    {
+                        pixelWidth = side1;
+                        pixelHeight = side2;
+                        rotatedRectAngle = Math.toDegrees(Math.atan(
+                            (rotatedRectVertices[1].y - rotatedRectVertices[0].y) /
+                            (rotatedRectVertices[1].x - rotatedRectVertices[0].x)));
+                    }
+                    else
+                    {
+                        pixelWidth = side2;
+                        pixelHeight = side1;
+                        rotatedRectAngle = Math.toDegrees(Math.atan(
+                            (rotatedRectVertices[2].y - rotatedRectVertices[1].y) /
+                            (rotatedRectVertices[2].x - rotatedRectVertices[1].x)));
+                    }
+                    pixelRect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
                 }
             }
 
-            return vertices;
+            return rotatedRectVertices;
         }   //getRotatedRectVertices
 
         /**
@@ -390,7 +578,8 @@ public class FtcLimelightVision
 
             // 4. Intersect ray with ground plane Z=0
             double s = -camPos.getZ() / dirWorld.getZ();
-            if (s < 0) {
+            if (s < 0)
+            {
                 // Intersection is behind the camera — invalid
                 return null;
             }
@@ -402,146 +591,42 @@ public class FtcLimelightVision
             double angleDeg = Math.toDegrees(Math.atan2(delta.getX(), delta.getY()));
 
             return new TrcPose2D(delta.getX(), delta.getY(), angleDeg);
-        }
-
-        /**
-         * This method calculates the target pose of the detected object.
-         *
-         * @param cameraInfo specifies the camera information.
-         * @return target pose from the camera.
-         */
-        private TrcPose2D getTargetPose(TrcVision.CameraInfo cameraInfo)
-        {
-            TrcPose2D targetPose;
-            LLResultTypes.FiducialResult fiducialResult =
-                resultType == ResultType.Fiducial? (LLResultTypes.FiducialResult) result: null;
-            Pose3D pose3DTargetFromRobot = fiducialResult != null? fiducialResult.getTargetPoseRobotSpace(): null;
-
-            if (pose3DTargetFromRobot != null)
-            {
-                // AprilTag has accurate 3D info, use it.
-                Position posTargetFromRobot = pose3DTargetFromRobot.getPosition().toUnit(DistanceUnit.INCH);
-                targetPose = new TrcPose2D(
-                    posTargetFromRobot.x, posTargetFromRobot.z,
-                    Math.toDegrees(Math.atan2(posTargetFromRobot.x, posTargetFromRobot.z)));
-                targetDepth = TrcUtil.magnitude(targetPose.x, targetPose.y);
-                TrcDbgTrace.globalTraceDebug(
-                    moduleName,
-                    "TargetPose(Id=%d, 3dPos=%s, 3dOrient=%s, Tx/Ty=%.3f/%.3f, trcPose=%s, dist=%.3f)",
-                    fiducialResult.getFiducialId(), posTargetFromRobot, pose3DTargetFromRobot.getOrientation(),
-                    fiducialResult.getTargetXDegrees(), fiducialResult.getTargetYDegrees(), targetPose, targetDepth);
-            }
-            else
-            {
-                // Other pipelines only have 2D info (less accurate and potentially sensitive to error).
-                // This method is very inaccurate when the target is at about the same height as the camera.
-                // Any error in the camPitch angle will be amplified. It can also potentially give a divide-by-zero
-                // error if the object is at the exact same height as the camera.
-                double camPitchRadians = Math.toRadians(cameraInfo.camPose.pitch);
-                double halfImageWidth = cameraInfo.camImageWidth/2.0;
-                double halfImageHeight = cameraInfo.camImageHeight/2.0;
-                double halfHFovRadians = Math.toRadians(cameraInfo.camHFov/2.0);
-                double halfVFovRadians = Math.toRadians(cameraInfo.camVFov/2.0);
-                double targetXPixel = targetRect.x + targetRect.width/2.0 - halfImageWidth;
-                double targetYPixel = -(targetRect.y + targetRect.height/2.0 - halfImageHeight);
-                double targetBearingRadians = Math.atan(targetXPixel*Math.tan(halfHFovRadians)/halfImageWidth);
-                double targetBearingDegrees = Math.toDegrees(targetBearingRadians);
-                double targetElevationRadians = Math.atan(targetYPixel*Math.tan(halfVFovRadians)/halfImageHeight);
-                double targetElevationDegrees = Math.toDegrees(targetElevationRadians);
-                double groundOffset = targetGroundOffset.getOffset(resultType);
-
-                targetDepth =
-                    (groundOffset - cameraInfo.camPose.z) / Math.tan(camPitchRadians + targetElevationRadians);
-                targetPose = new TrcPose2D(
-                    targetDepth * Math.sin(targetBearingRadians),
-                    targetDepth * Math.cos(targetBearingRadians),
-                    targetBearingDegrees);
-                TrcDbgTrace.globalTraceDebug(
-                    moduleName,
-                    "groundOffset=%.1f, cameraZ=%.1f, camPitch=%.1f, targetElevation=%.1f, targetDepth=%.1f, " +
-                    "targetBearing=%.1f, targetPose=%s",
-                    groundOffset, cameraInfo.camPose.z, cameraInfo.camPose.pitch, targetElevationDegrees, targetDepth,
-                    targetBearingDegrees, targetPose);
-            }
-
-            return targetPose;
-        }   //getTargetPose
-
-        /**
-         * This method returns the robot's field position as a TrcPose2D.
-         *
-         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
-         * @param useMT2 specifies true to use MegaTag2 to determine robot pose, false to use MegaTag1.
-         * @return robot's 2D field position.
-         */
-        private TrcPose2D getRobotPose(TrcPose3D camPose3dOnBot, boolean useMT2)
-        {
-            TrcPose2D robotPose = null;
-            // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
-            Pose3D camFieldPose3d = useMT2? llResult.getBotpose_MT2(): llResult.getBotpose();
-
-            if (camFieldPose3d != null)
-            {
-                Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
-                double trcX = camFieldPos.x;    // Distance Right in inches
-                double trcY = camFieldPos.y;    // Distance Forward in inches
-                double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
-                // Normalize angle output cleanly to the strict [-180, 180] range
-                trcAngle = (trcAngle + 180.0) % 360.0;
-                if (trcAngle < 0) trcAngle += 360.0;
-                trcAngle -= 180.0;
-                if (camPose3dOnBot != null)
-                {
-                    // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
-                    // Both are CW Positive, so they add together directly.
-                    double totalRotationRad = Math.toRadians(trcAngle + camPose3dOnBot.yaw);
-                    double cosHeading = Math.cos(totalRotationRad);
-                    double sinHeading = Math.sin(totalRotationRad);
-                    // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
-                    double globalCamOffsetX = (camPose3dOnBot.x * cosHeading) - (camPose3dOnBot.y * sinHeading);
-                    double globalCamOffsetY = (camPose3dOnBot.x * sinHeading) + (camPose3dOnBot.y * cosHeading);
-                    // Subtract the global offset values to shift the coordinate center back to the robot core
-                    double robotFieldX = trcX - globalCamOffsetX;
-                    double robotFieldY = trcY - globalCamOffsetY;
-
-                    robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
-                }
-                else
-                {
-                    robotPose = new TrcPose2D(trcX, trcY, trcAngle);
-                }
-            }
-            return robotPose;
-        }   //getRobotPose
-
-    }   //class DetectedObject
+        }   //projectCameraSpaceToFloor
+    }   //class TargetInfo
 
     public final TrcDbgTrace tracer;
     private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcVision.CameraInfo cameraInfo;
-    public final TargetGroundOffset targetGroundOffset;
+    private final TrcVision.TargetKnownWidth targetKnownWidth;
+    private final TrcVision.TargetGroundOffset targetGroundOffset;
+    private final TrcHomographyMapper homographyMapper;
     public final Limelight3A limelight;
     private int pipelineIndex = 0;
     private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
     private Double lastCapturedTimestampSec = null;
-    private boolean useMT2 = false;
 
     /**
      * Constructor: Create an instance of the object.
      *
      * @param hardwareMap specifies the global hardware map.
      * @param cameraInfo specifies the camera information.
-     * @param targetGroundOffset specifies the method to call to get target ground offset.
+     * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get target ground offset, can be null if not provided.
      */
     public FtcLimelightVision(
-        HardwareMap hardwareMap, TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
+        HardwareMap hardwareMap, TrcVision.CameraInfo cameraInfo, TrcVision.TargetKnownWidth targetKnownWidth,
+        TrcVision.TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = cameraInfo.camName;
         this.cameraInfo = cameraInfo;
+        this.targetKnownWidth = targetKnownWidth;
         this.targetGroundOffset = targetGroundOffset;
+        this.homographyMapper = cameraInfo.cameraRect != null && cameraInfo.worldRect != null?
+            new TrcHomographyMapper(cameraInfo.cameraRect, cameraInfo.worldRect): null;
         limelight = hardwareMap.get(Limelight3A.class, instanceName);
         limelight.setPollRateHz(100);
         setPipeline(pipelineIndex);
@@ -551,11 +636,15 @@ public class FtcLimelightVision
      * Constructor: Create an instance of the object.
      *
      * @param cameraInfo specifies the camera information.
-     * @param targetGroundOffset specifies the method to call to get the target ground offset.
+     * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get target ground offset, can be null if not provided.
      */
-    public FtcLimelightVision(TrcVision.CameraInfo cameraInfo, TargetGroundOffset targetGroundOffset)
+    public FtcLimelightVision(
+        TrcVision.CameraInfo cameraInfo, TrcVision.TargetKnownWidth targetKnownWidth,
+        TrcVision.TargetGroundOffset targetGroundOffset)
     {
-        this(FtcOpMode.getInstance().hardwareMap, cameraInfo, targetGroundOffset);
+        this(FtcOpMode.getInstance().hardwareMap, cameraInfo, targetKnownWidth, targetGroundOffset);
     }   //FtcLimelightVision
 
     /**
@@ -665,14 +754,18 @@ public class FtcLimelightVision
      *
      * @param resultType specifies the result type to detect for.
      * @param matchIds specifies the object ID(s) to match for, null if no matching required.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return array list of detected objects.
      */
-    public ArrayList<DetectedObject> getDetectedObjects(ResultType resultType, Object matchIds)
+    private ArrayList<TargetInfo> getDetectedTargets(
+        ResultType resultType, Object matchIds, Comparator<? super TargetInfo> comparator)
     {
-        ArrayList<DetectedObject> detectedObjs = null;
+        ArrayList<TargetInfo> detectedTargets = null;
 
-        if (resultType == ResultType.Python && matchIds != null)
+        if (resultType == ResultType.Python)
         {
+            // Running Python ColorBlob pipeline with array of ColorBlob IDs.
+            if (matchIds == null) matchIds = new double[] {};
             limelight.updatePythonInputs((double[]) matchIds);
         }
 
@@ -689,7 +782,7 @@ public class FtcLimelightVision
             {
                 List<?> resultList = null;
                 double[] pythonOutput = null;
-                ArrayList<DetectedObject> detectedList = new ArrayList<>();
+                ArrayList<TargetInfo> detectedList = new ArrayList<>();
                 lastCapturedTimestampSec = capturedTimestampSec;
 
                 switch (resultType)
@@ -748,7 +841,6 @@ public class FtcLimelightVision
                                 objId = ((LLResultTypes.FiducialResult) obj).getFiducialId();
                                 break;
 
-                            case Color:
                             default:
                                 objId = null;
                                 break;
@@ -758,34 +850,65 @@ public class FtcLimelightVision
                             resultType == ResultType.Fiducial && matchAprilTagId((int)objId, (int[])matchIds) != -1 ||
                             resultType != ResultType.Fiducial && matchIds.equals(objId))
                         {
-                            DetectedObject detectedObj =
-                                new DetectedObject(
-                                    llResult, resultType, capturedTimestampSec, obj, objId, targetGroundOffset, cameraInfo,
-                                    useMT2);
-                            detectedList.add(detectedObj);
+                            TargetInfo detectedTarget =
+                                new TargetInfo(
+                                    llResult, resultType, capturedTimestampSec, obj, objId, cameraInfo,
+                                    targetKnownWidth != null? targetKnownWidth.getRealWorldWidth(objId): null,
+                                    targetGroundOffset != null? targetGroundOffset.getOffset(objId): 0.0, homographyMapper);
+                            detectedList.add(detectedTarget);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }
                     }
 
                     if (!detectedList.isEmpty())
                     {
-                        detectedObjs = detectedList;
+                        detectedTargets = detectedList;
                     }
                 }
                 else if (pythonOutput != null)
                 {
-                    DetectedObject detectedObj =
-                        new DetectedObject(
-                            llResult, resultType, capturedTimestampSec, pythonOutput, llResult.getPipelineType(),
-                            targetGroundOffset, cameraInfo, false);
-                    detectedList.add(detectedObj);
-                    detectedObjs = detectedList;
+                    TargetInfo detectedTarget =
+                        new TargetInfo(
+                            llResult, resultType, capturedTimestampSec, pythonOutput, pythonOutput[7],
+                            cameraInfo,
+                            targetKnownWidth != null? targetKnownWidth.getRealWorldWidth(pythonOutput[7]): null,
+                            targetGroundOffset != null? targetGroundOffset.getOffset(pythonOutput[7]): 0.0,
+                            homographyMapper);
+                    detectedList.add(detectedTarget);
+                    detectedTargets = detectedList;
+                }
+
+                if (detectedTargets != null && comparator != null && detectedTargets.size() > 1)
+                {
+                    detectedTargets.sort(comparator);
                 }
             }
         }
 
-        return detectedObjs;
-    }   //getDetectedObjects
+        return detectedTargets;
+    }   //getDetectedTargets
+
+    /**
+     * This method returns the target info of the best detected target.
+     *
+     * @param resultType specifies the result type to detect for.
+     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
+     * @return best detected target.
+     */
+    public TargetInfo getBestDetectedTarget(
+        ResultType resultType, Object matchIds, Comparator<? super TargetInfo> comparator)
+    {
+        TargetInfo bestTarget = null;
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets(resultType, matchIds, comparator);
+
+        if (detectedTargets != null && !detectedTargets.isEmpty())
+        {
+            bestTarget = detectedTargets.get(0);
+        }
+
+        return bestTarget;
+    }   //getBestDetectedTarget
 
     /**
      * This method finds a matching AprilTag ID in the specified array and returns the found index.
@@ -811,77 +934,6 @@ public class FtcLimelightVision
     }   //matchAprilTagId
 
     /**
-     * This method returns the target info of the given detected target.
-     *
-     * @param target specifies the detected target
-     * @return information about the detected target.
-     */
-    public TrcVisionTargetInfo<DetectedObject> getDetectedTargetInfo(DetectedObject target)
-    {
-        TrcVisionTargetInfo<DetectedObject> targetInfo = new TrcVisionTargetInfo<>(target, null, 0.0, 0.0);
-        tracer.traceDebug(instanceName, "TargetInfo=" + targetInfo);
-        return targetInfo;
-    }   //getDetectedTargetInfo
-
-    /**
-     * This method returns an array list of target info on the filtered detected targets.
-     *
-     * @param resultType specifies the result type to detect for.
-     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
-     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @return filtered target info array list.
-     */
-    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo(
-        ResultType resultType, Object matchIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
-    {
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
-        ArrayList<DetectedObject> detectedObjects = getDetectedObjects(resultType, matchIds);
-
-        if (detectedObjects != null)
-        {
-            ArrayList<TrcVisionTargetInfo<DetectedObject>> targets = new ArrayList<>();
-            for (DetectedObject obj : detectedObjects)
-            {
-                targets.add(getDetectedTargetInfo(obj));
-            }
-
-            if (!targets.isEmpty())
-            {
-                if (comparator != null && targets.size() > 1)
-                {
-                    targets.sort(comparator);
-                }
-                targetsInfo = targets;
-            }
-        }
-
-        return targetsInfo;
-    }   //getDetectedTargetsInfo
-
-    /**
-     * This method returns the target info of the best detected target.
-     *
-     * @param resultType specifies the result type to detect for.
-     * @param matchIds specifies the object ID(s) to match for, null if no matching required.
-     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @return information about the best detected target.
-     */
-    public TrcVisionTargetInfo<DetectedObject> getBestDetectedTargetInfo(
-        ResultType resultType, Object matchIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
-    {
-        TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(resultType, matchIds, comparator);
-
-        if (detectedTargets != null && !detectedTargets.isEmpty())
-        {
-            bestTarget = detectedTargets.get(0);
-        }
-
-        return bestTarget;
-    }   //getBestDetectedTargetInfo
-
-    /**
      * This method update the dashboard with vision status.
      *
      * @param lineNum specifies the starting line number to print the subsystem status.
@@ -891,14 +943,13 @@ public class FtcLimelightVision
     {
         if (statusResultType != null)
         {
-            TrcVisionTargetInfo<DetectedObject> object = getBestDetectedTargetInfo(statusResultType, null, null);
+            TargetInfo target = getBestDetectedTarget(statusResultType, null, null);
 
-            if (object != null)
+            if (target != null)
             {
                 dashboard.displayPrintf(
-                    lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
-                    object.detectedObj.objId, object.objDepth, object.detectedObj.targetPose,
-                    object.detectedObj.robotPose);
+                    lineNum++, "LLAprilTag[%s]: dist=%f, targetPose=%s, robotPose=%s",
+                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
             }
             else
             {

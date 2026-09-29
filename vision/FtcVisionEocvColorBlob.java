@@ -25,16 +25,13 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
-import org.opencv.core.Point;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 
 import ftclib.driverio.FtcDashboard;
 import trclib.robotcore.TrcDbgTrace;
-import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
-import trclib.vision.TrcVisionTargetInfo;
+import trclib.vision.TrcVision;
 
 /**
  * This class encapsulates the EocvColorBlob vision processor to make all vision processors conform to our framework
@@ -42,20 +39,10 @@ import trclib.vision.TrcVisionTargetInfo;
  */
 public class FtcVisionEocvColorBlob
 {
-    /**
-     * This interface provides a method for filtering false positive objects in the detected target list.
-     */
-    public interface FilterTarget
-    {
-        boolean validateTarget(
-            TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> objInfo, Object context);
-    }   //interface FilterTarget
-
     private final FtcEocvColorBlobProcessor colorBlobProcessor;
     public final TrcDbgTrace tracer;
     private final FtcDashboard dashboard;
     private final String instanceName;
-    private final TrcHomographyMapper homographyMapper;
 
     /**
      * Constructor: Create an instance of the object.
@@ -63,42 +50,23 @@ public class FtcVisionEocvColorBlob
      * @param instanceName specifies the instance name.
      * @param pipelineParams specifies pipeline parameters.
      * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
-     * @param cameraRect specifies the camera rectangle for Homography Mapper, null if not provided.
-     * @param worldRect specifies the world rectangle for Homography Mapper, null if not provided.
+     * @param cameraInfo specifies the camera info.
+     * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get the ground offset of the detected target, can be
+     *        null if not provided.
      */
     public FtcVisionEocvColorBlob(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect)
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, TrcVision.CameraInfo cameraInfo,
+        TrcVision.TargetKnownWidth targetKnownWidth, TrcVision.TargetGroundOffset targetGroundOffset)
     {
         // Create the Color Blob processor.
-        colorBlobProcessor = new FtcEocvColorBlobProcessor(instanceName, pipelineParams, solvePnpParams);
-        tracer = colorBlobProcessor.tracer;
+        this.colorBlobProcessor = new FtcEocvColorBlobProcessor(
+            instanceName, pipelineParams, solvePnpParams, cameraInfo, targetKnownWidth, targetGroundOffset);
+        this.tracer = colorBlobProcessor.tracer;
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
-
-        if (cameraRect != null && worldRect != null)
-        {
-            homographyMapper = new TrcHomographyMapper(cameraRect, worldRect);
-        }
-        else
-        {
-            homographyMapper = null;
-        }
-    }   //FtcVisionEocvColorBlob
-
-    /**
-     * Constructor: Create an instance of the object.
-     *
-     * @param instanceName specifies the instance name.
-     * @param pipelineParams specifies pipeline parameters.
-     * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
-     */
-    public FtcVisionEocvColorBlob(
-        String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
-    {
-        this(instanceName, pipelineParams, solvePnpParams, null, null);
     }   //FtcVisionEocvColorBlob
 
     /**
@@ -124,74 +92,42 @@ public class FtcVisionEocvColorBlob
     }   //getVisionProcessor
 
     /**
-     * This method returns the target info of the given detected target.
-     *
-     * @param target specifies the detected target
-     * @param objGroundOffset specifies the object ground offset above the floor.
-     * @param cameraHeight specifies the height of the camera above the floor.
-     * @return information about the detected target.
-     */
-    public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> getDetectedTargetInfo(
-        TrcOpenCvColorBlobPipeline.DetectedObject target, double objGroundOffset, double cameraHeight)
-    {
-        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> targetInfo = new TrcVisionTargetInfo<>(
-            target, homographyMapper, objGroundOffset, cameraHeight);
-
-        tracer.traceDebug(instanceName, "TargetInfo=" + targetInfo);
-
-        return targetInfo;
-    }   //getDetectedTargetInfo
-
-    /**
-     * This method returns an array list of target info on the filtered detected targets.
+     * This method returns a list of target info on the filtered detected targets.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param filterContext specifies filter context object to be passed to the validate method, can be null.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objGroundOffset specifies the object ground offset above the floor.
-     * @param cameraHeight specifies the height of the camera above the floor.
      * @return filtered target info array list.
      */
-    public ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> getDetectedTargetsInfo(
-        FilterTarget filter, Object filterContext,
-        Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
-        double objGroundOffset, double cameraHeight)
+    public ArrayList<TrcVision.TargetInfo> getDetectedTargets(
+        TrcVision.FilterTarget filter, Object filterContext, Comparator<? super TrcVision.TargetInfo> comparator)
     {
-        ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> targetsInfo = null;
-        TrcOpenCvColorBlobPipeline.DetectedObject[] detectedObjects = colorBlobProcessor.getDetectedObjects();
+        ArrayList<TrcVision.TargetInfo> detectedTargets = colorBlobProcessor.getDetectedTargets();
 
-        if (detectedObjects != null)
+        if (detectedTargets != null)
         {
-            ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> targets = new ArrayList<>();
-            for (int i = 0; i < detectedObjects.length; i++)
+            if (filter != null)
             {
-                TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> objInfo =
-                    getDetectedTargetInfo(detectedObjects[i], objGroundOffset, cameraHeight);
-                boolean rejected = false;
-
-                if (filter == null || filter.validateTarget(objInfo, filterContext))
+                // Process the list background to make sure removing member won't mess up iteration.
+                for (int i = detectedTargets.size() - 1; i >= 0; i--)
                 {
-                    targets.add(objInfo);
+                    TrcVision.TargetInfo target = detectedTargets.get(i);
+                    if (!filter.validateTarget(target, filterContext))
+                    {
+                        detectedTargets.remove(target);
+                        tracer.traceDebug(instanceName, "[" + i + "] rejectedTarget rejected=" + target);
+                    }
                 }
-                else
-                {
-                    rejected = true;
-                }
-                tracer.traceDebug(instanceName, "[" + i + "] rejected=" + rejected);
             }
 
-            if (!targets.isEmpty())
+            if (comparator != null && detectedTargets.size() > 1)
             {
-                if (comparator != null && targets.size() > 1)
-                {
-                    targets.sort(comparator);
-                }
-                targetsInfo = targets;
+                detectedTargets.sort(comparator);
             }
         }
 
-        return targetsInfo;
-    }   //getDetectedTargetsInfo
+        return detectedTargets;
+    }   //getDetectedTargets
 
     /**
      * This method returns the target info of the best detected target.
@@ -199,18 +135,13 @@ public class FtcVisionEocvColorBlob
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param filterContext specifies filter context object to be passed to the validate method, can be null.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objGroundOffset specifies the object ground offset above the floor.
-     * @param cameraHeight specifies the height of the camera above the floor.
      * @return information about the best detected target.
      */
-    public TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> getBestDetectedTargetInfo(
-        FilterTarget filter, Object filterContext,
-        Comparator<? super TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> comparator,
-        double objGroundOffset, double cameraHeight)
+    public TrcVision.TargetInfo getBestDetectedTarget(
+        TrcVision.FilterTarget filter, Object filterContext, Comparator<? super TrcVision.TargetInfo> comparator)
     {
-        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject>> detectedTargets =
-            getDetectedTargetsInfo(filter, filterContext, comparator, objGroundOffset, cameraHeight);
+        TrcVision.TargetInfo bestTarget = null;
+        ArrayList<TrcVision.TargetInfo> detectedTargets = getDetectedTargets(filter, filterContext, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -218,18 +149,7 @@ public class FtcVisionEocvColorBlob
         }
 
         return bestTarget;
-    }   //getBestDetectedTargetInfo
-
-    /**
-     * This method maps a camera screen point to the real world point using homography.
-     *
-     * @param point specifies the camera screen point.
-     * @return real world coordinate point.
-     */
-    public Point mapPoint(Point point)
-    {
-        return homographyMapper != null? homographyMapper.mapPoint(point): null;
-    }   //mapPoint
+    }   //getBestDetectedTarget
 
     /**
      * This method update the dashboard with vision status.
@@ -239,15 +159,13 @@ public class FtcVisionEocvColorBlob
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<TrcOpenCvColorBlobPipeline.DetectedObject> object =
-            getBestDetectedTargetInfo(null, null, null, 0.0, 0.0);
+        TrcVision.TargetInfo target = getBestDetectedTarget(null, null, null);
 
-        if (object != null)
+        if (target != null)
         {
             dashboard.displayPrintf(
-                lineNum++, "EocvColorBlob(%s): depth=%f, targetPose=%s, rotatedAngle=%f",
-                object.detectedObj.label, object.objDepth, object.detectedObj.objPose,
-                object.detectedObj.rotatedRectAngle);
+                lineNum++, "EocvColorBlob(%s): dist=%.1f, targetPose=%s, rotatedAngle=%f",
+                target.label, target.getTargetDistance(), target.getTargetPose(), target.getRotatedRectAngle());
         }
         else
         {

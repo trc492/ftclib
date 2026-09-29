@@ -31,10 +31,8 @@ import java.util.Comparator;
 
 import ftclib.driverio.FtcDashboard;
 import trclib.robotcore.TrcDbgTrace;
-import trclib.vision.TrcHomographyMapper;
-import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcOpenCvPipeline;
-import trclib.vision.TrcVisionTargetInfo;
+import trclib.vision.TrcVision;
 
 /**
  * This class implements an EasyOpenCV detector. Typically, it is extended by a specific detector that provides the
@@ -47,7 +45,6 @@ public class FtcRawEocvVision
     private final FtcDashboard dashboard;
     private final String instanceName;
     private final OpenCvCamera openCvCamera;
-    private final TrcHomographyMapper homographyMapper;
 
     private boolean cameraStarted = false;
     private volatile FtcRawEocvColorBlobPipeline openCvPipeline = null;
@@ -56,31 +53,18 @@ public class FtcRawEocvVision
      * Constructor: Create an instance of the object.
      *
      * @param instanceName specifies the instance name.
-     * @param imageWidth specifies the width of the camera image.
-     * @param imageHeight specifies the height of the camera image.
-     * @param cameraRect specifies the camera rectangle for Homography Mapper, can be null if not provided.
-     * @param worldRect specifies the world rectangle for Homography Mapper, can be null if not provided.
+     * @param cameraInfo specifies camera info.
      * @param openCvCamera specifies the camera object.
      * @param cameraRotation specifies the camera orientation.
      */
     public FtcRawEocvVision(
-        String instanceName, int imageWidth, int imageHeight,
-        TrcHomographyMapper.Rectangle cameraRect, TrcHomographyMapper.Rectangle worldRect,
-        OpenCvCamera openCvCamera, OpenCvCameraRotation cameraRotation)
+        String instanceName, TrcVision.CameraInfo cameraInfo, OpenCvCamera openCvCamera,
+        OpenCvCameraRotation cameraRotation)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = instanceName;
         this.openCvCamera = openCvCamera;
-
-        if (cameraRect != null && worldRect != null)
-        {
-            homographyMapper = new TrcHomographyMapper(cameraRect, worldRect);
-        }
-        else
-        {
-            homographyMapper = null;
-        }
 
         openCvCamera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
@@ -90,11 +74,12 @@ public class FtcRawEocvVision
                 if (openCvCamera instanceof OpenCvWebcam)
                 {
                     ((OpenCvWebcam) openCvCamera).startStreaming(
-                        imageWidth, imageHeight, cameraRotation, OpenCvWebcam.StreamFormat.MJPEG);
+                        cameraInfo.camImageWidth, cameraInfo.camImageHeight, cameraRotation,
+                        OpenCvWebcam.StreamFormat.MJPEG);
                 }
                 else
                 {
-                    openCvCamera.startStreaming(imageWidth, imageHeight, cameraRotation);
+                    openCvCamera.startStreaming(cameraInfo.camImageWidth, cameraInfo.camImageHeight, cameraRotation);
                 }
                 cameraStarted = true;
             }
@@ -162,53 +147,49 @@ public class FtcRawEocvVision
      *
      * @return current active pipeline, null if no active pipeline.
      */
-    public TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>> getPipeline()
+    public TrcOpenCvPipeline getPipeline()
     {
         return openCvPipeline != null? openCvPipeline.getColorBlobPipeline(): null;
     }   //getPipeline
 
     /**
-     * This method returns an array list of detected targets from EasyOpenCV vision.
+     * This method returns detected targets from EasyOpenCV vision.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objGroundOffset specifies the object ground offset above the floor.
-     * @param cameraHeight specifies the height of the camera above the floor.
-     * @return array list of detected target info.
+     * @return list of detected target info.
      */
-    public ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> getDetectedTargetsInfo(
-        TrcOpenCvDetector.FilterTarget filter,
-        Comparator<? super TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> comparator,
-        double objGroundOffset, double cameraHeight)
+    public ArrayList<TrcVision.TargetInfo> getDetectedTargets(
+        TrcVision.FilterTarget filter, Comparator<? super TrcVision.TargetInfo> comparator)
     {
-        ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = null;
+        ArrayList<TrcVision.TargetInfo> detectedTargets = null;
 
         // Do this only if the pipeline is set.
         if (openCvPipeline != null)
         {
-            TrcOpenCvDetector.DetectedObject<?>[] objects = openCvPipeline.getColorBlobPipeline().getDetectedObjects();
+            detectedTargets = openCvPipeline.getColorBlobPipeline().getDetectedTargets();
 
-            if (objects != null)
+            if (detectedTargets != null)
             {
-                ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> targetList = new ArrayList<>();
-
-                for (TrcOpenCvDetector.DetectedObject<?> obj : objects)
+                if (filter != null)
                 {
-                    if (filter == null || filter.validateTarget(obj))
+                    // Process the list backward so that removing a member won't mess up iteration.
+                    for (int i = detectedTargets.size() - 1; i >= 0; i--)
                     {
-                        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> targetInfo =
-                            new TrcVisionTargetInfo<>(obj, homographyMapper, objGroundOffset, cameraHeight);
-                        targetList.add(targetInfo);
+                        TrcVision.TargetInfo target = detectedTargets.get(i);
+                        if (!filter.validateTarget(target, null))
+                        {
+                            detectedTargets.remove(target);
+                        }
                     }
                 }
 
-                if (!targetList.isEmpty())
+                if (!detectedTargets.isEmpty())
                 {
-                    if (comparator != null && targetList.size() > 1)
+                    if (comparator != null && detectedTargets.size() > 1)
                     {
-                        targetList.sort(comparator);
+                        detectedTargets.sort(comparator);
                     }
-                    detectedTargets = targetList;
 
                     if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
                     {
@@ -222,25 +203,20 @@ public class FtcRawEocvVision
         }
 
         return detectedTargets;
-    }   //getDetectedTargetsInfo
+    }   //getDetectedTargets
 
     /**
      * This method returns the target info of the best detected target.
      *
      * @param filter specifies the filter to call to filter out false positive targets.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
-     * @param objGroundOffset specifies the object ground offset above the floor.
-     * @param cameraHeight specifies the height of the camera above the floor.
-     * @return information about the best detected target.
+     * @return best detected target.
      */
-    public TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> getBestDetectedTargetInfo(
-        TrcOpenCvDetector.FilterTarget filter,
-        Comparator<? super TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> comparator,
-        double objGroundOffset, double cameraHeight)
+    public TrcVision.TargetInfo getBestDetectedTarget(
+        TrcVision.FilterTarget filter, Comparator<? super TrcVision.TargetInfo> comparator)
     {
-        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>>> detectedTargets = getDetectedTargetsInfo(
-            filter, comparator, objGroundOffset, cameraHeight);
+        TrcVision.TargetInfo bestTarget = null;
+        ArrayList<TrcVision.TargetInfo> detectedTargets = getDetectedTargets(filter, comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -248,7 +224,7 @@ public class FtcRawEocvVision
         }
 
         return bestTarget;
-    }   //getBestDetectedTargetInfo
+    }   //getBestDetectedTarget
 
     /**
      * This method update the dashboard with vision status.
@@ -258,14 +234,13 @@ public class FtcRawEocvVision
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<TrcOpenCvDetector.DetectedObject<?>> object =
-            getBestDetectedTargetInfo(null, null, 0.0, 0.0);
+        TrcVision.TargetInfo target = getBestDetectedTarget(null, null);
 
-        if (object != null)
+        if (target != null)
         {
             dashboard.displayPrintf(
                 lineNum++, "RawEocv(%s): targetPose=%s, rotatedRectAngle=%f",
-                object.detectedObj.label, object.detectedObj.getObjectPose(), object.detectedObj.getRotatedRectAngle());
+                target.label, target.getTargetPose(), target.getRotatedRectAngle());
         }
         else
         {

@@ -27,14 +27,15 @@ import androidx.annotation.NonNull;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,10 +43,8 @@ import java.util.Comparator;
 import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
-import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcVision;
-import trclib.vision.TrcVisionTargetInfo;
 
 /**
  * This class encapsulates the AprilTag vision processor to make all vision processors conform to our framework
@@ -54,278 +53,32 @@ import trclib.vision.TrcVisionTargetInfo;
 public class FtcVisionAprilTag
 {
     /**
-     * This class encapsulates info of the detected object. It extends TrcOpenCvDetector.DetectedObject that requires
-     * it to provide methods to return the detected object rect and area.
+     * This class encapsulates info of the detected target. It extends TrcVision.TargetInfo that requires this class
+     * to provide methods to return info of the detected target.
      */
-    public static class DetectedObject implements TrcVisionTargetInfo.ObjectInfo
+    public static class TargetInfo extends TrcVision.TargetInfo
     {
-        public AprilTagDetection aprilTagDetection;
-        public double timestampSec;
-        public Object id;
-        public TrcPose2D robotPose;
-        public double pixelWidth, pixelHeight, rotatedRectAngle;
+        public final AprilTagDetection aprilTagDetection;
+        public final Integer singleAprilTagId;
+        public final double timestampSec;
 
         /**
          * Constructor: Creates an instance of the object.
          *
-         * @param aprilTagDetection specifies the detected april tag object.
-         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
+         * @param aprilTagDetection specifies the detected AprilTag object.
+         * @param cameraInfo specifies camera info.
          */
-        public DetectedObject(AprilTagDetection aprilTagDetection, TrcPose3D camPose3dOnBot)
+        public TargetInfo(AprilTagDetection aprilTagDetection, TrcVision.CameraInfo cameraInfo)
         {
-            Pose3D robotPose3d = aprilTagDetection.robotPose;
+            super(aprilTagDetection instanceof AprilTagSingleDetection?
+                    Integer.toString(((AprilTagSingleDetection) aprilTagDetection).id):
+                    ((AprilTagClusterDetection) aprilTagDetection).metadata.name,
+                  cameraInfo);
             this.aprilTagDetection = aprilTagDetection;
-            this.timestampSec = aprilTagDetection.frameAcquisitionNanoTime/1000000000.0;
-
-            this.robotPose = getRobotPose(aprilTagDetection.robotPose, camPose3dOnBot);
-            if (aprilTagDetection instanceof AprilTagSingleDetection)
-            {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
-                double side1 = TrcUtil.magnitude(
-                    singleDet.corners[1].x - singleDet.corners[0].x,
-                    singleDet.corners[1].y - singleDet.corners[0].y);
-                double side2 = TrcUtil.magnitude(
-                    singleDet.corners[2].x - singleDet.corners[1].x,
-                    singleDet.corners[2].y - singleDet.corners[1].y);
-
-                id = singleDet.id;
-                if (side2 > side1)
-                {
-                    pixelWidth = side1;
-                    pixelHeight = side2;
-                    rotatedRectAngle = Math.toDegrees(Math.atan(
-                        (singleDet.corners[1].y - singleDet.corners[0].y) /
-                        (singleDet.corners[1].x - singleDet.corners[0].x)));
-                }
-                else
-                {
-                    pixelWidth = side2;
-                    pixelHeight = side1;
-                    rotatedRectAngle = Math.toDegrees(Math.atan(
-                        (singleDet.corners[2].y - singleDet.corners[1].y) /
-                        (singleDet.corners[2].x - singleDet.corners[1].x)));
-                }
-            }
-            else
-            {
-                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDetection;
-
-                id = clusterDet.metadata.name;
-                // Can't determine rect width, height and angle with cluster detection.
-                pixelWidth = pixelHeight = rotatedRectAngle = 0.0;
-            }
-        }   //DetectedObject
-
-        /**
-         * This method returns the robot's field position as a TrcPose2D.
-         *
-         * @param robotPose3d specifies the robot 3D pose from the pose solver.
-         * @param camPose3dOnBot specifies the camera 3D position relative to robot center.
-         * @return robot's 2D field position.
-         */
-        private TrcPose2D getRobotPose(Pose3D robotPose3d, TrcPose3D camPose3dOnBot)
-        {
-            TrcPose2D robotPose = null;
-
-            if (robotPose3d != null)
-            {
-                Position camFieldPos = robotPose3d.getPosition().toUnit(DistanceUnit.INCH);
-                double trcX = camFieldPos.x;    // Distance Right in inches
-                double trcY = camFieldPos.y;    // Distance Forward in inches
-                double trcAngle = -robotPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
-                // Normalize angle output cleanly to the strict [-180, 180] range
-                trcAngle = (trcAngle + 180.0) % 360.0;
-                if (trcAngle < 0) trcAngle += 360.0;
-                trcAngle -= 180.0;
-                if (camPose3dOnBot != null)
-                {
-                    // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
-                    // Both are CW Positive, so they add together directly.
-                    double totalRotationRad = Math.toRadians(trcAngle + camPose3dOnBot.yaw);
-                    double cosHeading = Math.cos(totalRotationRad);
-                    double sinHeading = Math.sin(totalRotationRad);
-                    // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
-                    double globalCamOffsetX = (camPose3dOnBot.x * cosHeading) - (camPose3dOnBot.y * sinHeading);
-                    double globalCamOffsetY = (camPose3dOnBot.x * sinHeading) + (camPose3dOnBot.y * cosHeading);
-                    // Subtract the global offset values to shift the coordinate center back to the robot core
-                    double robotFieldX = trcX - globalCamOffsetX;
-                    double robotFieldY = trcY - globalCamOffsetY;
-
-                    robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
-                }
-                else
-                {
-                    robotPose = new TrcPose2D(trcX, trcY, trcAngle);
-                }
-            }
-
-            return robotPose;
-        }   //getRobotPose
-
-        /**
-         * This method calculates the rectangle of the detected AprilTag.
-         *
-         * @param at specifies the AprilTag info.
-         * @return AprilTag rectangle.
-         */
-        public static Rect getDetectedRect(AprilTagDetection at)
-        {
-            Rect rect = null;
-
-            if (at instanceof AprilTagSingleDetection)
-            {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) at;
-
-                if (singleDet.corners != null && singleDet.corners.length > 0)
-                {
-                    double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
-                    double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
-
-                    for (Point point: singleDet.corners)
-                    {
-                        if (point.x < xMin) xMin = point.x;
-                        if (point.x > xMax) xMax = point.x;
-                        if (point.y < yMin) yMin = point.y;
-                        if (point.y > yMax) yMax = point.y;
-                    }
-                    rect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
-                }
-            }
-
-            return rect;
-        }   //getDetectedRect
-
-        /**
-         * This method returns the rect of the detected object.
-         *
-         * @return rect of the detected object.
-         */
-        @Override
-        public Rect getObjectRect()
-        {
-            // Calculate rect from AprilTag detection corner points.
-            return getDetectedRect(aprilTagDetection);
-        }   //getObjectRect
-
-        /**
-         * This method returns the area of the detected object.
-         *
-         * @return area of the detected object.
-         */
-        @Override
-        public double getObjectArea()
-        {
-            // AprilTag detection does not provide area, just calculate it from rect.
-            return getDetectedRect(aprilTagDetection).area();
-        }   //getObjectArea
-
-        /**
-         * This method returns the object's pixel width.
-         *
-         * @return object pixel width, null if not supported.
-         */
-        @Override
-        public Double getPixelWidth()
-        {
-            return pixelWidth;
-        }   //getPixelWidth
-
-        /**
-         * This method returns the object's pixel height.
-         *
-         * @return object pixel height, null if not supported.
-         */
-        @Override
-        public Double getPixelHeight()
-        {
-            return pixelHeight;
-        }   //getPixelHeight
-
-        /**
-         * This method returns the object's rotated rectangle angle.
-         *
-         * @return rotated rectangle angle.
-         */
-        @Override
-        public Double getRotatedRectAngle()
-        {
-            return rotatedRectAngle;
-        }   //getRotatedRectAngle
-
-        /**
-         * This method returns the pose of the detected object relative to the camera.
-         *
-         * @return pose of the detected object relative to camera.
-         */
-        @Override
-        public TrcPose2D getObjectPose()
-        {
-            TrcPose2D pose = null;
-
-            if (aprilTagDetection.ftcPose != null)
-            {
-                // Get pose from AprilTag detection ftcPose.
-                pose = new TrcPose2D(
-                    aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.bearing);
-            }
-
-            return pose;
-        }   //getObjectPose
-
-        /**
-         * This method returns the real world width of the detected object.
-         *
-         * @return real world width of the detected object.
-         */
-        @Override
-        public Double getObjectWidth()
-        {
-            return aprilTagDetection instanceof AprilTagSingleDetection?
-                ((AprilTagSingleDetection) aprilTagDetection).metadata.tagsize: null;
-        }   //getObjectWidth
-
-        /**
-         * This method returns the real world depth of the detected object.
-         *
-         * @return real world depth of the detected object.
-         */
-        @Override
-        public Double getObjectDepth()
-        {
-            return aprilTagDetection.ftcPose.range;
-        }   //getObjectDepth
-
-        /**
-         * This method returns the rotated rect vertices of the detected object.
-         *
-         * @return rotated rect vertices.
-         */
-        @Override
-        public Point[] getRotatedRectVertices()
-        {
-            Point[] vertices = null;
-
-            if (aprilTagDetection instanceof AprilTagSingleDetection)
-            {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
-
-                if (singleDet.corners != null)
-                {
-                    if (singleDet.corners.length == 4)
-                    {
-                        vertices = singleDet.corners;
-                    }
-                    else
-                    {
-                        throw new RuntimeException(
-                            "Object rectangle should have only 4 corners but found " + singleDet.corners.length +
-                            "corners.");
-                    }
-                }
-            }
-
-            return vertices;
-        }   //getRotatedRectVertices
+            this.singleAprilTagId = aprilTagDetection instanceof AprilTagSingleDetection?
+                ((AprilTagSingleDetection) aprilTagDetection).id: null;
+            this.timestampSec = aprilTagDetection.frameAcquisitionNanoTime/1_000_000_000.0;
+        }   //TargetInfo
 
         /**
          * This method returns the string form of the target info.
@@ -338,7 +91,9 @@ public class FtcVisionAprilTag
         {
             if (aprilTagDetection.ftcPose != null)
             {
-                return "{ftcPose=(x=" + aprilTagDetection.ftcPose.x +
+                return super.toString() +
+                       ",singleId=" + singleAprilTagId +
+                       ",ftcPose=(x=" + aprilTagDetection.ftcPose.x +
                        ",y=" + aprilTagDetection.ftcPose.y +
                        ",z=" + aprilTagDetection.ftcPose.z +
                        ",yaw=" + aprilTagDetection.ftcPose.yaw +
@@ -347,31 +102,285 @@ public class FtcVisionAprilTag
                        ",range=" + aprilTagDetection.ftcPose.range +
                        ",bearing=" + aprilTagDetection.ftcPose.bearing +
                        ",elevation=" + aprilTagDetection.ftcPose.elevation + ")" +
-
-                       ",robotPose=(" + aprilTagDetection.robotPose + ")" +
-                       ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
-                       ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
-
-                       ",id=" + id +
-                       ",rect=" + getObjectRect() +
-                       ",rotatedRect=(width=" + getPixelWidth() +
-                       ",height=" + getPixelHeight() +
-                       ",angle=" + getRotatedRectAngle() + ")";
+                       ",timestamp=" + timestampSec;
             }
             else
             {
-                return "{robotPose=" + aprilTagDetection.robotPose +
-                       ",nanoTimestamp=" + aprilTagDetection.frameAcquisitionNanoTime +
-                       ",distanceUnit=" + aprilTagDetection.distanceUnit + "}" +
-
-                       ",id=" + id +
-                       ",rect=" + getObjectRect() +
-                       ",rotatedRect=(width=" + getPixelWidth() +
-                       ",height=" + getPixelHeight() +
-                       ",angle=" + getRotatedRectAngle();
+                return super.toString() +
+                       ",singleId=" + singleAprilTagId;
             }
         }   //toString
 
+        //
+        // Implement TrcVision.TargetInfo abstract methods.
+        //
+
+        /**
+         * This method returns the robot field pose on the ground.
+         *
+         * @return robot field pose, null if not supported.
+         */
+        @Override
+        public TrcPose2D getRobotPose()
+        {
+            if (robotPose == null)
+            {
+                if (aprilTagDetection.robotPose != null)
+                {
+                    Position camFieldPos = aprilTagDetection.robotPose.getPosition().toUnit(DistanceUnit.INCH);
+                    double trcX = camFieldPos.x;    // Distance Right in inches
+                    double trcY = camFieldPos.y;    // Distance Forward in inches
+                    double trcAngle = -aprilTagDetection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES);
+                    // Normalize angle output cleanly to the strict [-180, 180] range
+                    trcAngle = (trcAngle + 180.0) % 360.0;
+                    if (trcAngle < 0) trcAngle += 360.0;
+                    trcAngle -= 180.0;
+                    if (cameraInfo.camPose != null)
+                    {
+                        // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
+                        // Both are CW Positive, so they add together directly.
+                        double totalRotationRad = Math.toRadians(trcAngle + cameraInfo.camPose.yaw);
+                        double cosHeading = Math.cos(totalRotationRad);
+                        double sinHeading = Math.sin(totalRotationRad);
+                        // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
+                        double globalCamOffsetX =
+                            (cameraInfo.camPose.x * cosHeading) - (cameraInfo.camPose.y * sinHeading);
+                        double globalCamOffsetY =
+                            (cameraInfo.camPose.x * sinHeading) + (cameraInfo.camPose.y * cosHeading);
+                        // Subtract the global offset values to shift the coordinate center back to the robot core
+                        double robotFieldX = trcX - globalCamOffsetX;
+                        double robotFieldY = trcY - globalCamOffsetY;
+
+                        robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
+                    }
+                    else
+                    {
+                        robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                    }
+                }
+            }
+
+            return robotPose;
+        }   //getRobotPose
+
+        /**
+         * This method returns the projected 2D pose on the ground of the detected target relative to the camera.
+         *
+         * @return pose of the detected target relative to camera, null if not supported.
+         */
+        @Override
+        public TrcPose2D getTargetPose()
+        {
+            if (targetPose == null)
+            {
+                if (aprilTagDetection.ftcPose != null)
+                {
+                    // TODO: Need to adjust with camPose
+                    // Get pose from AprilTag detection ftcPose.
+                    targetPose = new TrcPose2D(
+                        aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.bearing);
+                    targetDistance = aprilTagDetection.ftcPose.range;
+                }
+            }
+
+            return targetPose;
+        }   //getTargetPose
+
+        /**
+         * This method returns the target's real world ground distance from the camera.
+         *
+         * @return target real world ground distance, null if not supported.
+         */
+        @Override
+        public Double getTargetDistance()
+        {
+            if (targetDistance == null)
+            {
+                // getTargetPose will calculate targetDistance.
+                getTargetPose();
+            }
+
+            return targetDistance;
+        }   //getTargetDistance
+
+        /**
+         * This method returns the target's real world width.
+         *
+         * @return target real world width, null if not supported.
+         */
+        @Override
+        public Double getTargetWidth()
+        {
+            if (targetWidth == null)
+            {
+                if (aprilTagDetection instanceof AprilTagSingleDetection)
+                {
+                    // targetWidth is only supported with Single Detection.
+                    AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
+                    targetWidth = singleDet.metadata.tagsize;
+                }
+            }
+
+            return targetWidth;
+        }   //getTargetWidth
+
+        /**
+         * This method returns the normalized area percent of the detected target.
+         *
+         * @return normalized area percent of the detected target (0.0 to 1.0), null if not supported.
+         */
+        @Override
+        public Double getNormalizedTargetArea()
+        {
+            if (normalizedTargetArea == null)
+            {
+                if (rotatedRectVertices == null)
+                {
+                    getRotatedRectVertices();
+                }
+
+                if (rotatedRectVertices != null)
+                {
+                    // Wrap points inside an OpenCV MatOfPoint container
+                    MatOfPoint contour = new MatOfPoint();
+                    contour.fromArray(rotatedRectVertices);
+                    // Compute the area (false = return absolute value instead of signed area)
+                    normalizedTargetArea =
+                        Imgproc.contourArea(contour, false) / (cameraInfo.camImageWidth*cameraInfo.camImageHeight);
+                    contour.release();
+                }
+            }
+
+            return normalizedTargetArea;
+        }   //getNormalizedTargetArea
+
+        /**
+         * This method returns the pixel rect of the detected target.
+         *
+         * @return pixel rect of the detected target, null if not supported.
+         */
+        @Override
+        public Rect getPixelRect()
+        {
+            if (pixelRect == null)
+            {
+                // getRotatedRectVertices will calculate pixelRect.
+                getRotatedRectVertices();
+            }
+
+            return pixelRect;
+        }   //getPixelRect
+
+        /**
+         * This method returns the pixel width of the detected target. This may be different from pixel rect width.
+         * If the target is rotated, this will give you a more accurate width.
+         *
+         * @return target pixel width, null if not supported.
+         */
+        @Override
+        public Double getPixelWidth()
+        {
+            if (pixelWidth == null)
+            {
+                // getRotatedRectVertices will calculate pixelWidth.
+                getRotatedRectVertices();
+            }
+
+            return pixelWidth;
+        }   //getPixelWidth
+
+        /**
+         * This method returns the pixel height of the detected target. This may be different from pixel rect height.
+         * If the target is rotated, this will give you a more accurate height.
+         *
+         * @return target pixel height, null if not supported.
+         */
+        @Override
+        public Double getPixelHeight()
+        {
+            if (pixelHeight == null)
+            {
+                // getRotatedRectVertices will calculate pixelHeight.
+                getRotatedRectVertices();
+            }
+
+            return pixelHeight;
+        }   //getPixelHeight
+
+        /**
+         * This method returns the target's rotated rectangle angle.
+         *
+         * @return rotated rectangle angle, null if not supported.
+         */
+        @Override
+        public Double getRotatedRectAngle()
+        {
+            if (rotatedRectAngle == null)
+            {
+                // getRotatedRectVertices will calculate rotatedRectAngle.
+                getRotatedRectVertices();
+            }
+
+            return rotatedRectAngle;
+        }   //getRotatedRectAngle
+
+        /**
+         * This method returns the rotated rect vertices of the detected target.
+         *
+         * @return rotated rect vertices, null if not supported.
+         */
+        @Override
+        public Point[] getRotatedRectVertices()
+        {
+            if (rotatedRectVertices == null)
+            {
+                if (aprilTagDetection instanceof AprilTagSingleDetection)
+                {
+                    // rotatedRectVertices is only supported with Single Detection.
+                    AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDetection;
+                    if (singleDet.corners != null && singleDet.corners.length > 0)
+                    {
+                        double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
+                        double yMin = Double.MAX_VALUE, yMax = -Double.MAX_VALUE;
+
+                        rotatedRectVertices = singleDet.corners;
+                        for (Point point: singleDet.corners)
+                        {
+                            if (point.x < xMin) xMin = point.x;
+                            if (point.x > xMax) xMax = point.x;
+                            if (point.y < yMin) yMin = point.y;
+                            if (point.y > yMax) yMax = point.y;
+                        }
+                        pixelRect = new Rect((int)xMin, (int)yMin, (int)(xMax - xMin), (int)(yMax - yMin));
+                        // Calculate vertices related info: pixelWidth, pixelHeight and rotatedRectAngle.
+                        double side1 = TrcUtil.magnitude(
+                            rotatedRectVertices[1].x - rotatedRectVertices[0].x,
+                            rotatedRectVertices[1].y - rotatedRectVertices[0].y);
+                        double side2 = TrcUtil.magnitude(
+                            rotatedRectVertices[2].x - rotatedRectVertices[1].x,
+                            rotatedRectVertices[2].y - rotatedRectVertices[1].y);
+                        if (side2 > side1)
+                        {
+                            pixelWidth = side1;
+                            pixelHeight = side2;
+                            rotatedRectAngle = Math.toDegrees(Math.atan(
+                                (rotatedRectVertices[1].y - rotatedRectVertices[0].y) /
+                                (rotatedRectVertices[1].x - rotatedRectVertices[0].x)));
+                        }
+                        else
+                        {
+                            pixelWidth = side2;
+                            pixelHeight = side1;
+                            rotatedRectAngle = Math.toDegrees(Math.atan(
+                                (rotatedRectVertices[2].y - rotatedRectVertices[1].y) /
+                                (rotatedRectVertices[2].x - rotatedRectVertices[1].x)));
+                        }
+                    }
+                }
+            }
+
+            return rotatedRectVertices;
+        }   //getRotatedRectVertices
     }   //class DetectedObject
 
     /**
@@ -424,7 +433,6 @@ public class FtcVisionAprilTag
             this.angleUnit = angleUnit;
             return this;
         }   //setOutputUnits
-
     }   //class Parameters
 
     public final TrcDbgTrace tracer;
@@ -441,9 +449,9 @@ public class FtcVisionAprilTag
      */
     public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily, TrcVision.CameraInfo cameraInfo)
     {
-        tracer = new TrcDbgTrace();
-        dashboard = FtcDashboard.getInstance();
-        instanceName = tagFamily.name();
+        this.tracer = new TrcDbgTrace();
+        this.dashboard = FtcDashboard.getInstance();
+        this.instanceName = tagFamily.name();
         this.cameraInfo = cameraInfo;
         // Create the AprilTag processor.
         AprilTagProcessor.Builder builder = new AprilTagProcessor.Builder().setTagFamily(tagFamily);
@@ -492,9 +500,9 @@ public class FtcVisionAprilTag
      *
      * @return sorted target info array list.
      */
-    public ArrayList<TrcVisionTargetInfo<DetectedObject>> getDetectedTargetsInfo()
+    public ArrayList<TargetInfo> getDetectedTargets()
     {
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> targetsInfo = null;
+        ArrayList<TargetInfo> targetsInfo = null;
         ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
 
         if (targets != null && !targets.isEmpty())
@@ -502,36 +510,54 @@ public class FtcVisionAprilTag
             targetsInfo = new ArrayList<>();
             for (AprilTagDetection aprilTagDet: targets)
             {
-                TrcVisionTargetInfo<DetectedObject> targetInfo =
-                    new TrcVisionTargetInfo<>(new DetectedObject(aprilTagDet, cameraInfo.camPose));
+                if (aprilTagDet instanceof AprilTagSingleDetection)
+                {
+                    AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDet;
+                    tracer.traceInfo(
+                        instanceName, "single: id=%d, metadata=%s, ftpPose=%s, robotPose=%s",
+                        singleDet.id, singleDet.metadata != null, singleDet.ftcPose != null, singleDet.robotPose != null);
+                }
+                else
+                {
+                    AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDet;
+                    tracer.traceInfo(
+                        instanceName,
+                        "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, r%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
+                        clusterDet.metadata.name,
+                        clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
+                        clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
+                        clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
+                        clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
+                }
+                TargetInfo targetInfo = new TargetInfo(aprilTagDet, cameraInfo);
                 tracer.traceDebug(instanceName, "AprilTagInfo=%s", targetInfo);
                 targetsInfo.add(targetInfo);
             }
         }
 
         return targetsInfo;
-    }   //getDetectedTargetsInfo
+    }   //getDetectedTargets
 
     /**
-     * This method returns the target info of the best detected AprilTag.
+     * This method returns the target info of the best detected single AprilTag.
      *
      * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TrcVisionTargetInfo<DetectedObject> getBestDetectedAprilTagInfo(
-        int[] aprilTagIds, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    public TargetInfo getBestDetectedSingle(int[] aprilTagIds, Comparator<? super TargetInfo> comparator)
     {
-        TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo();
+        TargetInfo bestTarget = null;
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets();
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
+            // Process the list backward to make sure removing members won't mess up iteration.
             for (int i = detectedTargets.size() - 1; i >= 0; i--)
             {
-                TrcVisionTargetInfo<DetectedObject> targetInfo = detectedTargets.get(i);
-                if (targetInfo.detectedObj.aprilTagDetection instanceof AprilTagClusterDetection ||
-                    aprilTagIds != null && matchAprilTagId((int) targetInfo.detectedObj.id, aprilTagIds) == -1)
+                TargetInfo targetInfo = detectedTargets.get(i);
+                if (targetInfo.aprilTagDetection instanceof AprilTagClusterDetection ||
+                    aprilTagIds != null && matchAprilTagId(targetInfo.singleAprilTagId, aprilTagIds) == -1)
                 {
                     // Not the one we want, remove it from the list.
                     detectedTargets.remove(i);
@@ -550,7 +576,7 @@ public class FtcVisionAprilTag
         }
 
         return bestTarget;
-    }   //getBestDetectedAprilTagInfo
+    }   //getBestDetectedSingle
 
     /**
      * This method returns the target info of the best detected AprilTag cluster.
@@ -559,19 +585,19 @@ public class FtcVisionAprilTag
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TrcVisionTargetInfo<DetectedObject> getBestDetectedClusterInfo(
-        String clusterName, Comparator<? super TrcVisionTargetInfo<DetectedObject>> comparator)
+    public TargetInfo getBestDetectedCluster(String clusterName, Comparator<? super TargetInfo> comparator)
     {
-        TrcVisionTargetInfo<DetectedObject> bestTarget = null;
-        ArrayList<TrcVisionTargetInfo<DetectedObject>> detectedTargets = getDetectedTargetsInfo();
+        TargetInfo bestTarget = null;
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets();
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
             for (int i = detectedTargets.size() - 1; i >= 0; i--)
             {
-                TrcVisionTargetInfo<DetectedObject> targetInfo = detectedTargets.get(i);
-                if (targetInfo.detectedObj.aprilTagDetection instanceof AprilTagSingleDetection ||
-                    clusterName != null && !clusterName.equals(targetInfo.detectedObj.id))
+                TargetInfo targetInfo = detectedTargets.get(i);
+                if (targetInfo.aprilTagDetection instanceof AprilTagSingleDetection ||
+                    clusterName != null &&
+                    !clusterName.equals(((AprilTagClusterDetection) targetInfo.aprilTagDetection).metadata.name))
                 {
                     // Not the one we want, remove it from the list.
                     detectedTargets.remove(i);
@@ -590,7 +616,7 @@ public class FtcVisionAprilTag
         }
 
         return bestTarget;
-    }   //getBestDetectedClusterInfo
+    }   //getBestDetectedCluster
 
     /**
      * This method finds a matching AprilTag ID in the specified array and returns the found index.
@@ -623,27 +649,33 @@ public class FtcVisionAprilTag
      */
     public int updateStatus(int lineNum)
     {
-        TrcVisionTargetInfo<DetectedObject> object = getBestDetectedAprilTagInfo(null, null);
-        if (object != null)
+        TargetInfo target = getBestDetectedSingle(null, null);
+        if (target != null)
         {
-            AprilTagSingleDetection singleDet = (AprilTagSingleDetection) object.detectedObj.aprilTagDetection;
             dashboard.displayPrintf(
-                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
-                singleDet.id, object.objDepth, object.detectedObj.getObjectPose(), object.detectedObj.robotPose);
+                lineNum++, "WebcamAprilTagSingle[%d]: dist=%.1f, targetPose=%s, robotPose=%s",
+                target.singleAprilTagId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
         }
         else
         {
             dashboard.displayPrintf(lineNum++, "");
         }
 
-        object = getBestDetectedClusterInfo(null, null);
-        if (object != null)
+        target = getBestDetectedCluster(null, null);
+        if (target != null)
         {
-            AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) object.detectedObj.aprilTagDetection;
+            AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) target.aprilTagDetection;
             dashboard.displayPrintf(
-                lineNum++, "AprilTag[%s]: depth=%f, targetPose=%s, robotPose=%s",
-                clusterDet.metadata.name, object.objDepth, object.detectedObj.getObjectPose(),
-                object.detectedObj.robotPose);
+                lineNum++, "WebcamAprilTagCluster[%s]: dist=%.1f, targetPose=%s, robotPose=%s",
+                clusterDet.metadata.name, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
+            tracer.traceInfo(
+                instanceName,
+                "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, r%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
+                clusterDet.metadata.name,
+                clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
+                clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
+                clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
+                clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
         }
         else
         {

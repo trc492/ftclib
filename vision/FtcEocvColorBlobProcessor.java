@@ -38,6 +38,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
@@ -45,15 +46,14 @@ import java.util.concurrent.RejectedExecutionException;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.timer.TrcTimer;
 import trclib.vision.TrcOpenCvColorBlobPipeline;
-import trclib.vision.TrcOpenCvDetector;
 import trclib.vision.TrcOpenCvPipeline;
+import trclib.vision.TrcVision;
 
 /**
  * This class implements a vision processor on top of an EOCV color blob pipeline.
  */
 
-public class FtcEocvColorBlobProcessor
-    implements TrcOpenCvPipeline<TrcOpenCvDetector.DetectedObject<?>>, VisionProcessor
+public class FtcEocvColorBlobProcessor implements TrcOpenCvPipeline, VisionProcessor
 {
     private static final double DEF_STREAM_INTERVAL = 0.1;  // in seconds (10 fps)
     private static final int DEF_LINE_COLOR = Color.GREEN;
@@ -62,14 +62,15 @@ public class FtcEocvColorBlobProcessor
     private static final float DEF_TEXT_SIZE = 20.0f;
     private final android.graphics.Rect srcRect = new android.graphics.Rect();
     private final android.graphics.Rect dstRect = new android.graphics.Rect();
+
     private final TrcOpenCvColorBlobPipeline colorBlobPipeline;
     public final TrcDbgTrace tracer;
     private final String instanceName;
     private final TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams;
-    private final Paint linePaint;
-    private final Paint textPaint;
     private final float strokeWidth;
     private final float textSize;
+    private final Paint linePaint;
+    private final Paint textPaint;
     private final Mat rawColorMat = new Mat();
 
     private ExecutorService dashboardExecutor = null;
@@ -85,6 +86,11 @@ public class FtcEocvColorBlobProcessor
      * @param instanceName specifies the instance name.
      * @param pipelineParams specifies pipeline parameters.
      * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
+     * @param cameraInfo specifies the camera info.
+     * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get the ground offset of the detected target, can be
+     *        null if not provided.
      * @param lineColor specifies the line color to draw the bounding rectangle, can be null if not provided in which
      *        case default color is used.
      * @param lineWidth specifies the line width to draw the bounding rectangle, can be null if not provided in which
@@ -96,26 +102,28 @@ public class FtcEocvColorBlobProcessor
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, Integer lineColor, Float lineWidth,
-        Integer textColor, Float textSize)
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, TrcVision.CameraInfo cameraInfo,
+        TrcVision.TargetKnownWidth targetKnownWidth, TrcVision.TargetGroundOffset targetGroundOffset,
+        Integer lineColor, Float lineWidth, Integer textColor, Float textSize)
     {
-        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
+        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
+            instanceName, pipelineParams, solvePnpParams, cameraInfo, targetKnownWidth, targetGroundOffset);
         this.tracer = colorBlobPipeline.tracer;
         this.instanceName = instanceName;
         this.pipelineParams = pipelineParams;
-        this.strokeWidth = lineWidth != null ? lineWidth : DEF_LINE_WIDTH;
-        this.textSize = textSize != null ? textSize : DEF_TEXT_SIZE;
+        this.strokeWidth = lineWidth != null? lineWidth: DEF_LINE_WIDTH;
+        this.textSize = textSize != null? textSize: DEF_TEXT_SIZE;
 
         linePaint = new Paint();
         linePaint.setAntiAlias(true);
         linePaint.setStrokeCap(Paint.Cap.ROUND);
-        linePaint.setColor(lineColor != null ? lineColor : DEF_LINE_COLOR);
+        linePaint.setColor(lineColor != null? lineColor: DEF_LINE_COLOR);
         linePaint.setStrokeWidth(this.strokeWidth);
 
         textPaint = new Paint();
         textPaint.setAntiAlias(true);
         textPaint.setTextAlign(Paint.Align.LEFT);
-        textPaint.setColor(textColor != null ? textColor : DEF_TEXT_COLOR);
+        textPaint.setColor(textColor != null? textColor: DEF_TEXT_COLOR);
         textPaint.setTextSize(this.textSize);
     }   //FtcEocvColorBlobProcessor
 
@@ -125,12 +133,19 @@ public class FtcEocvColorBlobProcessor
      * @param instanceName specifies the instance name.
      * @param pipelineParams specifies pipeline parameters.
      * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
+     * @param cameraInfo specifies the camera info.
+     * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get the ground offset of the detected target, can be
+     *        null if not provided.
      */
     public FtcEocvColorBlobProcessor(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, TrcVision.CameraInfo cameraInfo,
+        TrcVision.TargetKnownWidth targetKnownWidth, TrcVision.TargetGroundOffset targetGroundOffset)
     {
-        this(instanceName, pipelineParams, solvePnpParams, null, null, null, null);
+        this(instanceName, pipelineParams, solvePnpParams, cameraInfo, targetKnownWidth, targetGroundOffset,
+             null, null, null, null);
     }   //FtcEocvColorBlobProcessor
 
     /**
@@ -255,10 +270,10 @@ public class FtcEocvColorBlobProcessor
      * This method is called to process the input image through the pipeline.
      *
      * @param input specifies the input image to be processed.
-     * @return array of detected objects.
+     * @return list of detected objects.
      */
     @Override
-    public TrcOpenCvColorBlobPipeline.DetectedObject[] process(Mat input)
+    public ArrayList<TrcVision.TargetInfo> process(Mat input)
     {
         return colorBlobPipeline.process(input);
     }   //process
@@ -266,13 +281,13 @@ public class FtcEocvColorBlobProcessor
     /**
      * This method returns the array of detected objects.
      *
-     * @return array of detected objects.
+     * @return list of detected objects.
      */
     @Override
-    public TrcOpenCvColorBlobPipeline.DetectedObject[] getDetectedObjects()
+    public ArrayList<TrcVision.TargetInfo> getDetectedTargets()
     {
-        return colorBlobPipeline.getDetectedObjects();
-    }   //getDetectedObjects
+        return colorBlobPipeline.getDetectedTargets();
+    }   //getDetectedTargets
 
     /**
      * This method enables image annotation of the detected object.
@@ -410,8 +425,9 @@ public class FtcEocvColorBlobProcessor
      * @param onscreenHeight the height of the canvas that corresponds to the image
      * @param scaleBmpPxToCanvasPx multiply pixel coords by this to scale to canvas coords
      * @param scaleCanvasDensity a scaling factor to adjust e.g. text size. Relative to Nexus5 DPI.
-     * @param userContext whatever you passed in when requesting the draw hook :monkey:
+     * @param userContext whatever you passed in when requesting the draw hook.
      */
+    @SuppressWarnings("unchecked")
     @Override
     public synchronized void onDrawFrame(
         Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity,
@@ -421,13 +437,13 @@ public class FtcEocvColorBlobProcessor
         // camera stream).
         if (pipelineParams.annotation.enabled)
         {
-            TrcOpenCvColorBlobPipeline.DetectedObject[] dets =
-                (TrcOpenCvColorBlobPipeline.DetectedObject[]) userContext;
+            ArrayList<TrcVision.TargetInfo> targets = (ArrayList<TrcVision.TargetInfo>) userContext;
 
             if (dashboardExecutor == null)
             {
                 // No FTC Dashboard streaming: just annotate directly
-                drawAnnotations(dets, canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity);
+                drawAnnotations(
+                    targets, canvas, onscreenWidth, onscreenHeight, scaleBmpPxToCanvasPx, scaleCanvasDensity);
             }
             else
             {
@@ -508,7 +524,7 @@ public class FtcEocvColorBlobProcessor
                     dashboardCanvas.drawBitmap(rawBitmap, srcRect, dstRect, null);
                     // Draw annotations in upscale space
                     drawAnnotations(
-                        dets, dashboardCanvas, onscreenWidth, onscreenHeight, (float) onscreenWidth/rawBitmapWidth,
+                        targets, dashboardCanvas, onscreenWidth, onscreenHeight, (float) onscreenWidth/rawBitmapWidth,
                         scaleCanvasDensity);
                     // Stream annotated upscale image to dashboard
                     try
@@ -548,7 +564,7 @@ public class FtcEocvColorBlobProcessor
     /**
      * Draws annotations on the given canvas.
      *
-     * @param dets array of detected objects
+     * @param targets list of detected objects
      * @param canvas canvas to draw on
      * @param canvasWidth canvas width in pixels
      * @param canvasHeight canvas height in pixels
@@ -556,7 +572,7 @@ public class FtcEocvColorBlobProcessor
      * @param scaleCanvasDensity scale factor for device density (e.g., DPI)
      */
     private void drawAnnotations(
-        TrcOpenCvColorBlobPipeline.DetectedObject[] dets, Canvas canvas, int canvasWidth, int canvasHeight,
+        ArrayList<TrcVision.TargetInfo> targets, Canvas canvas, int canvasWidth, int canvasHeight,
         float scaleBmpPxToCanvasPx, float scaleCanvasDensity)
     {
         // Combined scaling for upscaling and device density
@@ -564,12 +580,12 @@ public class FtcEocvColorBlobProcessor
         linePaint.setStrokeWidth(strokeWidth*scale);
         textPaint.setTextSize(textSize*scale);
 
-        if (dets != null)
+        if (targets != null)
         {
-            for (TrcOpenCvColorBlobPipeline.DetectedObject object : dets)
+            for (TrcVision.TargetInfo target: targets)
             {
-                Rect objRect = object.getObjectRect();
-                Point[] vertices = pipelineParams.annotation.drawRotatedRect ? object.getRotatedRectVertices() : null;
+                Rect targetRect = target.getPixelRect();
+                Point[] vertices = pipelineParams.annotation.drawRotatedRect? target.getRotatedRectVertices(): null;
 
                 if (vertices != null)
                 {
@@ -584,28 +600,28 @@ public class FtcEocvColorBlobProcessor
                             linePaint);
                     }
                     canvas.drawText(
-                        object.label, (float) (objRect.x*scaleBmpPxToCanvasPx),
-                        (float) (objRect.y*scaleBmpPxToCanvasPx), textPaint);
+                        target.label, (float) (targetRect.x*scaleBmpPxToCanvasPx),
+                        (float) (targetRect.y*scaleBmpPxToCanvasPx), textPaint);
                 }
                 else
                 {
                     // Detected rect is on camera Mat that has different resolution from the canvas. Therefore, we must
                     // scale the rect to canvas resolution.
-                    float left = objRect.x*scaleBmpPxToCanvasPx;
-                    float right = (objRect.x + objRect.width)*scaleBmpPxToCanvasPx;
-                    float top = objRect.y*scaleBmpPxToCanvasPx;
-                    float bottom = (objRect.y + objRect.height)*scaleBmpPxToCanvasPx;
+                    float left = targetRect.x*scaleBmpPxToCanvasPx;
+                    float right = (targetRect.x + targetRect.width)*scaleBmpPxToCanvasPx;
+                    float top = targetRect.y*scaleBmpPxToCanvasPx;
+                    float bottom = (targetRect.y + targetRect.height)*scaleBmpPxToCanvasPx;
                     canvas.drawLine(left, top, right, top, linePaint);
                     canvas.drawLine(right, top, right, bottom, linePaint);
                     canvas.drawLine(right, bottom, left, bottom, linePaint);
                     canvas.drawLine(left, bottom, left, top, linePaint);
-                    canvas.drawText(object.label, left, top, textPaint);
+                    canvas.drawText(target.label, left, top, textPaint);
                 }
 
                 if (pipelineParams.annotation.drawCrosshair)
                 {
-                    float centerX = (objRect.x + objRect.width/2.0f) * scaleBmpPxToCanvasPx;
-                    float centerY = (objRect.y + objRect.height) * scaleBmpPxToCanvasPx;
+                    float centerX = (targetRect.x + targetRect.width/2.0f) * scaleBmpPxToCanvasPx;
+                    float centerY = (targetRect.y + targetRect.height) * scaleBmpPxToCanvasPx;
                     float halfCrosshairLen = (10.0f * scaleBmpPxToCanvasPx)/2.0f;
                     canvas.drawLine(
                         centerX - halfCrosshairLen, centerY, centerX + halfCrosshairLen, centerY, linePaint);

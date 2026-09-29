@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2022 Titan Robotics Club (http://www.titanrobotics.com)
- * Copyright (c) 2021 OpenFTC Team
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +28,7 @@ import org.opencv.core.Mat;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 import trclib.vision.TrcOpenCvColorBlobPipeline;
+import trclib.vision.TrcVision;
 
 /**
  * This class implements an EOCV color blob pipeline.
@@ -43,12 +43,19 @@ public class FtcRawEocvColorBlobPipeline extends OpenCvPipeline
      * @param instanceName specifies the instance name.
      * @param pipelineParams specifies the pipeline parameters.
      * @param solvePnpParams specifies SolvePnP parameters, can be null if not provided.
+     * @param cameraInfo specifies the camera info.
+     * @param targetKnownWidth specifies the method to call to get the target's known width, can be null if not
+     *        provided.
+     * @param targetGroundOffset specifies the method to call to get target's ground offset, can be null if not
+     *        provided.
      */
     public FtcRawEocvColorBlobPipeline(
         String instanceName, TrcOpenCvColorBlobPipeline.PipelineParams pipelineParams,
-        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams)
+        TrcOpenCvColorBlobPipeline.SolvePnpParams solvePnpParams, TrcVision.CameraInfo cameraInfo,
+        TrcVision.TargetKnownWidth targetKnownWidth, TrcVision.TargetGroundOffset targetGroundOffset)
     {
-        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(instanceName, pipelineParams, solvePnpParams);
+        colorBlobPipeline = new TrcOpenCvColorBlobPipeline(
+            instanceName, pipelineParams, solvePnpParams, cameraInfo, targetKnownWidth, targetGroundOffset);
     }   //FtcRawEocvColorBlobPipeline
 
     /**
