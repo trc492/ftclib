@@ -29,10 +29,6 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
-import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
-import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
@@ -49,7 +45,6 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
-import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcVision;
@@ -539,59 +534,6 @@ public class FtcLimelightVision
 
             return rotatedRectVertices;
         }   //getRotatedRectVertices
-
-        /**
-         * This method projects the target pose in Camera Space to Floor Space.
-         *
-         * @param targetPoseCameraSpace specifies the 3D target pose in Camera Space.
-         * @param cameraPose specifies 3D camera pose in Robot Space.
-         * @return target 2D pose in Floor Space.
-         */
-        public TrcPose2D projectCameraSpaceToFloor(Pose3D targetPoseCameraSpace, TrcPose3D cameraPose)
-        {
-            // 1. Convert cameraPose to Apache types
-            Vector3D camPos = new Vector3D(cameraPose.x, cameraPose.y, cameraPose.z);
-
-            // Build camera rotation matrix using roll (X), pitch (Y), yaw (Z)
-            Rotation camRot = new Rotation(
-                RotationOrder.XYZ, // or XYZ depending on how you define your axes
-                RotationConvention.VECTOR_OPERATOR,
-                Math.toRadians(cameraPose.roll),
-                Math.toRadians(cameraPose.pitch),
-                Math.toRadians(cameraPose.yaw)
-            );
-
-            // 2. Convert targetPoseCameraSpace to Apache types
-            Position posTargetFromCam = targetPoseCameraSpace.getPosition();
-            Vector3D targetPos = new Vector3D(
-                posTargetFromCam.x,
-                posTargetFromCam.y,
-                posTargetFromCam.z
-            );
-
-            // For now assume target orientation is ignored; only position matters
-            // Compute vector from camera to target in camera frame
-            Vector3D dirCam = targetPos.subtract(camPos);
-
-            // 3. Rotate vector into world frame
-            Vector3D dirWorld = camRot.applyTo(dirCam);
-
-            // 4. Intersect ray with ground plane Z=0
-            double s = -camPos.getZ() / dirWorld.getZ();
-            if (s < 0)
-            {
-                // Intersection is behind the camera — invalid
-                return null;
-            }
-
-            Vector3D floorPoint = camPos.add(dirWorld.scalarMultiply(s));
-            Vector3D delta = floorPoint.subtract(camPos);
-
-            // 5. Convert to TrcPose2D: Y forward, X right, angle CW from Y
-            double angleDeg = Math.toDegrees(Math.atan2(delta.getX(), delta.getY()));
-
-            return new TrcPose2D(delta.getX(), delta.getY(), angleDeg);
-        }   //projectCameraSpaceToFloor
     }   //class TargetInfo
 
     public final TrcDbgTrace tracer;

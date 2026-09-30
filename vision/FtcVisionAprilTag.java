@@ -30,6 +30,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.opencv.core.MatOfPoint;
@@ -43,6 +44,7 @@ import java.util.Comparator;
 import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcVision;
 
@@ -175,10 +177,8 @@ public class FtcVisionAprilTag
             {
                 if (aprilTagDetection.ftcPose != null)
                 {
-                    // TODO: Need to adjust with camPose
-                    // Get pose from AprilTag detection ftcPose.
-                    targetPose = new TrcPose2D(
-                        aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.bearing);
+                    TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection.ftcPose);
+                    targetPose = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
                     targetDistance = aprilTagDetection.ftcPose.range;
                 }
             }
@@ -484,6 +484,18 @@ public class FtcVisionAprilTag
     {
         return instanceName;
     }   //toString
+
+    /**
+     * This method translates a 3D AprilTag pose from the FTC SDK's normalized reference frame into platform-agnostic
+     * TrcLib frame convention.
+     *
+     * @param ftcPose specifies the AprilTag 3D Pose from FTC SDK.
+     * @return translated TrcPose3D.
+     */
+    public static TrcPose3D ftcPoseToTrcPose3D(AprilTagPoseFtc ftcPose)
+    {
+        return new TrcPose3D(ftcPose.x, ftcPose.y, ftcPose.z, -ftcPose.pitch, -ftcPose.roll, -ftcPose.yaw);
+    }   //ftcPoseToTrcPose3D
 
     /**
      * This method returns the AprilTag vision processor.
