@@ -544,7 +544,7 @@ public class FtcLimelightVision
     private final TrcVision.TargetGroundOffset targetGroundOffset;
     private final TrcHomographyMapper homographyMapper;
     public final Limelight3A limelight;
-    private int pipelineIndex = 0;
+    private int pipelineIndex = -1;
     private ResultType statusResultType = ResultType.Fiducial;  // Assuming pipeline 0 is AprilTag
     private Double lastCapturedTimestampSec = null;
 
@@ -571,7 +571,6 @@ public class FtcLimelightVision
             new TrcHomographyMapper(cameraInfo.cameraRect, cameraInfo.worldRect): null;
         limelight = hardwareMap.get(Limelight3A.class, instanceName);
         limelight.setPollRateHz(100);
-        setPipeline(pipelineIndex);
     }   //FtcLimelightVision
 
     /**
@@ -602,23 +601,32 @@ public class FtcLimelightVision
     }   //toString
 
     /**
-     * This method starts/pauses vision processing.
+     * This method enables/disables vision processing.
      *
-     * @param enabled specifies true to start vision processing, false to pause.
+     * @param pipelineIndex specifies pipeline index to switched to when enabling, -1 to disable.
      */
-    public void setVisionEnabled(boolean enabled)
+    public void setVisionEnabled(int pipelineIndex)
     {
-        boolean isActive = isVisionEnabled();
-
-        if (!isActive && enabled)
+        // Only do it if setting something different.
+        if (pipelineIndex != this.pipelineIndex)
         {
-            tracer.traceDebug(instanceName, "Enabling LimelightVision.");
-            limelight.start();
-        }
-        else if (isActive && !enabled)
-        {
-            tracer.traceDebug(instanceName, "Disabling LimelightVision.");
-            limelight.pause();
+            if (pipelineIndex == -1)
+            {
+                // Disable vision.
+                tracer.traceDebug(instanceName, "Disabling LimelightVision.");
+                limelight.pause();
+                this.pipelineIndex = -1;
+            }
+            else
+            {
+                tracer.traceDebug(instanceName, "Enabling LimelightVision for pipeline " + pipelineIndex);
+                limelight.start();
+                if (limelight.pipelineSwitch(pipelineIndex))
+                {
+                    this.pipelineIndex = pipelineIndex;
+                    tracer.traceDebug(instanceName, "Successfully set to pipeline %d.", pipelineIndex);
+                }
+            }
         }
     }   //setVisionEnabled
 
@@ -629,7 +637,7 @@ public class FtcLimelightVision
      */
     public boolean isVisionEnabled()
     {
-        return limelight.isConnected() && limelight.isRunning();
+        return pipelineIndex != -1;
     }   //isVisionEnabled
 
     /**
@@ -651,25 +659,6 @@ public class FtcLimelightVision
             tracer.traceDebug(instanceName, "robotHeading=%f, ftcHeading=%f", trcRobotHeading, limelightYaw);
         }
     }   //updateRobotHeading
-
-    /**
-     * This method sets the vision pipeline.
-     *
-     * @param index specifies the pipeline index to be set active.
-     * @return true if successful, false otherwise.
-     */
-    public boolean setPipeline(int index)
-    {
-        boolean success = limelight.pipelineSwitch(index);
-
-        if (success)
-        {
-            pipelineIndex = index;
-            tracer.traceDebug(instanceName, "Successfully set to pipeline %d.", index);
-        }
-
-        return success;
-    }   //setPipeline
 
     /**
      * This method returns the last set active pipeline.
@@ -781,6 +770,10 @@ public class FtcLimelightVision
 
                             case Fiducial:
                                 objId = ((LLResultTypes.FiducialResult) obj).getFiducialId();
+                                break;
+
+                            case Color:
+                                objId = resultType.toString();
                                 break;
 
                             default:
