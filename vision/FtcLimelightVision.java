@@ -45,6 +45,7 @@ import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
+import trclib.pathdrive.TrcPose3D;
 import trclib.robotcore.TrcDbgTrace;
 import trclib.vision.TrcHomographyMapper;
 import trclib.vision.TrcVision;
@@ -136,48 +137,58 @@ public class FtcLimelightVision
         /**
          * This method returns the robot field pose on the ground.
          *
-         * @return robot field pose, null if not supported.
+         * @param targetFieldPose specifies 3D target field pose, can be null if not provided in which case the
+         *                        vision library has built-in Target field poses that calculates robotPose. If
+         *                        provided, this method will use it to calculate robot pose.
+         * @return robot field pose.
          */
         @Override
-        public TrcPose2D getRobotPose()
+        public TrcPose2D getRobotPose(TrcPose3D targetFieldPose)
         {
             if (robotPose == null)
             {
-                // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
-                Pose3D camFieldPose3d = USE_MT2? llResult.getBotpose_MT2(): llResult.getBotpose();
-
-                if (camFieldPose3d != null)
+                if (targetFieldPose == null)
                 {
-                    Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
-                    double trcX = camFieldPos.x;    // Distance Right in inches
-                    double trcY = camFieldPos.y;    // Distance Forward in inches
-                    double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
-                    // Normalize angle output cleanly to the strict [-180, 180] range
-                    trcAngle = (trcAngle + 180.0) % 360.0;
-                    if (trcAngle < 0) trcAngle += 360.0;
-                    trcAngle -= 180.0;
-                    if (cameraInfo.camPose != null)
-                    {
-                        // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
-                        // Both are CW Positive, so they add together directly.
-                        double totalRotationRad = Math.toRadians(trcAngle + cameraInfo.camPose.yaw);
-                        double cosHeading = Math.cos(totalRotationRad);
-                        double sinHeading = Math.sin(totalRotationRad);
-                        // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
-                        double globalCamOffsetX =
-                            (cameraInfo.camPose.x * cosHeading) - (cameraInfo.camPose.y * sinHeading);
-                        double globalCamOffsetY =
-                            (cameraInfo.camPose.x * sinHeading) + (cameraInfo.camPose.y * cosHeading);
-                        // Subtract the global offset values to shift the coordinate center back to the robot core
-                        double robotFieldX = trcX - globalCamOffsetX;
-                        double robotFieldY = trcY - globalCamOffsetY;
+                    // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
+                    Pose3D camFieldPose3d = USE_MT2? llResult.getBotpose_MT2(): llResult.getBotpose();
 
-                        robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
-                    }
-                    else
+                    if (camFieldPose3d != null)
                     {
-                        robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                        Position camFieldPos = camFieldPose3d.getPosition().toUnit(DistanceUnit.INCH);
+                        double trcX = camFieldPos.x;    // Distance Right in inches
+                        double trcY = camFieldPos.y;    // Distance Forward in inches
+                        double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
+                        // Normalize angle output cleanly to the strict [-180, 180] range
+                        trcAngle = (trcAngle + 180.0) % 360.0;
+                        if (trcAngle < 0) trcAngle += 360.0;
+                        trcAngle -= 180.0;
+                        if (cameraInfo.camPose != null)
+                        {
+                            // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
+                            // Both are CW Positive, so they add together directly.
+                            double totalRotationRad = Math.toRadians(trcAngle + cameraInfo.camPose.yaw);
+                            double cosHeading = Math.cos(totalRotationRad);
+                            double sinHeading = Math.sin(totalRotationRad);
+                            // TRC Left-Handed (CW Positive) 2D rotation matrix formulas:
+                            double globalCamOffsetX =
+                                (cameraInfo.camPose.x * cosHeading) - (cameraInfo.camPose.y * sinHeading);
+                            double globalCamOffsetY =
+                                (cameraInfo.camPose.x * sinHeading) + (cameraInfo.camPose.y * cosHeading);
+                            // Subtract the global offset values to shift the coordinate center back to the robot core
+                            double robotFieldX = trcX - globalCamOffsetX;
+                            double robotFieldY = trcY - globalCamOffsetY;
+
+                            robotPose = new TrcPose2D(robotFieldX, robotFieldY, trcAngle);
+                        }
+                        else
+                        {
+                            robotPose = new TrcPose2D(trcX, trcY, trcAngle);
+                        }
                     }
+                }
+                else
+                {
+                    robotPose = getRobotPoseByTargetFieldPose(targetFieldPose);
                 }
             }
 
@@ -884,7 +895,7 @@ public class FtcLimelightVision
             {
                 dashboard.displayPrintf(
                     lineNum++, "LLAprilTag[%s]: dist=%f, targetPose=%s, robotPose=%s",
-                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
+                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose(null));
             }
             else
             {
