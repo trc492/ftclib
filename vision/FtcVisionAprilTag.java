@@ -190,7 +190,7 @@ public class FtcVisionAprilTag
                 {
                     TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection.ftcPose);
                     targetPose3d = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
-                    targetPose2d = project3dTo2dSpace(targetPose3d);
+                    targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
                     TrcDbgTrace.globalTraceInfo(
                         "DEBUG!!!!",
