@@ -184,16 +184,17 @@ public class FtcVisionAprilTag
         @Override
         public TrcPose2D getTargetPose()
         {
-            if (targetPose == null)
+            if (targetPose2d == null)
             {
                 if (aprilTagDetection.ftcPose != null)
                 {
                     TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection.ftcPose);
-                    targetPose = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
+                    targetPose3d = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
+                    targetPose2d = project3dTo2dSpace(targetPose3d);
                     targetDistance = aprilTagDetection.ftcPose.range;
                     TrcDbgTrace.globalTraceInfo(
                         "DEBUG!!!!",
-                        "ftcPose=(x/y/z=%.1f/%.1f/%.1f, p/r/y=%.1f/%.1f/%.1f, d/b/e=%.1f/%.1f/%.1f), camPose=%s, targetPose=%s",
+                        "ftcPose=(x/y/z=%.1f/%.1f/%.1f, p/r/y=%.1f/%.1f/%.1f, d/b/e=%.1f/%.1f/%.1f), camPose=%s, targetPose3d=%s",
                         aprilTagDetection.ftcPose.x,
                         aprilTagDetection.ftcPose.y,
                         aprilTagDetection.ftcPose.z,
@@ -203,11 +204,11 @@ public class FtcVisionAprilTag
                         aprilTagDetection.ftcPose.range,
                         aprilTagDetection.ftcPose.bearing,
                         aprilTagDetection.ftcPose.elevation,
-                        cameraInfo.camPose, targetPose);
+                        cameraInfo.camPose, targetPose3d);
                 }
             }
 
-            return targetPose;
+            return targetPose2d;
         }   //getTargetPose
 
         /**

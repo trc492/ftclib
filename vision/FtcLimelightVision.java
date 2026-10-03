@@ -33,6 +33,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 
@@ -203,7 +204,7 @@ public class FtcLimelightVision
         @Override
         public TrcPose2D getTargetPose()
         {
-            if (targetPose == null)
+            if (targetPose2d == null)
             {
                 if (resultType == ResultType.Python)
                 {
@@ -213,13 +214,13 @@ public class FtcLimelightVision
                         double bearingDeg = pythonOutput[5];
                         double bearingRad = Math.toRadians(bearingDeg);
                         targetDistance = pythonOutput[4];
-                        targetPose = new TrcPose2D(
+                        targetPose2d = new TrcPose2D(
                             targetDistance*Math.sin(bearingRad),
                             targetDistance*Math.cos(bearingRad),
                             bearingDeg);
                         TrcDbgTrace.globalTraceDebug(
-                            moduleName, "TargetPose(Id=%.0f, trcPose=%s, dist=%.3f)",
-                            pythonOutput[7], targetPose, targetDistance);
+                            moduleName, "TargetPose(Id=%.0f, trcPose2d=%s, dist=%.3f)",
+                            pythonOutput[7], targetPose2d, targetDistance);
                     }
                 }
                 else if (resultType == ResultType.Detector)
@@ -227,26 +228,26 @@ public class FtcLimelightVision
                     LLResultTypes.DetectorResult detectorResult = (LLResultTypes.DetectorResult) result;
                     if (targetKnownWidth != null)
                     {
-                        targetPose = getTargetPoseByKnownWidth(targetKnownWidth);
+                        targetPose2d = getTargetPoseByKnownWidth(targetKnownWidth);
                     }
                     else if (homographyMapper != null)
                     {
                         // Good but needs camera fixed and Homography calibration.
-                        targetPose = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
+                        targetPose2d = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
                     }
                     else if (cameraInfo != null)
                     {
                         // Worst because it depends on the camera pitch. The flatter the camera pitch, the bigger
                         // the error.
-                        targetPose = getTargetPoseByPixelPosition(targetGroundOffset);
+                        targetPose2d = getTargetPoseByPixelPosition(targetGroundOffset);
                     }
 
-                    if (targetPose != null)
+                    if (targetPose2d != null)
                     {
-                        targetDistance = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                        targetDistance = TrcUtil.magnitude(targetPose2d.x, targetPose2d.y);
                         TrcDbgTrace.globalTraceDebug(
-                            moduleName, "TargetPose(Id=%s, trcPose=%s, dist=%.3f)",
-                            detectorResult.getClassName(), targetPose, targetDistance);
+                            moduleName, "TargetPose(Id=%s, trcPose2d=%s, dist=%.3f)",
+                            detectorResult.getClassName(), targetPose2d, targetDistance);
                     }
                 }
                 else
@@ -272,40 +273,46 @@ public class FtcLimelightVision
                         // AprilTag has accurate 3D info, use it.
                         Position posTargetFromRobot =
                             targetPose3dFromRobot.getPosition().toUnit(DistanceUnit.INCH);
-                        targetPose = new TrcPose2D(
-                            posTargetFromRobot.x, posTargetFromRobot.z,
-                            Math.toDegrees(Math.atan2(posTargetFromRobot.x, posTargetFromRobot.z)));
+                        YawPitchRollAngles orientation = targetPose3dFromRobot.getOrientation();
+                        // Limelight getTargetPoseRobotSpace returns 3D pose: x-forward, y-right, z-up, yaw-CW.
+                        targetPose3d = new TrcPose3D(
+                            posTargetFromRobot.y, posTargetFromRobot.x, posTargetFromRobot.z,
+                            orientation.getRoll(AngleUnit.DEGREES), orientation.getPitch(AngleUnit.DEGREES),
+                            -orientation.getYaw(AngleUnit.DEGREES));
+                        targetPose2d = new TrcPose2D(
+                            targetPose3d.x, targetPose3d.y,
+                            Math.toDegrees(Math.atan2(posTargetFromRobot.y, posTargetFromRobot.x)));
                         TrcDbgTrace.globalTraceDebug(
-                            moduleName, "TargetPose(Id=%s, 3dPos=%s, 3dOrient=%s, trcPose=%s, dist=%.3f)",
-                            id, posTargetFromRobot, targetPose3dFromRobot.getOrientation(), targetPose, targetDistance);
+                            moduleName, "TargetPose(Id=%s, 3dPos=%s, 3dOrient=%s, trcPose3d=%s, dist=%.3f)",
+                            id, posTargetFromRobot, targetPose3dFromRobot.getOrientation(), targetPose3d, targetDistance);
                     }
                     else if (targetKnownWidth != null)
                     {
-                        targetPose = getTargetPoseByKnownWidth(targetKnownWidth);
+                        targetPose2d = getTargetPoseByKnownWidth(targetKnownWidth);
                     }
                     else if (homographyMapper != null)
                     {
-                        targetPose = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
+                        targetPose2d = getTargetPoseByHomography(homographyMapper, targetGroundOffset);
                     }
                     else if (cameraInfo != null)
                     {
-                        targetPose = getTargetPoseByPixelPosition(targetGroundOffset);
+                        targetPose2d = getTargetPoseByPixelPosition(targetGroundOffset);
                     }
 
-                    if (targetPose != null)
+                    if (targetPose2d != null)
                     {
-                        targetDistance = TrcUtil.magnitude(targetPose.x, targetPose.y);
+                        targetDistance = TrcUtil.magnitude(targetPose2d.x, targetPose2d.y);
                         if (targetPose3dFromRobot == null)
                         {
                             TrcDbgTrace.globalTraceDebug(
-                                moduleName, "TargetPose(Id=%s, trcPose=%s, dist=%.3f)",
-                                id, targetPose, targetDistance);
+                                moduleName, "TargetPose(Id=%s, trcPose2d=%s, dist=%.3f)",
+                                id, targetPose2d, targetDistance);
                         }
                     }
                 }
             }
 
-            return targetPose != null? targetPose.clone(): null;
+            return targetPose2d != null? targetPose2d.clone(): null;
         }   //getTargetPose
 
         /**
