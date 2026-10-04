@@ -93,17 +93,19 @@ public class FtcLimelightVision
          * @param result specifies the detected object.
          * @param objId specifies the detected object ID if there is one.
          * @param cameraInfo specifies camera info.
+         * @param aprilTagFieldPoseCallback specifies the method to call to get the AprilTag field pose for calculating
+         *                                  robot pose, can be null if not provided.
          * @param targetKnownWidth specifies the target's known width in real world unit, can be null if not provided.
          * @param targetGroundOffset specifies the target offset from ground, can be zero if target is on the ground.
          * @param homographyMapper specifies Homography Mapper to be used to determine target pose, can be null
-         *        if not provided.
+         *                         if not provided.
          */
         public TargetInfo(
             LLResult llResult, ResultType resultType, double timestampSec, Object result, Object objId,
-            TrcVision.CameraInfo cameraInfo, Double targetKnownWidth, double targetGroundOffset,
-            TrcHomographyMapper homographyMapper)
+            TrcVision.CameraInfo cameraInfo, TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback,
+            Double targetKnownWidth, double targetGroundOffset, TrcHomographyMapper homographyMapper)
         {
-            super(objId != null? objId.toString(): "null", cameraInfo);
+            super(objId != null? objId.toString(): "null", cameraInfo, aprilTagFieldPoseCallback);
             this.llResult = llResult;
             this.resultType = resultType;
             this.timestampSec = timestampSec;
@@ -138,17 +140,14 @@ public class FtcLimelightVision
         /**
          * This method returns the robot field pose on the ground.
          *
-         * @param targetFieldPose specifies 3D target field pose, can be null if not provided in which case the
-         *                        vision library has built-in Target field poses that calculates robotPose. If
-         *                        provided, this method will use it to calculate robot pose.
          * @return robot field pose.
          */
         @Override
-        public TrcPose2D getRobotPose(TrcPose3D targetFieldPose)
+        public TrcPose2D getRobotPose()
         {
             if (robotPose == null)
             {
-                if (targetFieldPose == null)
+                if (aprilTagFieldPoseCallback == null)
                 {
                     // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
                     Pose3D camFieldPose3d = USE_MT2? llResult.getBotpose_MT2(): llResult.getBotpose();
@@ -189,7 +188,7 @@ public class FtcLimelightVision
                 }
                 else
                 {
-                    robotPose = getRobotPoseByTargetFieldPose(targetFieldPose);
+                    robotPose = getRobotPoseByTargetFieldPose(aprilTagFieldPoseCallback.getFieldPose(this));
                 }
             }
 
@@ -558,6 +557,7 @@ public class FtcLimelightVision
     private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcVision.CameraInfo cameraInfo;
+    private final TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback;
     private final TrcVision.TargetKnownWidth targetKnownWidth;
     private final TrcVision.TargetGroundOffset targetGroundOffset;
     private final TrcHomographyMapper homographyMapper;
@@ -571,18 +571,22 @@ public class FtcLimelightVision
      *
      * @param hardwareMap specifies the global hardware map.
      * @param cameraInfo specifies the camera information.
+     * @param aprilTagFieldPoseCallback specifies the method to call to get the AprilTag field pose for calculating
+     *                                  robot pose, can be null if not provided.
      * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
      *        provided.
      * @param targetGroundOffset specifies the method to call to get target ground offset, can be null if not provided.
      */
     public FtcLimelightVision(
-        HardwareMap hardwareMap, TrcVision.CameraInfo cameraInfo, TrcVision.TargetKnownWidth targetKnownWidth,
+        HardwareMap hardwareMap, TrcVision.CameraInfo cameraInfo,
+        TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback, TrcVision.TargetKnownWidth targetKnownWidth,
         TrcVision.TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = cameraInfo.camName;
         this.cameraInfo = cameraInfo;
+        this.aprilTagFieldPoseCallback = aprilTagFieldPoseCallback;
         this.targetKnownWidth = targetKnownWidth;
         this.targetGroundOffset = targetGroundOffset;
         this.homographyMapper = cameraInfo.cameraRect != null && cameraInfo.worldRect != null?
@@ -595,15 +599,18 @@ public class FtcLimelightVision
      * Constructor: Create an instance of the object.
      *
      * @param cameraInfo specifies the camera information.
+     * @param aprilTagFieldPoseCallback specifies the method to call to get the AprilTag field pose for calculating
+     *                                  robot pose, can be null if not provided.
      * @param targetKnownWidth specifies the method to call to get the target's real world width, can be null if not
      *        provided.
      * @param targetGroundOffset specifies the method to call to get target ground offset, can be null if not provided.
      */
     public FtcLimelightVision(
-        TrcVision.CameraInfo cameraInfo, TrcVision.TargetKnownWidth targetKnownWidth,
-        TrcVision.TargetGroundOffset targetGroundOffset)
+        TrcVision.CameraInfo cameraInfo, TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback,
+        TrcVision.TargetKnownWidth targetKnownWidth, TrcVision.TargetGroundOffset targetGroundOffset)
     {
-        this(FtcOpMode.getInstance().hardwareMap, cameraInfo, targetKnownWidth, targetGroundOffset);
+        this(FtcOpMode.getInstance().hardwareMap, cameraInfo, aprilTagFieldPoseCallback, targetKnownWidth,
+             targetGroundOffset);
     }   //FtcLimelightVision
 
     /**
@@ -806,6 +813,7 @@ public class FtcLimelightVision
                             TargetInfo detectedTarget =
                                 new TargetInfo(
                                     llResult, resultType, capturedTimestampSec, obj, objId, cameraInfo,
+                                    aprilTagFieldPoseCallback,
                                     targetKnownWidth != null? targetKnownWidth.getRealWorldWidth(objId): null,
                                     targetGroundOffset != null? targetGroundOffset.getOffset(objId): 0.0, homographyMapper);
                             detectedList.add(detectedTarget);
@@ -823,7 +831,7 @@ public class FtcLimelightVision
                     TargetInfo detectedTarget =
                         new TargetInfo(
                             llResult, resultType, capturedTimestampSec, pythonOutput, pythonOutput[7],
-                            cameraInfo,
+                            cameraInfo, aprilTagFieldPoseCallback,
                             targetKnownWidth != null? targetKnownWidth.getRealWorldWidth(pythonOutput[7]): null,
                             targetGroundOffset != null? targetGroundOffset.getOffset(pythonOutput[7]): 0.0,
                             homographyMapper);
@@ -902,7 +910,7 @@ public class FtcLimelightVision
             {
                 dashboard.displayPrintf(
                     lineNum++, "LLAprilTag[%s]: dist=%f, targetPose=%s, robotPose=%s",
-                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose(null));
+                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
             }
             else
             {

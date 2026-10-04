@@ -71,13 +71,17 @@ public class FtcVisionAprilTag
          *
          * @param aprilTagDetection specifies the detected AprilTag object.
          * @param cameraInfo specifies camera info.
+         * @param aprilTagFieldPoseCallback specifies the method to call to get the AprilTag field pose for calculating
+         *                                  robot pose, can be null if not provided.
          */
-        public TargetInfo(AprilTagDetection aprilTagDetection, TrcVision.CameraInfo cameraInfo)
+        public TargetInfo(
+            AprilTagDetection aprilTagDetection, TrcVision.CameraInfo cameraInfo,
+            TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback)
         {
             super(aprilTagDetection instanceof AprilTagSingleDetection?
                     Integer.toString(((AprilTagSingleDetection) aprilTagDetection).id):
                     ((AprilTagClusterDetection) aprilTagDetection).metadata.name,
-                  cameraInfo);
+                  cameraInfo, aprilTagFieldPoseCallback);
             this.aprilTagDetection = aprilTagDetection;
             this.cameraInfo = cameraInfo;
             this.singleAprilTagId = aprilTagDetection instanceof AprilTagSingleDetection?
@@ -123,17 +127,14 @@ public class FtcVisionAprilTag
         /**
          * This method returns the robot field pose on the ground.
          *
-         * @param targetFieldPose specifies 3D target field pose, can be null if not provided in which case the
-         *                        vision library has built-in Target field poses that calculates robotPose. If
-         *                        provided, this method will use it to calculate robot pose.
          * @return robot field pose.
          */
         @Override
-        public TrcPose2D getRobotPose(TrcPose3D targetFieldPose)
+        public TrcPose2D getRobotPose()
         {
             if (robotPose == null)
             {
-                if (targetFieldPose == null)
+                if (aprilTagFieldPoseCallback == null)
                 {
                     // FTC SDK will provide robot pose in camera space.
                     if (aprilTagDetection.robotPose != null)
@@ -169,7 +170,7 @@ public class FtcVisionAprilTag
                 }
                 else
                 {
-                    robotPose = getRobotPoseByTargetFieldPose(targetFieldPose);
+                    robotPose = getRobotPoseByTargetFieldPose(aprilTagFieldPoseCallback.getFieldPose(this));
                 }
             }
 
@@ -192,19 +193,6 @@ public class FtcVisionAprilTag
                     targetPose3d = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
                     targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
-                    TrcDbgTrace.globalTraceInfo(
-                        "DEBUG!!!!",
-                        "ftcPose=(x/y/z=%.1f/%.1f/%.1f, p/r/y=%.1f/%.1f/%.1f, d/b/e=%.1f/%.1f/%.1f), camPose=%s, targetPose3d=%s",
-                        aprilTagDetection.ftcPose.x,
-                        aprilTagDetection.ftcPose.y,
-                        aprilTagDetection.ftcPose.z,
-                        aprilTagDetection.ftcPose.pitch,
-                        aprilTagDetection.ftcPose.roll,
-                        aprilTagDetection.ftcPose.yaw,
-                        aprilTagDetection.ftcPose.range,
-                        aprilTagDetection.ftcPose.bearing,
-                        aprilTagDetection.ftcPose.elevation,
-                        cameraInfo.camPose, targetPose3d);
                 }
             }
 
@@ -464,6 +452,7 @@ public class FtcVisionAprilTag
     private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcVision.CameraInfo cameraInfo;
+    private final TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback;
     private final AprilTagProcessor aprilTagProcessor;
 
     /**
@@ -471,13 +460,19 @@ public class FtcVisionAprilTag
      *
      * @param params specifies the AprilTag parameters, can be null if using default parameters.
      * @param tagFamily specifies the tag family.
+     * @param cameraInfo specifies camera info.
+     * @param aprilTagFieldPoseCallback specifies the method to call to get the AprilTag field pose for calculating
+     *                                  robot pose, can be null if not provided.
      */
-    public FtcVisionAprilTag(Parameters params, AprilTagProcessor.TagFamily tagFamily, TrcVision.CameraInfo cameraInfo)
+    public FtcVisionAprilTag(
+        Parameters params, AprilTagProcessor.TagFamily tagFamily, TrcVision.CameraInfo cameraInfo,
+        TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback)
     {
         this.tracer = new TrcDbgTrace();
         this.dashboard = FtcDashboard.getInstance();
         this.instanceName = tagFamily.name();
         this.cameraInfo = cameraInfo;
+        this.aprilTagFieldPoseCallback = aprilTagFieldPoseCallback;
         // Create the AprilTag processor.
         AprilTagProcessor.Builder builder = new AprilTagProcessor.Builder().setTagFamily(tagFamily);
         if (params != null)
@@ -566,7 +561,7 @@ public class FtcVisionAprilTag
                         clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
                         clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
                 }
-                TargetInfo targetInfo = new TargetInfo(aprilTagDet, cameraInfo);
+                TargetInfo targetInfo = new TargetInfo(aprilTagDet, cameraInfo, aprilTagFieldPoseCallback);
                 tracer.traceDebug(instanceName, "AprilTagInfo=%s", targetInfo);
                 targetsInfo.add(targetInfo);
             }
@@ -718,7 +713,7 @@ public class FtcVisionAprilTag
                 dashboard.displayPrintf(
                     lineNum++, "WebcamAprilTagCluster[%s]: dist=%.1f, targetPose=%s, robotPose=%s",
                     clusterDet.metadata.name, target.getTargetDistance(), target.getTargetPose(),
-                    target.getRobotPose(null));
+                    target.getRobotPose());
                 tracer.traceInfo(
                     instanceName,
                     "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, d%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
@@ -734,7 +729,7 @@ public class FtcVisionAprilTag
                 dashboard.displayPrintf(
                     lineNum++, "WebcamAprilTagSingle[%d]: dist=%.1f, targetPose=%s, robotPose=%s",
                     target.singleAprilTagId, target.getTargetDistance(), target.getTargetPose(),
-                    target.getRobotPose(null));
+                    target.getRobotPose());
                 tracer.traceInfo(
                     instanceName,
                     "single: id=%d, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, d%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
