@@ -171,6 +171,9 @@ public class FtcVisionAprilTag
                 else
                 {
                     robotPose = getRobotPoseByTargetFieldPose(aprilTagFieldPoseCallback.getFieldPose(this));
+                    TrcDbgTrace.globalTraceInfo(
+                        "DEBUG@@@@@",
+                        "targetPose2dRobotSpace=%s, RobotPoseFromTrcLib=%s", targetPose2d, robotPose);
                 }
             }
 
@@ -190,9 +193,16 @@ public class FtcVisionAprilTag
                 if (aprilTagDetection.ftcPose != null)
                 {
                     TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection.ftcPose);
-                    targetPose3d = transformCameraSpaceToRobotSpace(trc3dTargetPose, cameraInfo.camPose);
+                    targetPose3d = cameraInfo.camPose.addRelativePose(trc3dTargetPose);
                     targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
+                    TrcDbgTrace.globalTraceInfo(
+                        "DEBUG####",
+                        "ftcPose(x/y/z=%.1f/%.1f/%.1f, p/r/y=%.1f/%.1f/%.1f, d/b/e=%.1f/%.1f/%1.f), ftcToTrcPose=%s, targetPose3d=%s, targetPose2d=%s",
+                        aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.z,
+                        aprilTagDetection.ftcPose.pitch, aprilTagDetection.ftcPose.roll, aprilTagDetection.ftcPose.yaw,
+                        aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing, aprilTagDetection.ftcPose.elevation,
+                        trc3dTargetPose, targetPose3d, targetPose2d);
                 }
             }
 
@@ -652,7 +662,7 @@ public class FtcVisionAprilTag
                 TargetInfo targetInfo = detectedTargets.get(i);
                 if (targetInfo.aprilTagDetection instanceof AprilTagSingleDetection ||
                     clusterName != null &&
-                    !clusterName.equals(((AprilTagClusterDetection) targetInfo.aprilTagDetection).metadata.name))
+                    !((AprilTagClusterDetection) targetInfo.aprilTagDetection).metadata.name.contains(clusterName))
                 {
                     // Not the one we want, remove it from the list.
                     detectedTargets.remove(i);
