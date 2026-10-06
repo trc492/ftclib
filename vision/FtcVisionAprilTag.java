@@ -55,6 +55,8 @@ import trclib.vision.TrcVision;
  */
 public class FtcVisionAprilTag
 {
+    private static final String moduleName = FtcVisionAprilTag.class.getSimpleName();
+
     /**
      * This class encapsulates info of the detected target. It extends TrcVision.TargetInfo that requires this class
      * to provide methods to return info of the detected target.
@@ -161,19 +163,13 @@ public class FtcVisionAprilTag
                             robotYaw = robotFieldPose3d.yaw;
                         }
 
-                        double normalizedYaw = (robotYaw + 180.0) % 360.0;
-                        if (normalizedYaw < 0) normalizedYaw += 360.0;
-                        normalizedYaw -= 180.0;
-
+                        double normalizedYaw = TrcUtil.normalizeAngle(robotYaw);
                         robotPose = new TrcPose2D(robotFieldX, robotFieldY, normalizedYaw);
                     }
                 }
                 else
                 {
                     robotPose = getRobotPoseByTargetFieldPose(aprilTagFieldPoseCallback.getFieldPose(this));
-                    TrcDbgTrace.globalTraceInfo(
-                        "DEBUG@@@@@",
-                        "targetPose2dRobotSpace=%s, RobotPoseFromTrcLib=%s", targetPose2d, robotPose);
                 }
             }
 
@@ -197,12 +193,12 @@ public class FtcVisionAprilTag
                     targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
                     TrcDbgTrace.globalTraceInfo(
-                        "DEBUG####",
-                        "ftcPose(x/y/z=%.1f/%.1f/%.1f, p/r/y=%.1f/%.1f/%.1f, d/b/e=%.1f/%.1f/%1.f), ftcToTrcPose=%s, targetPose3d=%s, targetPose2d=%s",
+                        moduleName + "." + label,
+                        "ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), targetPose3d=%s, targetPose2d=%s, robotPose=%s",
                         aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.z,
                         aprilTagDetection.ftcPose.pitch, aprilTagDetection.ftcPose.roll, aprilTagDetection.ftcPose.yaw,
                         aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing, aprilTagDetection.ftcPose.elevation,
-                        trc3dTargetPose, targetPose3d, targetPose2d);
+                        targetPose3d, targetPose2d, getRobotPose());
                 }
             }
 
@@ -726,7 +722,8 @@ public class FtcVisionAprilTag
                     target.getRobotPose());
                 tracer.traceInfo(
                     instanceName,
-                    "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, d%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
+                    "cluster: name=%s, ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), " +
+                    "robotPose(pos=%s,orient=%s)",
                     clusterDet.metadata.name,
                     clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
                     clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
@@ -736,13 +733,16 @@ public class FtcVisionAprilTag
             else
             {
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) target.aprilTagDetection;
+                tracer.traceInfo("DDDDD#####", "SingeDetection=" + (target.aprilTagDetection instanceof AprilTagSingleDetection) +
+                    "singDet.ftcPose=" + (singleDet.ftcPose != null));
                 dashboard.displayPrintf(
                     lineNum++, "WebcamAprilTagSingle[%d]: dist=%.1f, targetPose=%s, robotPose=%s",
                     target.singleAprilTagId, target.getTargetDistance(), target.getTargetPose(),
                     target.getRobotPose());
                 tracer.traceInfo(
                     instanceName,
-                    "single: id=%d, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, d%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
+                    "single: id=%d, ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), " +
+                    "robotPose(pos=%s,orient=%s)",
                     target.singleAprilTagId,
                     singleDet.ftcPose.x, singleDet.ftcPose.y, singleDet.ftcPose.z,
                     singleDet.ftcPose.pitch, singleDet.ftcPose.roll, singleDet.ftcPose.yaw,

@@ -159,9 +159,7 @@ public class FtcLimelightVision
                         double trcY = camFieldPos.y;    // Distance Forward in inches
                         double trcAngle = -camFieldPose3d.getOrientation().getYaw(AngleUnit.DEGREES);
                         // Normalize angle output cleanly to the strict [-180, 180] range
-                        trcAngle = (trcAngle + 180.0) % 360.0;
-                        if (trcAngle < 0) trcAngle += 360.0;
-                        trcAngle -= 180.0;
+                        trcAngle = TrcUtil.normalizeAngle(trcAngle);
                         if (cameraInfo.camPose != null)
                         {
                             // Combined Angle = Global Robot Heading + Camera's local mounting yaw offset
