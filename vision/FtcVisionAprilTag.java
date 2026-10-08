@@ -25,13 +25,16 @@ package ftclib.vision;
 
 import androidx.annotation.NonNull;
 
+import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
+import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
+import org.firstinspires.ftc.robotcore.external.matrices.MatrixF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.apriltag.AprilTagClusterDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
 import org.opencv.core.MatOfPoint;
@@ -41,8 +44,10 @@ import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Locale;
 
 import ftclib.driverio.FtcDashboard;
+import teamcode.vision.Vision;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
@@ -63,8 +68,12 @@ public class FtcVisionAprilTag
      */
     public static class TargetInfo extends TrcVision.TargetInfo
     {
+        // If the detected object is a Single AprilTag detection, TrcVision.TargetInfo.label contains the string
+        // form of the AprilTag ID. If the detected object is an AprilTag Cluster, TrcVision.TargetInfo.label
+        // contains the Cluster name.
         public final AprilTagDetection aprilTagDetection;
         public final TrcVision.CameraInfo cameraInfo;
+        // singleAprilTagId is null for cluster detection.
         public final Integer singleAprilTagId;
         public final double timestampSec;
 
@@ -107,9 +116,9 @@ public class FtcVisionAprilTag
                        ",ftcPose=(x=" + aprilTagDetection.ftcPose.x +
                        ",y=" + aprilTagDetection.ftcPose.y +
                        ",z=" + aprilTagDetection.ftcPose.z +
-                       ",yaw=" + aprilTagDetection.ftcPose.yaw +
                        ",pitch=" + aprilTagDetection.ftcPose.pitch +
                        ",roll=" + aprilTagDetection.ftcPose.roll +
+                       ",yaw=" + aprilTagDetection.ftcPose.yaw +
                        ",range=" + aprilTagDetection.ftcPose.range +
                        ",bearing=" + aprilTagDetection.ftcPose.bearing +
                        ",elevation=" + aprilTagDetection.ftcPose.elevation + ")" +
@@ -141,6 +150,7 @@ public class FtcVisionAprilTag
                     // FTC SDK will provide robot pose in camera space.
                     if (aprilTagDetection.robotPose != null)
                     {
+                        // TODO: this code path has not been verified.
                         Position camFieldPos = aprilTagDetection.robotPose.getPosition().toUnit(DistanceUnit.INCH);
                         YawPitchRollAngles orientation = aprilTagDetection.robotPose.getOrientation();
                         double robotFieldX = camFieldPos.x;
@@ -150,6 +160,7 @@ public class FtcVisionAprilTag
 
                         if (cameraInfo.camPose != null)
                         {
+                            // TODO: Since we had issue converting ftcPose to TrcPose3D, do we have issue here as well?
                             TrcPose3D camFieldPose3d = new TrcPose3D(
                                 camFieldPos.x, camFieldPos.y, camFieldPos.z,
                                 orientation.getPitch(AngleUnit.DEGREES),
@@ -188,13 +199,14 @@ public class FtcVisionAprilTag
             {
                 if (aprilTagDetection.ftcPose != null)
                 {
-                    TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection.ftcPose);
+                    TrcPose3D trc3dTargetPose = ftcPoseToTrcPose3D(aprilTagDetection);
                     targetPose3d = cameraInfo.camPose.addRelativePose(trc3dTargetPose);
                     targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
-                    TrcDbgTrace.globalTraceInfo(
+                    TrcDbgTrace.globalTraceDebug(
                         moduleName + "." + label,
-                        "ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), targetPose3d=%s, targetPose2d=%s, robotPose=%s",
+                        "ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), targetPose3d=%s, " +
+                        "targetPose2d=%s, robotPose=%s",
                         aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.z,
                         aprilTagDetection.ftcPose.pitch, aprilTagDetection.ftcPose.roll, aprilTagDetection.ftcPose.yaw,
                         aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing, aprilTagDetection.ftcPose.elevation,
@@ -232,6 +244,7 @@ public class FtcVisionAprilTag
         {
             if (targetWidth == null)
             {
+                // Cannot determine width for AprilTag cluster.
                 if (aprilTagDetection instanceof AprilTagSingleDetection)
                 {
                     // targetWidth is only supported with Single Detection.
@@ -353,6 +366,7 @@ public class FtcVisionAprilTag
         {
             if (rotatedRectVertices == null)
             {
+                // AprilTag cluster does not support vertices.
                 if (aprilTagDetection instanceof AprilTagSingleDetection)
                 {
                     // rotatedRectVertices is only supported with Single Detection.
@@ -512,15 +526,31 @@ public class FtcVisionAprilTag
     }   //toString
 
     /**
-     * This method translates a 3D AprilTag pose from the FTC SDK's normalized reference frame into platform-agnostic
-     * TrcLib frame convention.
+     * Converts an FTC AprilTag detection to a TRC 3D pose.
+     * TRC coordinates:
+     *   X right, Y forward, Z up.
+     *   Pitch about X, roll about Y, yaw CW-positive.
      *
-     * @param ftcPose specifies the AprilTag 3D Pose from FTC SDK.
-     * @return translated TrcPose3D.
+     * @param detection specifies the AprilTag detection.
+     * @return the target pose relative to the camera.
      */
-    public static TrcPose3D ftcPoseToTrcPose3D(AprilTagPoseFtc ftcPose)
+    public static TrcPose3D ftcPoseToTrcPose3D(AprilTagDetection detection)
     {
-        return new TrcPose3D(ftcPose.x, ftcPose.y, ftcPose.z, ftcPose.pitch, ftcPose.roll, -ftcPose.yaw);
+        MatrixF raw = detection.rawPose.R;
+        // Convert native AprilTag coordinates to TRC coordinates.
+        // Rtrc = C * Rraw * C^T.
+        double[][] matrix =
+            {
+                { raw.get(0, 0),  raw.get(0, 2), -raw.get(0, 1) },
+                { raw.get(2, 0),  raw.get(2, 2), -raw.get(2, 1) },
+                {-raw.get(1, 0), -raw.get(1, 2),  raw.get(1, 1) }
+            };
+        Rotation rotation = new Rotation(matrix, 1.0e-6);
+        double[] angles = rotation.getAngles(RotationOrder.ZYX, RotationConvention.VECTOR_OPERATOR);
+
+        return new TrcPose3D(
+            detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z,
+            Math.toDegrees(angles[2]), Math.toDegrees(angles[1]), -Math.toDegrees(angles[0]));
     }   //ftcPoseToTrcPose3D
 
     /**
@@ -548,24 +578,29 @@ public class FtcVisionAprilTag
             targetsInfo = new ArrayList<>();
             for (AprilTagDetection aprilTagDet: targets)
             {
-                if (aprilTagDet instanceof AprilTagSingleDetection)
+                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
                 {
-                    AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDet;
-                    tracer.traceDebug(
-                        instanceName, "single: id=%d, metadata=%s, ftpPose=%s, robotPose=%s",
-                        singleDet.id, singleDet.metadata != null, singleDet.ftcPose != null, singleDet.robotPose != null);
-                }
-                else
-                {
-                    AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDet;
-                    tracer.traceDebug(
-                        instanceName,
-                        "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, r%.1f/b%.1f/e%.1f, robotPose=p%s/o%s",
-                        clusterDet.metadata.name,
-                        clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
-                        clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
-                        clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
-                        clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
+                    if (aprilTagDet instanceof AprilTagSingleDetection)
+                    {
+                        AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDet;
+                        tracer.traceMsg(
+                            instanceName, "single: id=%d, metadata=%s, ftpPose=%s, robotPose=%s",
+                            singleDet.id, singleDet.metadata != null, singleDet.ftcPose != null,
+                            singleDet.robotPose != null);
+                    }
+                    else
+                    {
+                        AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDet;
+                        tracer.traceMsg(
+                            instanceName,
+                            "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, r%.1f/b%.1f/e%.1f, " +
+                            "robotPose=p%s/o%s",
+                            clusterDet.metadata.name,
+                            clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
+                            clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
+                            clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
+                            clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
+                    }
                 }
                 TargetInfo targetInfo = new TargetInfo(aprilTagDet, cameraInfo, aprilTagFieldPoseCallback);
                 tracer.traceDebug(instanceName, "AprilTagInfo=%s", targetInfo);
@@ -720,34 +755,56 @@ public class FtcVisionAprilTag
                     lineNum++, "WebcamAprilTagCluster[%s]: dist=%.1f, targetPose=%s, robotPose=%s",
                     clusterDet.metadata.name, target.getTargetDistance(), target.getTargetPose(),
                     target.getRobotPose());
-                tracer.traceInfo(
-                    instanceName,
-                    "cluster: name=%s, ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), " +
-                    "robotPose(pos=%s,orient=%s)",
-                    clusterDet.metadata.name,
-                    clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
-                    clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
-                    clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
-                    clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
+                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.INFO))
+                {
+                    String msg = "cluster: name=" + clusterDet.metadata.name + ", ImuHeading=" + Vision.hubImu.getZHeading().value;
+
+                    if (clusterDet.ftcPose != null)
+                    {
+                        msg += String.format(
+                            Locale.US, ", ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f)",
+                            clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
+                            clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
+                            clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation);
+                    }
+
+                    if (clusterDet.robotPose != null)
+                    {
+                        msg += ", ftcRobotPose(pos=" + clusterDet.robotPose.getPosition() +
+                               ", orient=" + clusterDet.robotPose.getOrientation() + ")";
+                    }
+
+                    tracer.traceMsg(instanceName, msg);
+                }
             }
             else
             {
                 AprilTagSingleDetection singleDet = (AprilTagSingleDetection) target.aprilTagDetection;
-                tracer.traceInfo("DDDDD#####", "SingeDetection=" + (target.aprilTagDetection instanceof AprilTagSingleDetection) +
-                    "singDet.ftcPose=" + (singleDet.ftcPose != null));
                 dashboard.displayPrintf(
                     lineNum++, "WebcamAprilTagSingle[%d]: dist=%.1f, targetPose=%s, robotPose=%s",
                     target.singleAprilTagId, target.getTargetDistance(), target.getTargetPose(),
                     target.getRobotPose());
-                tracer.traceInfo(
-                    instanceName,
-                    "single: id=%d, ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), " +
-                    "robotPose(pos=%s,orient=%s)",
-                    target.singleAprilTagId,
-                    singleDet.ftcPose.x, singleDet.ftcPose.y, singleDet.ftcPose.z,
-                    singleDet.ftcPose.pitch, singleDet.ftcPose.roll, singleDet.ftcPose.yaw,
-                    singleDet.ftcPose.range, singleDet.ftcPose.bearing, singleDet.ftcPose.elevation,
-                    singleDet.robotPose.getPosition(), singleDet.robotPose.getOrientation());
+                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
+                {
+                    String msg = "single: id=" + singleDet.id;
+
+                    if (singleDet.ftcPose != null)
+                    {
+                        msg += String.format(
+                            Locale.US, ", ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f)",
+                            singleDet.ftcPose.x, singleDet.ftcPose.y, singleDet.ftcPose.z,
+                            singleDet.ftcPose.pitch, singleDet.ftcPose.roll, singleDet.ftcPose.yaw,
+                            singleDet.ftcPose.range, singleDet.ftcPose.bearing, singleDet.ftcPose.elevation);
+                    }
+
+                    if (singleDet.robotPose != null)
+                    {
+                        msg += ", ftcRobotPose(pos=" + singleDet.robotPose.getPosition() +
+                            ", orient=" + singleDet.robotPose.getOrientation() + ")";
+                    }
+
+                    tracer.traceMsg(instanceName, msg);
+                }
             }
         }
         else
