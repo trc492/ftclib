@@ -47,7 +47,6 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import ftclib.driverio.FtcDashboard;
-import teamcode.vision.Vision;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
@@ -757,7 +756,7 @@ public class FtcVisionAprilTag
                     target.getRobotPose());
                 if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.INFO))
                 {
-                    String msg = "cluster: name=" + clusterDet.metadata.name + ", ImuHeading=" + Vision.hubImu.getZHeading().value;
+                    String msg = "cluster: name=" + clusterDet.metadata.name;
 
                     if (clusterDet.ftcPose != null)
                     {
