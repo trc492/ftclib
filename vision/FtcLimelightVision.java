@@ -41,8 +41,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
-import ftclib.driverio.FtcDashboard;
 import ftclib.robotcore.FtcOpMode;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
@@ -126,11 +126,10 @@ public class FtcLimelightVision
         public String toString()
         {
             return super.toString() +
-                   ",resultType=" + resultType +
-                   ",timestamp=" + timestampSec +
-                   ",objId=" + objId +
-                   ",knownWidth=" + targetKnownWidth +
-                   ",groundOffset=" + targetGroundOffset;
+                   String.format(
+                       Locale.US,
+                       ", resultType=%s, timestamp=%.3f, objId=%s, knownWidth=%.1f, groundOffset=%.1f",
+                       resultType, timestampSec, objId, targetKnownWidth, targetGroundOffset);
         }   //toString
 
         //
@@ -242,9 +241,6 @@ public class FtcLimelightVision
                     if (targetPose2d != null)
                     {
                         targetDistance = TrcUtil.magnitude(targetPose2d.x, targetPose2d.y);
-                        TrcDbgTrace.globalTraceDebug(
-                            moduleName, "TargetPose(Id=%s, trcPose2d=%s, dist=%.3f)",
-                            detectorResult.getClassName(), targetPose2d, targetDistance);
                     }
                 }
                 else
@@ -279,9 +275,6 @@ public class FtcLimelightVision
                         targetPose2d = new TrcPose2D(
                             targetPose3d.x, targetPose3d.y,
                             Math.toDegrees(Math.atan2(posTargetFromRobot.y, posTargetFromRobot.x)));
-                        TrcDbgTrace.globalTraceDebug(
-                            moduleName, "TargetPose(Id=%s, 3dPos=%s, 3dOrient=%s, trcPose3d=%s, dist=%.3f)",
-                            id, posTargetFromRobot, targetPose3dFromRobot.getOrientation(), targetPose3d, targetDistance);
                     }
                     else if (targetKnownWidth != null)
                     {
@@ -552,7 +545,6 @@ public class FtcLimelightVision
     }   //class TargetInfo
 
     public final TrcDbgTrace tracer;
-    private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcVision.CameraInfo cameraInfo;
     private final TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback;
@@ -581,7 +573,6 @@ public class FtcLimelightVision
         TrcVision.TargetGroundOffset targetGroundOffset)
     {
         this.tracer = new TrcDbgTrace();
-        this.dashboard = FtcDashboard.getInstance();
         this.instanceName = cameraInfo.camName;
         this.cameraInfo = cameraInfo;
         this.aprilTagFieldPoseCallback = aprilTagFieldPoseCallback;
@@ -891,32 +882,5 @@ public class FtcLimelightVision
 
         return matchedIndex;
     }   //matchAprilTagId
-
-    /**
-     * This method update the dashboard with vision status.
-     *
-     * @param lineNum specifies the starting line number to print the subsystem status.
-     * @return updated line number for the next subsystem to print.
-     */
-    public int updateStatus(int lineNum)
-    {
-        if (statusResultType != null)
-        {
-            TargetInfo target = getBestDetectedTarget(statusResultType, null, null);
-
-            if (target != null)
-            {
-                dashboard.displayPrintf(
-                    lineNum++, "LLAprilTag[%s]: dist=%f, targetPose=%s, robotPose=%s",
-                    target.objId, target.getTargetDistance(), target.getTargetPose(), target.getRobotPose());
-            }
-            else
-            {
-                dashboard.displayPrintf(lineNum++, "");
-            }
-        }
-
-        return lineNum;
-    }   //updateStatus
 
 }   //class FtcLimelightVision

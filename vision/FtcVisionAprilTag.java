@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 
-import ftclib.driverio.FtcDashboard;
 import trclib.dataprocessor.TrcUtil;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
@@ -111,22 +110,20 @@ public class FtcVisionAprilTag
             if (aprilTagDetection.ftcPose != null)
             {
                 return super.toString() +
-                       ",singleId=" + singleAprilTagId +
-                       ",ftcPose=(x=" + aprilTagDetection.ftcPose.x +
-                       ",y=" + aprilTagDetection.ftcPose.y +
-                       ",z=" + aprilTagDetection.ftcPose.z +
-                       ",pitch=" + aprilTagDetection.ftcPose.pitch +
-                       ",roll=" + aprilTagDetection.ftcPose.roll +
-                       ",yaw=" + aprilTagDetection.ftcPose.yaw +
-                       ",range=" + aprilTagDetection.ftcPose.range +
-                       ",bearing=" + aprilTagDetection.ftcPose.bearing +
-                       ",elevation=" + aprilTagDetection.ftcPose.elevation + ")" +
-                       ",timestamp=" + timestampSec;
+                       String.format(
+                           Locale.US,
+                           ", singleId=%d, ftpPose=(xyz=%.1f/%.1f/%.1f,pry=%.1f/%.1f/%.1f,rbe=%.1f/%.1f/%.1f)" +
+                           ", timestamp=%.3f",
+                           singleAprilTagId, aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y,
+                           aprilTagDetection.ftcPose.z, aprilTagDetection.ftcPose.pitch,
+                           aprilTagDetection.ftcPose.roll, aprilTagDetection.ftcPose.yaw,
+                           aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing,
+                           aprilTagDetection.ftcPose.elevation, timestampSec);
             }
             else
             {
                 return super.toString() +
-                       ",singleId=" + singleAprilTagId;
+                       String.format(Locale.US, ", singleId=%d, timestamp=%.3f", singleAprilTagId, timestampSec);
             }
         }   //toString
 
@@ -202,14 +199,6 @@ public class FtcVisionAprilTag
                     targetPose3d = cameraInfo.camPose.addRelativePose(trc3dTargetPose);
                     targetPose2d = targetPose3d.toTrcPose2DBearing();
                     targetDistance = aprilTagDetection.ftcPose.range;
-                    TrcDbgTrace.globalTraceDebug(
-                        moduleName + "." + label,
-                        "ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f), targetPose3d=%s, " +
-                        "targetPose2d=%s, robotPose=%s",
-                        aprilTagDetection.ftcPose.x, aprilTagDetection.ftcPose.y, aprilTagDetection.ftcPose.z,
-                        aprilTagDetection.ftcPose.pitch, aprilTagDetection.ftcPose.roll, aprilTagDetection.ftcPose.yaw,
-                        aprilTagDetection.ftcPose.range, aprilTagDetection.ftcPose.bearing, aprilTagDetection.ftcPose.elevation,
-                        targetPose3d, targetPose2d, getRobotPose());
                 }
             }
 
@@ -413,6 +402,35 @@ public class FtcVisionAprilTag
 
             return rotatedRectVertices;
         }   //getRotatedRectVertices
+
+        /**
+         * Converts an FTC AprilTag detection to a TRC 3D pose.
+         * TRC coordinates:
+         *   X right, Y forward, Z up.
+         *   Pitch about X, roll about Y, yaw CW-positive.
+         *
+         * @param detection specifies the AprilTag detection.
+         * @return the target pose relative to the camera.
+         */
+        public TrcPose3D ftcPoseToTrcPose3D(AprilTagDetection detection)
+        {
+            MatrixF raw = detection.rawPose.R;
+            // Convert native AprilTag coordinates to TRC coordinates.
+            // Rtrc = C * Rraw * C^T.
+            double[][] matrix =
+                {
+                    { raw.get(0, 0),  raw.get(0, 2), -raw.get(0, 1) },
+                    { raw.get(2, 0),  raw.get(2, 2), -raw.get(2, 1) },
+                    {-raw.get(1, 0), -raw.get(1, 2),  raw.get(1, 1) }
+                };
+            Rotation rotation = new Rotation(matrix, 1.0e-6);
+            double[] angles = rotation.getAngles(RotationOrder.ZYX, RotationConvention.VECTOR_OPERATOR);
+
+            return new TrcPose3D(
+                detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z,
+                Math.toDegrees(angles[2]), Math.toDegrees(angles[1]), -Math.toDegrees(angles[0]));
+        }   //ftcPoseToTrcPose3D
+
     }   //class DetectedObject
 
     /**
@@ -468,11 +486,11 @@ public class FtcVisionAprilTag
     }   //class Parameters
 
     public final TrcDbgTrace tracer;
-    private final FtcDashboard dashboard;
     private final String instanceName;
     private final TrcVision.CameraInfo cameraInfo;
     private final TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback;
     private final AprilTagProcessor aprilTagProcessor;
+    private TargetInfo lastDetectedTarget = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -488,8 +506,7 @@ public class FtcVisionAprilTag
         TrcVision.AprilTagFieldPose aprilTagFieldPoseCallback)
     {
         this.tracer = new TrcDbgTrace();
-        this.dashboard = FtcDashboard.getInstance();
-        this.instanceName = tagFamily.name();
+        this.instanceName = cameraInfo.camName;
         this.cameraInfo = cameraInfo;
         this.aprilTagFieldPoseCallback = aprilTagFieldPoseCallback;
         // Create the AprilTag processor.
@@ -525,34 +542,6 @@ public class FtcVisionAprilTag
     }   //toString
 
     /**
-     * Converts an FTC AprilTag detection to a TRC 3D pose.
-     * TRC coordinates:
-     *   X right, Y forward, Z up.
-     *   Pitch about X, roll about Y, yaw CW-positive.
-     *
-     * @param detection specifies the AprilTag detection.
-     * @return the target pose relative to the camera.
-     */
-    public static TrcPose3D ftcPoseToTrcPose3D(AprilTagDetection detection)
-    {
-        MatrixF raw = detection.rawPose.R;
-        // Convert native AprilTag coordinates to TRC coordinates.
-        // Rtrc = C * Rraw * C^T.
-        double[][] matrix =
-            {
-                { raw.get(0, 0),  raw.get(0, 2), -raw.get(0, 1) },
-                { raw.get(2, 0),  raw.get(2, 2), -raw.get(2, 1) },
-                {-raw.get(1, 0), -raw.get(1, 2),  raw.get(1, 1) }
-            };
-        Rotation rotation = new Rotation(matrix, 1.0e-6);
-        double[] angles = rotation.getAngles(RotationOrder.ZYX, RotationConvention.VECTOR_OPERATOR);
-
-        return new TrcPose3D(
-            detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z,
-            Math.toDegrees(angles[2]), Math.toDegrees(angles[1]), -Math.toDegrees(angles[0]));
-    }   //ftcPoseToTrcPose3D
-
-    /**
      * This method returns the AprilTag vision processor.
      *
      * @return AprilTag vision processor.
@@ -565,9 +554,10 @@ public class FtcVisionAprilTag
     /**
      * This method returns an array list of target info on the detected targets.
      *
+     * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return sorted target info array list.
      */
-    public ArrayList<TargetInfo> getDetectedTargets()
+    public ArrayList<TargetInfo> getDetectedTargets(Comparator<? super TargetInfo> comparator)
     {
         ArrayList<TargetInfo> targetsInfo = null;
         ArrayList<AprilTagDetection> targets = aprilTagProcessor.getFreshDetections();
@@ -577,33 +567,16 @@ public class FtcVisionAprilTag
             targetsInfo = new ArrayList<>();
             for (AprilTagDetection aprilTagDet: targets)
             {
-                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
-                {
-                    if (aprilTagDet instanceof AprilTagSingleDetection)
-                    {
-                        AprilTagSingleDetection singleDet = (AprilTagSingleDetection) aprilTagDet;
-                        tracer.traceMsg(
-                            instanceName, "single: id=%d, metadata=%s, ftpPose=%s, robotPose=%s",
-                            singleDet.id, singleDet.metadata != null, singleDet.ftcPose != null,
-                            singleDet.robotPose != null);
-                    }
-                    else
-                    {
-                        AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) aprilTagDet;
-                        tracer.traceMsg(
-                            instanceName,
-                            "cluster: name=%s, ftcPose=x%.1f/y%.1f/z%.1f, p%.1f/r%.1f/y%.1f, r%.1f/b%.1f/e%.1f, " +
-                            "robotPose=p%s/o%s",
-                            clusterDet.metadata.name,
-                            clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
-                            clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
-                            clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation,
-                            clusterDet.robotPose.getPosition(), clusterDet.robotPose.getOrientation());
-                    }
-                }
                 TargetInfo targetInfo = new TargetInfo(aprilTagDet, cameraInfo, aprilTagFieldPoseCallback);
-                tracer.traceDebug(instanceName, "AprilTagInfo=%s", targetInfo);
+                tracer.traceDebug(
+                    instanceName, "AprilTagInfo=%s, targetPose3d=%s, robotPose=%s",
+                    targetInfo, targetInfo.getTargetPose3d(), targetInfo.getRobotPose());
                 targetsInfo.add(targetInfo);
+            }
+
+            if (comparator != null && targetsInfo.size() > 1)
+            {
+                targetsInfo.sort(comparator);
             }
         }
 
@@ -613,21 +586,26 @@ public class FtcVisionAprilTag
     /**
      * This method returns the target info of the best detected AprilTag, single or cluster.
      *
+     * @param lastTimestamp specifies the timestamp of the detected target in a previous call, null if not provided.
+     *                      In the case when there is no fresh data, the last cached target data will be returned if
+     *                      it is newer than lastTimestamp.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TargetInfo getBestDetectedTarget(Comparator<? super TargetInfo> comparator)
+    public TargetInfo getBestDetectedTarget(Double lastTimestamp, Comparator<? super TargetInfo> comparator)
     {
         TargetInfo bestTarget = null;
-        ArrayList<TargetInfo> detectedTargets = getDetectedTargets();
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets(comparator);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
-            if (comparator != null && detectedTargets.size() > 1)
-            {
-                detectedTargets.sort(comparator);
-            }
             bestTarget = detectedTargets.get(0);
+            lastDetectedTarget = bestTarget;
+        }
+        else if (lastTimestamp != null && lastDetectedTarget != null &&
+                 lastDetectedTarget.timestampSec > lastTimestamp)
+        {
+            bestTarget = lastDetectedTarget;
         }
 
         return bestTarget;
@@ -636,14 +614,18 @@ public class FtcVisionAprilTag
     /**
      * This method returns the target info of the best detected single AprilTag.
      *
+     * @param lastTimestamp specifies the timestamp of the detected target in a previous call, null if not provided.
+     *                      In the case when there is no fresh data, the last cached target data will be returned if
+     *                      it is newer than lastTimestamp.
      * @param aprilTagIds specifies an array of AprilTag ID to look for, null if match to any ID.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TargetInfo getBestDetectedSingle(int[] aprilTagIds, Comparator<? super TargetInfo> comparator)
+    public TargetInfo getBestDetectedSingle(
+        Double lastTimestamp, int[] aprilTagIds, Comparator<? super TargetInfo> comparator)
     {
         TargetInfo bestTarget = null;
-        ArrayList<TargetInfo> detectedTargets = getDetectedTargets();
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets(null);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -667,7 +649,15 @@ public class FtcVisionAprilTag
             if (!detectedTargets.isEmpty())
             {
                 bestTarget = detectedTargets.get(0);
+                lastDetectedTarget = bestTarget;
             }
+        }
+
+        if (bestTarget == null && lastTimestamp != null && lastDetectedTarget != null &&
+            lastDetectedTarget.timestampSec > lastTimestamp &&
+            lastDetectedTarget.aprilTagDetection instanceof AprilTagSingleDetection)
+        {
+            bestTarget = lastDetectedTarget;
         }
 
         return bestTarget;
@@ -676,14 +666,18 @@ public class FtcVisionAprilTag
     /**
      * This method returns the target info of the best detected AprilTag cluster.
      *
+     * @param lastTimestamp specifies the timestamp of the detected target in a previous call, null if not provided.
+     *                      In the case when there is no fresh data, the last cached target data will be returned if
+     *                      it is newer than lastTimestamp.
      * @param clusterName specifies the name of the cluster to look for, null if matching for any.
      * @param comparator specifies the comparator to sort the array if provided, can be null if not provided.
      * @return information about the best detected target.
      */
-    public TargetInfo getBestDetectedCluster(String clusterName, Comparator<? super TargetInfo> comparator)
+    public TargetInfo getBestDetectedCluster(
+        Double lastTimestamp, String clusterName, Comparator<? super TargetInfo> comparator)
     {
         TargetInfo bestTarget = null;
-        ArrayList<TargetInfo> detectedTargets = getDetectedTargets();
+        ArrayList<TargetInfo> detectedTargets = getDetectedTargets(null);
 
         if (detectedTargets != null && !detectedTargets.isEmpty())
         {
@@ -707,7 +701,15 @@ public class FtcVisionAprilTag
             if (!detectedTargets.isEmpty())
             {
                 bestTarget = detectedTargets.get(0);
+                lastDetectedTarget = bestTarget;
             }
+        }
+
+        if (bestTarget == null && lastTimestamp != null && lastDetectedTarget != null &&
+            lastDetectedTarget.timestampSec > lastTimestamp &&
+            lastDetectedTarget.aprilTagDetection instanceof AprilTagClusterDetection)
+        {
+            bestTarget = lastDetectedTarget;
         }
 
         return bestTarget;
@@ -735,83 +737,5 @@ public class FtcVisionAprilTag
 
         return matchedIndex;
     }   //matchAprilTagId
-
-    /**
-     * This method update the dashboard with vision status.
-     *
-     * @param lineNum specifies the starting line number to print the subsystem status.
-     * @return updated line number for the next subsystem to print.
-     */
-    public int updateStatus(int lineNum)
-    {
-        TargetInfo target = getBestDetectedTarget(null);
-        if (target != null)
-        {
-            if (target.aprilTagDetection instanceof AprilTagClusterDetection)
-            {
-                AprilTagClusterDetection clusterDet = (AprilTagClusterDetection) target.aprilTagDetection;
-                dashboard.displayPrintf(
-                    lineNum++, "WebcamAprilTagCluster[%s]: dist=%.1f, targetPose=%s, robotPose=%s",
-                    clusterDet.metadata.name, target.getTargetDistance(), target.getTargetPose(),
-                    target.getRobotPose());
-                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.INFO))
-                {
-                    String msg = "cluster: name=" + clusterDet.metadata.name;
-
-                    if (clusterDet.ftcPose != null)
-                    {
-                        msg += String.format(
-                            Locale.US, ", ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f)",
-                            clusterDet.ftcPose.x, clusterDet.ftcPose.y, clusterDet.ftcPose.z,
-                            clusterDet.ftcPose.pitch, clusterDet.ftcPose.roll, clusterDet.ftcPose.yaw,
-                            clusterDet.ftcPose.range, clusterDet.ftcPose.bearing, clusterDet.ftcPose.elevation);
-                    }
-
-                    if (clusterDet.robotPose != null)
-                    {
-                        msg += ", ftcRobotPose(pos=" + clusterDet.robotPose.getPosition() +
-                               ", orient=" + clusterDet.robotPose.getOrientation() + ")";
-                    }
-
-                    tracer.traceMsg(instanceName, msg);
-                }
-            }
-            else
-            {
-                AprilTagSingleDetection singleDet = (AprilTagSingleDetection) target.aprilTagDetection;
-                dashboard.displayPrintf(
-                    lineNum++, "WebcamAprilTagSingle[%d]: dist=%.1f, targetPose=%s, robotPose=%s",
-                    target.singleAprilTagId, target.getTargetDistance(), target.getTargetPose(),
-                    target.getRobotPose());
-                if (tracer.isMsgLevelEnabled(TrcDbgTrace.MsgLevel.DEBUG))
-                {
-                    String msg = "single: id=" + singleDet.id;
-
-                    if (singleDet.ftcPose != null)
-                    {
-                        msg += String.format(
-                            Locale.US, ", ftcPose(xyz=%.1f/%.1f/%.1f, pry=%.1f/%.1f/%.1f, rbe=%.1f/%.1f/%.1f)",
-                            singleDet.ftcPose.x, singleDet.ftcPose.y, singleDet.ftcPose.z,
-                            singleDet.ftcPose.pitch, singleDet.ftcPose.roll, singleDet.ftcPose.yaw,
-                            singleDet.ftcPose.range, singleDet.ftcPose.bearing, singleDet.ftcPose.elevation);
-                    }
-
-                    if (singleDet.robotPose != null)
-                    {
-                        msg += ", ftcRobotPose(pos=" + singleDet.robotPose.getPosition() +
-                            ", orient=" + singleDet.robotPose.getOrientation() + ")";
-                    }
-
-                    tracer.traceMsg(instanceName, msg);
-                }
-            }
-        }
-        else
-        {
-            dashboard.displayPrintf(lineNum++, "");
-        }
-
-        return lineNum;
-    }   //updateStatus
 
 }   //class FtcVisionAprilTag
