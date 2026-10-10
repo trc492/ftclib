@@ -49,7 +49,6 @@ public class FtcRobotBase
      */
     public static class RobotInfo
     {
-        public String robotName = null;
         // Robot Characteristics.
         public double robotWidth = 0.0, robotLength = 0.0;
         public double wheelBaseWidth = 0.0, wheelBaseLength = 0.0;
@@ -103,7 +102,6 @@ public class FtcRobotBase
         /**
          * This method sets basic robot info.
          *
-         * @param robotName specifies robot name.
          * @param robotWidth specifies robot width.
          * @param robotLength specifies robot length.
          * @param wheelBaseWidth specifies wheel base width.
@@ -111,25 +109,12 @@ public class FtcRobotBase
          * @return this object for chaining.
          */
         public RobotInfo setRobotInfo(
-            String robotName, double robotWidth, double robotLength, double wheelBaseWidth, double wheelBaseLength)
+            double robotWidth, double robotLength, double wheelBaseWidth, double wheelBaseLength)
         {
-            this.robotName = robotName;
             this.robotWidth = robotWidth;
             this.robotLength = robotLength;
             this.wheelBaseWidth = wheelBaseWidth;
             this.wheelBaseLength = wheelBaseLength;
-            return this;
-        }   //setRobotInfo
-
-        /**
-         * This method sets basic robot info.
-         *
-         * @param robotName specifies robot name.
-         * @return this object for chaining.
-         */
-        public RobotInfo setRobotInfo(String robotName)
-        {
-            setRobotInfo(robotName, 0.0, 0.0, 0.0, 0.0);
             return this;
         }   //setRobotInfo
 
