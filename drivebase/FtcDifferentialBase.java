@@ -52,16 +52,16 @@ public class FtcDifferentialBase extends FtcRobotBase
             case 4:
                 driveBase = new TrcSimpleDrive(
                     gyro,
-                    driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.BackLeft.value],
-                    driveMotors[MotorIndex.FrontRight.value], driveMotors[MotorIndex.BackRight.value]);
+                    driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.FrontRight.value],
+                    driveMotors[MotorIndex.BackLeft.value], driveMotors[MotorIndex.BackRight.value]);
                 break;
 
             case 6:
                 driveBase = new TrcSimpleDrive(
                     gyro,
-                    driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.CenterLeft.value],
-                    driveMotors[MotorIndex.BackLeft.value], driveMotors[MotorIndex.FrontRight.value],
-                    driveMotors[MotorIndex.CenterRight.value], driveMotors[MotorIndex.BackRight.value]);
+                    driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.FrontRight.value],
+                    driveMotors[MotorIndex.BackLeft.value], driveMotors[MotorIndex.BackRight.value],
+                    driveMotors[MotorIndex.CenterLeft.value], driveMotors[MotorIndex.CenterRight.value]);
                 break;
 
             default:

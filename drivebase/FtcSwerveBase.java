@@ -156,8 +156,8 @@ public class FtcSwerveBase extends FtcRobotBase
         swerveModules = createSwerveModules();
         TrcSwerveDrive driveBase = new TrcSwerveDrive(
             gyro, swerveInfo.wheelBaseWidth, swerveInfo.wheelBaseLength,
-            swerveModules[MotorIndex.FrontLeft.value], swerveModules[MotorIndex.BackLeft.value],
-            swerveModules[MotorIndex.FrontRight.value], swerveModules[MotorIndex.BackRight.value]);
+            swerveModules[MotorIndex.FrontLeft.value], swerveModules[MotorIndex.FrontRight.value],
+            swerveModules[MotorIndex.BackLeft.value], swerveModules[MotorIndex.BackRight.value]);
         super.configDriveBase(driveBase);
         this.dashboard = FtcDashboard.getInstance();
     }   //FtcSwerveBase
