@@ -41,8 +41,8 @@ public class FtcMecanumBase extends FtcRobotBase
         super(robotInfo);
         TrcMecanumDrive driveBase = new TrcMecanumDrive(
             gyro,
-            driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.BackLeft.value],
-            driveMotors[MotorIndex.FrontRight.value], driveMotors[MotorIndex.BackRight.value]);
+            driveMotors[MotorIndex.FrontLeft.value], driveMotors[MotorIndex.FrontRight.value],
+            driveMotors[MotorIndex.BackLeft.value], driveMotors[MotorIndex.BackRight.value]);
         configDriveBase(driveBase);
     }   //FtcMecanumBase
 
