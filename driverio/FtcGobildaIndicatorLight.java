@@ -51,7 +51,7 @@ public class FtcGobildaIndicatorLight extends TrcGobildaIndicatorLight
     {
         super(instanceName);
         led = hardwareMap.get(Servo.class, instanceName);
-        setPattern(currPattern);
+        reset();
     }   //FtcGobildaIndicatorLight
 
     /**

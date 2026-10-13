@@ -155,7 +155,7 @@ public class FtcRevBlinkin extends TrcRevBlinkin
     private static final Pattern offPattern = new Pattern("Off", RevLedPattern.SolidBlack);
 
     private final RevBlinkinLedDriver blinkinLedDriver;
-    private Pattern currPattern = offPattern;
+    private Pattern currPattern = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -167,7 +167,7 @@ public class FtcRevBlinkin extends TrcRevBlinkin
     {
         super(instanceName);
         blinkinLedDriver = hardwareMap.get(RevBlinkinLedDriver.class, instanceName);
-        setPattern(currPattern);
+        reset();
     }   //FtcRevBlinkin
 
     /**

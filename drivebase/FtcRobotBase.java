@@ -22,6 +22,8 @@
 
 package ftclib.drivebase;
 
+import androidx.annotation.NonNull;
+
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 
 import ftclib.motor.FtcMotorActuator;
@@ -44,6 +46,43 @@ import trclib.vision.TrcVision;
  */
 public class FtcRobotBase
 {
+    public enum IndicatorType
+    {
+        RevBlinkin,
+        GoBildaIndicatorLight,
+        GoBildaPrism
+    }   //enum IndicatorType
+
+    public static class IndicatorInfo
+    {
+        public IndicatorType type;
+        public String name;
+
+        /**
+         * Constructor: Creates an instance of the object.
+         *
+         * @param type specifies the indicator type.
+         * @param name specifies the name of the indicator.
+         */
+        public IndicatorInfo(IndicatorType type, String name)
+        {
+            this.type = type;
+            this.name = name;
+        }   //IndicatorInfo
+
+        /**
+         * This method returns the indicator info in a string.
+         *
+         * @return indicator info.
+         */
+        @NonNull
+        @Override
+        public String toString()
+        {
+            return "{type=" + type + ",name=" + name + "}";
+        }   //toString
+    }   //class IndicatorInfo
+
     /**
      * This class contains the Common Robot Info.
      */
@@ -97,7 +136,7 @@ public class FtcRobotBase
         // Vision
         public TrcVision.CameraInfo[] camInfos = null;
         // Miscellaneous
-        public String[] indicatorNames = null;
+        public IndicatorInfo[] indicatorsInfo = null;
 
         /**
          * This method sets basic robot info.
@@ -378,12 +417,12 @@ public class FtcRobotBase
         /**
          * This method sets LED indicator names.
          *
-         * @param indicatorNames specifies an array of LED indicator names.
+         * @param indicatorsInfo specifies an array of indicator info.
          * @return this object for chaining.
          */
-        public RobotInfo setIndicators(String... indicatorNames)
+        public RobotInfo setIndicators(IndicatorInfo... indicatorsInfo)
         {
-            this.indicatorNames = indicatorNames;
+            this.indicatorsInfo = indicatorsInfo;
             return this;
         }   //setIndicators
 
