@@ -128,7 +128,9 @@ public class FtcShooter
             boolean encoderInverted, boolean encoderWrapped, TrcShooter.PanTiltParams tiltParams)
         {
             this.tiltMotorParams = new FtcMotorActuator.Params()
-                .setPrimaryMotor(motorName, motorType, motorInverted, true, true);
+                .setPrimaryMotor(
+                    motorName, motorType, motorInverted, true,
+                    motorType == FtcMotorActuator.MotorType.DcMotor? true: null);
             if (encoderName != null)
             {
                 tiltMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
