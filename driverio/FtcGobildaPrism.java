@@ -39,57 +39,32 @@ import trclib.driverio.TrcPriorityIndicator;
  */
 public class FtcGobildaPrism extends TrcPriorityIndicator
 {
-    public static Pattern solidBlack =
-        new Pattern("Black", new PrismAnimations.Solid(Color.TRANSPARENT, 50));
-    public static Pattern solidRed =
-        new Pattern("Red", new PrismAnimations.Solid(Color.RED, 50));
-    public static Pattern solidGreen =
-        new Pattern("Green", new PrismAnimations.Solid(Color.GREEN, 50));
-    public static Pattern solidBlue =
-        new Pattern("Blue", new PrismAnimations.Solid(Color.BLUE, 50));
-    public static Pattern solidYellow =
-        new Pattern("Yellow", new PrismAnimations.Solid(Color.YELLOW, 50));
-    public static Pattern solidCyan =
-        new Pattern("Cyan", new PrismAnimations.Solid(Color.CYAN, 50));
-    public static Pattern solidMagenta =
-        new Pattern("Magenta", new PrismAnimations.Solid(Color.MAGENTA, 50));
-    public static Pattern solidWhite =
-        new Pattern("White", new PrismAnimations.Solid(Color.WHITE, 50));
-    public static Pattern solidOrange =
-        new Pattern("Orange", new PrismAnimations.Solid(Color.ORANGE, 50));
-    public static Pattern solidOlive =
-        new Pattern("Olive", new PrismAnimations.Solid(Color.OLIVE, 50));
-    public static Pattern solidTeal =
-        new Pattern("Teal", new PrismAnimations.Solid(Color.TEAL, 50));
-    public static Pattern solidPurple =
-        new Pattern("Purple", new PrismAnimations.Solid(Color.PURPLE, 50));
-    public static Pattern solidPink =
-        new Pattern("Pink", new PrismAnimations.Solid(Color.PINK, 50));
+    public static AnimationBase solidBlack = new PrismAnimations.Solid(Color.TRANSPARENT, 50);
+    public static AnimationBase solidRed = new PrismAnimations.Solid(Color.RED, 50);
+    public static AnimationBase solidGreen = new PrismAnimations.Solid(Color.GREEN, 50);
+    public static AnimationBase solidBlue = new PrismAnimations.Solid(Color.BLUE, 50);
+    public static AnimationBase solidYellow = new PrismAnimations.Solid(Color.YELLOW, 50);
+    public static AnimationBase solidCyan = new PrismAnimations.Solid(Color.CYAN, 50);
+    public static AnimationBase solidMagenta = new PrismAnimations.Solid(Color.MAGENTA, 50);
+    public static AnimationBase solidWhite = new PrismAnimations.Solid(Color.WHITE, 50);
+    public static AnimationBase solidOrange = new PrismAnimations.Solid(Color.ORANGE, 50);
+    public static AnimationBase solidOlive = new PrismAnimations.Solid(Color.OLIVE, 50);
+    public static AnimationBase solidTeal = new PrismAnimations.Solid(Color.TEAL, 50);
+    public static AnimationBase solidPurple = new PrismAnimations.Solid(Color.PURPLE, 50);
+    public static AnimationBase solidPink = new PrismAnimations.Solid(Color.PINK, 50);
 
-    public static Pattern blinkRed =
-        new Pattern("Red", new PrismAnimations.Blink(Color.RED, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkGreen =
-        new Pattern("Green", new PrismAnimations.Blink(Color.GREEN, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkBlue =
-        new Pattern("Blue", new PrismAnimations.Blink(Color.BLUE, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkYellow =
-        new Pattern("Yellow", new PrismAnimations.Blink(Color.YELLOW, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkCyan =
-        new Pattern("Cyan", new PrismAnimations.Blink(Color.CYAN, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkMagenta =
-        new Pattern("Magenta", new PrismAnimations.Blink(Color.MAGENTA, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkWhite =
-        new Pattern("White", new PrismAnimations.Blink(Color.WHITE, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkOrange =
-        new Pattern("Orange", new PrismAnimations.Blink(Color.ORANGE, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkOlive =
-        new Pattern("Olive", new PrismAnimations.Blink(Color.OLIVE, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkTeal =
-        new Pattern("Teal", new PrismAnimations.Blink(Color.TEAL, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkPurple =
-        new Pattern("Purple", new PrismAnimations.Blink(Color.PURPLE, Color.TRANSPARENT, 500, 250));
-    public static Pattern blinkPink =
-        new Pattern("Pink", new PrismAnimations.Blink(Color.PINK, Color.TRANSPARENT, 500, 250));
+    public static AnimationBase blinkRed = new PrismAnimations.Blink(Color.RED, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkGreen = new PrismAnimations.Blink(Color.GREEN, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkBlue = new PrismAnimations.Blink(Color.BLUE, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkYellow = new PrismAnimations.Blink(Color.YELLOW, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkCyan = new PrismAnimations.Blink(Color.CYAN, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkMagenta = new PrismAnimations.Blink(Color.MAGENTA, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkWhite = new PrismAnimations.Blink(Color.WHITE, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkOrange = new PrismAnimations.Blink(Color.ORANGE, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkOlive = new PrismAnimations.Blink(Color.OLIVE, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkTeal = new PrismAnimations.Blink(Color.TEAL, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkPurple = new PrismAnimations.Blink(Color.PURPLE, Color.TRANSPARENT, 500, 250);
+    public static AnimationBase blinkPink = new PrismAnimations.Blink(Color.PINK, Color.TRANSPARENT, 500, 250);
 
     private final GoBildaPrismDriver prismDriver;
     private Pattern currPattern = null;
