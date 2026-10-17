@@ -161,6 +161,51 @@ public class FtcShooter
         }   //setTiltMotor
 
         /**
+         * This method sets the parameters of tilt if there is one.
+         *
+         * @param motorName specifies the name of the motor.
+         * @param motorType specifies the motor type.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
+         * @param tiltParams specifies tilt parameters.
+         * @return this object for chaining.
+         */
+        public Params setTiltMotor(
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, TrcShooter.PanTiltParams tiltParams)
+        {
+            return setTiltMotor(
+                motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled, null, false, false,
+                tiltParams);
+        }   //setTiltMotor
+
+        /**
+         * This method adds the parameters of a tilt follower motor`.
+         *
+         * @param motorName specifies the name of the motor.
+         * @param motorType specifies the motor type.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
+         * @return this object for chaining.
+         */
+        public Params addTiltFollower(
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled)
+        {
+            if (tiltMotorParams == null)
+            {
+                throw new IllegalMonitorStateException("Must call setTiltMotor first.");
+            }
+
+            tiltMotorParams.addFollowerMotor(
+                motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
+
+            return this;
+        }   //addTiltFollower
+
+        /**
          * This method sets the position presets for the Tilt Motor.
          *
          * @param presetTolerance specifies the preset position tolerance.
@@ -206,6 +251,51 @@ public class FtcShooter
             this.panParams = panParams;
             return this;
         }   //setPanMotor
+
+        /**
+         * This method sets the parameters of pan if there is one.
+         *
+         * @param motorName specifies the name of the motor.
+         * @param motorType specifies the motor type.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
+         * @param panParams specifies pan parameters.
+         * @return this object for chaining.
+         */
+        public Params setPanMotor(
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled, TrcShooter.PanTiltParams panParams)
+        {
+            return setPanMotor(
+                motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled, null, false, false,
+                panParams);
+        }   //setPanMotor
+
+        /**
+         * This method adds the parameters of a tilt follower motor`.
+         *
+         * @param motorName specifies the name of the motor.
+         * @param motorType specifies the motor type.
+         * @param motorInverted specifies true to invert the motor direction, false otherwise.
+         * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
+         * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
+         * @return this object for chaining.
+         */
+        public Params addPanFollower(
+            String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
+            boolean brakeModeEnabled)
+        {
+            if (panMotorParams == null)
+            {
+                throw new IllegalMonitorStateException("Must call setPanMotor first.");
+            }
+
+            panMotorParams.addFollowerMotor(
+                motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
+
+            return this;
+        }   //addPanFollower
 
         /**
          * This method sets the position presets for the Pan Motor.
