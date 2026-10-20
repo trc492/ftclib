@@ -84,7 +84,7 @@ public class FtcMotorActuator
      */
     public static class Params
     {
-        public MotorInfo primaryMotor = null;
+        public MotorInfo motor = null;
         public ArrayList<MotorInfo> followerMotors = null;
 
         public String lowerLimitSwitchName = null;
@@ -114,7 +114,7 @@ public class FtcMotorActuator
         @Override
         public String toString()
         {
-            return "primaryMotor=(" + primaryMotor +
+            return "motor=(" + motor +
                    ")\nfollowerMotors=" + followerMotors +
                    "\nlowerLimitName=" + lowerLimitSwitchName +
                    ",lowerLimitInverted=" + lowerLimitSwitchInverted +
@@ -131,7 +131,7 @@ public class FtcMotorActuator
         }   //toString
 
         /**
-         * This method sets the parameters of the primary motor.
+         * This method sets the parameters of the motor.
          *
          * @param name specifies the name of the motor.
          * @param motorType specifies the motor type.
@@ -141,7 +141,7 @@ public class FtcMotorActuator
          *        does not support brake mode.
          * @return this object for chaining.
          */
-        public Params setPrimaryMotor(
+        public Params setMotor(
             String name, MotorType motorType, boolean inverted, boolean voltageCompEnabled, boolean brakeModeEnabled)
         {
             if (name == null)
@@ -149,14 +149,14 @@ public class FtcMotorActuator
                 throw new IllegalArgumentException("Must provide a valid primary motor name.");
             }
 
-            if (primaryMotor != null)
+            if (motor != null)
             {
-                throw new IllegalStateException("Primary motor is already set.");
+                throw new IllegalStateException("Motor is already set.");
             }
 
-            primaryMotor = new MotorInfo(name, motorType, inverted, voltageCompEnabled, brakeModeEnabled);
+            motor = new MotorInfo(name, motorType, inverted, voltageCompEnabled, brakeModeEnabled);
             return this;
-        }   //setPrimaryMotor
+        }   //setMotor
 
         /**
          * This method sets the parameters of an additional follower motor.
@@ -172,7 +172,7 @@ public class FtcMotorActuator
         public Params addFollowerMotor(
             String name, MotorType motorType, boolean inverted, boolean voltageCompEnabled, boolean brakeModeEnabled)
         {
-            if (primaryMotor == null)
+            if (motor == null)
             {
                 throw new IllegalStateException("Must set the primary motor first.");
             }
@@ -347,14 +347,14 @@ public class FtcMotorActuator
             }
         }
 
-        motor = createMotor(params.primaryMotor, sensors);
+        motor = createMotor(params.motor, sensors);
 
         if (params.followerMotors != null)
         {
             for (MotorInfo motorInfo: params.followerMotors)
             {
                 TrcMotor followerMotor = createMotor(motorInfo, null);
-                followerMotor.follow(motor, params.primaryMotor.inverted != motorInfo.inverted);
+                followerMotor.follow(motor, params.motor.inverted != motorInfo.inverted);
             }
         }
 
@@ -421,6 +421,7 @@ public class FtcMotorActuator
             }
             catch (UnsupportedOperationException ignored)
             {
+                // Ignore the exception if the motor does not support Brake Mode.
             }
         }
 

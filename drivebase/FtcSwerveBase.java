@@ -196,7 +196,7 @@ public class FtcSwerveBase extends FtcRobotBase
         for (int i = 0; i < motors.length; i++)
         {
             FtcMotorActuator.Params motorParams= new FtcMotorActuator.Params()
-                .setPrimaryMotor(
+                .setMotor(
                     swerveInfo.steerMotorNames[i], swerveInfo.steerMotorType, swerveInfo.steerMotorInverted[i], true,
                     false)
                 .setExternalEncoder(steerEncoders[i]);

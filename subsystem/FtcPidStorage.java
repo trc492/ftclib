@@ -81,7 +81,7 @@ public class FtcPidStorage
             String motorName, MotorType motorType, boolean inverted, boolean voltageCompEnabled,
             boolean brakeModeEnabled)
         {
-            motorParams = new FtcMotorActuator.Params().setPrimaryMotor(
+            motorParams = new FtcMotorActuator.Params().setMotor(
                 motorName, motorType, inverted, voltageCompEnabled, brakeModeEnabled);
             return this;
         }   //setPrimaryMotor

@@ -30,7 +30,7 @@ import trclib.motor.TrcMotor;
 import trclib.subsystem.TrcShooter;
 
 /**
- * This class implements a platform dependent Shooter Subsystem. A Shooter consists of one or two shooter motors.
+ * This class implements a platform dependent Shooter Subsystem. A Shooter consists of one or two shoot motors.
  * Optionally, it may have a pan motor and a tilt motor.
  */
 public class FtcShooter
@@ -40,10 +40,8 @@ public class FtcShooter
      */
     public static class Params
     {
-        private FtcMotorActuator.Params shooterMotor1Params = null;
-        private boolean shooterMotor1HasVelTrigger = false;
-        private FtcMotorActuator.Params shooterMotor2Params = null;
-        private boolean shooterMotor2HasVelTrigger = false;
+        private FtcMotorActuator.Params shootMotor1Params = null;
+        private FtcMotorActuator.Params shootMotor2Params = null;
 
         private FtcMotorActuator.Params tiltMotorParams = null;
         private TrcShooter.PanTiltParams tiltParams = null;
@@ -60,10 +58,8 @@ public class FtcShooter
         @Override
         public String toString()
         {
-            return "shooterMotor1Params=" + shooterMotor1Params +
-                   ",shooterMotor1HasVelTrigger=" + shooterMotor1HasVelTrigger +
-                   "\nshooterMotor2Params=" + shooterMotor2Params +
-                   ",shooterMotor2HasVelTrigger=" + shooterMotor2HasVelTrigger +
+            return "shootMotor1Params=" + shootMotor1Params +
+                   "\nshootMotor2Params=" + shootMotor2Params +
                    "\ntiltMotorParams=" + tiltMotorParams +
                    ",tiltParams=" + tiltParams +
                    "\npanMotorParams=" + panMotorParams +
@@ -71,65 +67,60 @@ public class FtcShooter
         }   //toString
 
         /**
-         * This method sets the parameters of the shooter motor 1.
+         * This method sets the parameters of the shoot motor 1.
          *
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
          * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
-         * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor1(
+        public Params setShootMotor1(
             String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
-            boolean brakeModeEnabled, boolean hasVelocityTrigger)
+            boolean brakeModeEnabled)
         {
-            this.shooterMotor1Params =
-                new FtcMotorActuator.Params().setPrimaryMotor(
+            this.shootMotor1Params =
+                new FtcMotorActuator.Params().setMotor(
                     motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
-            this.shooterMotor1HasVelTrigger = hasVelocityTrigger;
             return this;
-        }   //setShooterMotor1
+        }   //setShootMotor1
 
         /**
-         * This method sets the parameters of the shooter motor 2.
+         * This method sets the parameters of the shoot motor 2.
          *
          * @param motorName specifies the name of the motor.
          * @param motorType specifies the motor type.
          * @param motorInverted specifies true to invert the motor direction, false otherwise.
          * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
          * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
-         * @param hasVelocityTrigger specifies true to create velocity trigger, false otherwise.
-         *        Not applicable if isFollower is true.
          * @param isFollower specifies true if motor2 is a follower of motor1, false otherwise.
          * @return this object for chaining.
          */
-        public Params setShooterMotor2(
+        public Params setShootMotor2(
             String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
-            boolean brakeModeEnabled, boolean hasVelocityTrigger, boolean isFollower)
+            boolean brakeModeEnabled, boolean isFollower)
         {
-            if (shooterMotor1Params == null)
+            if (shootMotor1Params == null)
             {
                 throw new IllegalStateException("Need to set motor1 parameters first.");
             }
 
             if (isFollower)
             {
-                shooterMotor1Params.addFollowerMotor(
+                shootMotor1Params.addFollowerMotor(
                     motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
-                this.shooterMotor2Params = null;
+                this.shootMotor2Params = null;
             }
             else
             {
-                this.shooterMotor2Params =
-                    new FtcMotorActuator.Params().setPrimaryMotor(
+                this.shootMotor2Params =
+                    new FtcMotorActuator.Params().setMotor(
                         motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
-                this.shooterMotor2HasVelTrigger = hasVelocityTrigger;
             }
 
             return this;
-        }   //setShooterMotor2
+        }   //setShootMotor2
 
         /**
          * This method sets the parameters of tilt if there is one.
@@ -151,7 +142,7 @@ public class FtcShooter
             TrcShooter.PanTiltParams tiltParams)
         {
             this.tiltMotorParams = new FtcMotorActuator.Params()
-                .setPrimaryMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
+                .setMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
             if (encoderName != null)
             {
                 tiltMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
@@ -243,7 +234,7 @@ public class FtcShooter
             TrcShooter.PanTiltParams panParams)
         {
             this.panMotorParams = new FtcMotorActuator.Params()
-                .setPrimaryMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
+                .setMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled);
             if (encoderName != null)
             {
                 panMotorParams.setExternalEncoder(encoderName, encoderInverted, encoderWrapped);
@@ -327,17 +318,17 @@ public class FtcShooter
      */
     public FtcShooter(String instanceName, Params params)
     {
-        if (params.shooterMotor1Params == null || params.shooterMotor1Params.primaryMotor == null)
+        if (params.shootMotor1Params == null || params.shootMotor1Params.motor == null)
         {
-            throw new IllegalArgumentException("Shooter must have the primary motor.");
+            throw new IllegalArgumentException("Shooter must have a primary motor.");
         }
 
-        TrcMotor shooterMotor1 = new FtcMotorActuator(params.shooterMotor1Params).getMotor();
+        TrcMotor shootMotor1 = new FtcMotorActuator(params.shootMotor1Params).getMotor();
 
-        TrcMotor shooterMotor2 = null;
-        if (params.shooterMotor2Params != null && params.shooterMotor2Params.primaryMotor != null)
+        TrcMotor shootMotor2 = null;
+        if (params.shootMotor2Params != null && params.shootMotor2Params.motor != null)
         {
-            shooterMotor2 = new FtcMotorActuator(params.shooterMotor2Params).getMotor();
+            shootMotor2 = new FtcMotorActuator(params.shootMotor2Params).getMotor();
         }
 
         TrcMotor tiltMotor =
@@ -346,14 +337,13 @@ public class FtcShooter
             params.panMotorParams != null? new FtcMotorActuator(params.panMotorParams).getMotor(): null;
 
         shooter = new TrcShooter(
-            instanceName, shooterMotor1, params.shooterMotor1HasVelTrigger, shooterMotor2,
-            params.shooterMotor2HasVelTrigger, tiltMotor, params.tiltParams, panMotor, params.panParams);
+            instanceName, shootMotor1, shootMotor2, tiltMotor, params.tiltParams, panMotor, params.panParams);
     }   //FtcShooter
 
     /**
-     * This method returns the shooter object.
+     * This method returns the created shooter object.
      *
-     * @return shooter object.
+     * @return created shooter object.
      */
     public TrcShooter getShooter()
     {

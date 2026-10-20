@@ -449,7 +449,7 @@ public class FtcRobotBase
         for (int i = 0; i < driveMotors.length; i++)
         {
             FtcMotorActuator.Params motorParams= new FtcMotorActuator.Params()
-                .setPrimaryMotor(
+                .setMotor(
                     robotInfo.driveMotorNames[i], robotInfo.driveMotorType, robotInfo.driveMotorInverted[i], true,
                     true);
             driveMotors[i] = new FtcMotorActuator(motorParams).getMotor();

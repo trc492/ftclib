@@ -82,7 +82,7 @@ public class FtcRollerIntake
         public Params setPrimaryMotor(
             String name, MotorType motorType, boolean inverted, boolean voltageCompEnabled, boolean brakeModeEnabled)
         {
-            motorParams = new FtcMotorActuator.Params().setPrimaryMotor(
+            motorParams = new FtcMotorActuator.Params().setMotor(
                 name, motorType, inverted, voltageCompEnabled, brakeModeEnabled);
             return this;
         }   //setPrimaryMotor
