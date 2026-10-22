@@ -158,7 +158,7 @@ public class FtcRobotBase
         }   //setRobotInfo
 
         /**
-         * This methods sets IMU info for the built-in IMU in the REV ControlHub or ExpansionHub.
+         * This method sets IMU info for the built-in IMU in the REV ControlHub or ExpansionHub.
          *
          * @param imuName specifies the IMU name in the Robot Config XML file.
          * @param hubLogoDirection specifies the Logo direction on the Hub.

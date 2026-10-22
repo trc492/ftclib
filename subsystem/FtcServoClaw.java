@@ -64,7 +64,7 @@ public class FtcServoClaw
         }   //toString
 
         /**
-         * This methods sets the parameters of the primary servo.
+         * This method sets the parameters of the primary servo.
          *
          * @param servoName specifies the name of the servo.
          * @param inverted specifies true if the servo is inverted, false otherwise.
@@ -77,7 +77,7 @@ public class FtcServoClaw
         }   //setPrimaryServo
 
         /**
-         * This methods sets the parameter of the follower servo if there is one.
+         * This method sets the parameter of the follower servo if there is one.
          *
          * @param servoName specifies the name of the servo.
          * @param inverted specifies true if the servo is inverted, false otherwise.

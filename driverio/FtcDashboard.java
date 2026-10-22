@@ -221,7 +221,7 @@ public class FtcDashboard extends TrcDashboard
     }   //addStatusUpdate
 
     /**
-     * This methods is called periodically to run the task.
+     * This method is called periodically to run the task.
      *
      * @param taskType specifies the type of task being run.
      * @param runMode specifies the competition mode (e.g. Autonomous, TeleOp, Test).

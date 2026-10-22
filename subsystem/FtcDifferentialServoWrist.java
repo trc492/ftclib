@@ -59,7 +59,7 @@ public class FtcDifferentialServoWrist
         }   //toString
 
         /**
-         * This methods sets the parameters of the two servos.
+         * This method sets the parameters of the two servos.
          *
          * @param servo1Name specifies the name of servo1.
          * @param servo1Inverted specifies true if servo1 is inverted, false otherwise.

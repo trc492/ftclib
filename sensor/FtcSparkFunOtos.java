@@ -97,7 +97,7 @@ public class FtcSparkFunOtos implements TrcDriveBaseOdometry
         }   //setOffset
 
         /**
-         * This methods sets the linear and angular scales used by the OTOS for compensating scaling issues with
+         * This method sets the linear and angular scales used by the OTOS for compensating scaling issues with
          * sensor measurements.
          *
          * @param linearScale specifies linear scale, must be between 0.872 and 1.127.

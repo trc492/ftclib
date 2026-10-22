@@ -98,7 +98,7 @@ public class FtcServoActuator
         }   //toString
 
         /**
-         * This methods sets the parameters of the primary servo.
+         * This method sets the parameters of the primary servo.
          *
          * @param name specifies the name of the servo.
          * @param inverted specifies true if the servo is inverted, false otherwise.
@@ -117,7 +117,7 @@ public class FtcServoActuator
         }   //setPrimaryServo
 
         /**
-         * This methods sets the parameter of the follower servo.
+         * This method sets the parameter of the follower servo.
          *
          * @param name specifies the name of the servo.
          * @param inverted specifies true if the servo is inverted, false otherwise.
