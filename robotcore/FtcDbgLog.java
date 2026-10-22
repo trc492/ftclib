@@ -49,6 +49,10 @@ public class FtcDbgLog implements TrcDbgTrace.DbgLog
     {
         switch (level)
         {
+            case MSG:
+                Log.i(DBG_TAG, msg);
+                break;
+
             case FATAL:
                 Log.wtf(DBG_TAG, msg);
                 break;
