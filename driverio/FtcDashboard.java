@@ -200,6 +200,14 @@ public class FtcDashboard extends TrcDashboard
     }   //isDashboardUpdateEnabled
 
     /**
+     * This method forces FtcDashboard to update values of referenced objects.
+     */
+    public void updateFtcDashboardConfig()
+    {
+        com.acmerobotics.dashboard.FtcDashboard.getInstance().updateConfig();
+    }   //updateFtcDashboardConfig
+
+    /**
      * This method adds a component for dashboard status update.
      *
      * @param name specifies the component name.
