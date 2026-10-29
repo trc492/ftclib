@@ -110,7 +110,7 @@ public class FtcGobildaPrism extends TrcPriorityIndicator
     @Override
     public void reset()
     {
-        prismDriver.clearAllAnimations();
+        prismDriver.insertAndUpdateAnimation(GoBildaPrismDriver.LayerHeight.LAYER_0, solidBlack);
         currPattern = null;
     }   //reset
 
