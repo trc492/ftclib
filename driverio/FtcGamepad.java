@@ -50,6 +50,16 @@ public class FtcGamepad extends TrcGameController
     private static final int GAMEPAD_GUIDE      = (1 << 12);
     private static final int GAMEPAD_LSTICK_BTN = (1 << 13);
     private static final int GAMEPAD_RSTICK_BTN = (1 << 14);
+    private static final int GAMEPAD_LSTICK_LBTN= (1 << 16);
+    private static final int GAMEPAD_LSTICK_RBTN= (1 << 17);
+    private static final int GAMEPAD_LSTICK_UBTN= (1 << 18);
+    private static final int GAMEPAD_LSTICK_DBTN= (1 << 19);
+    private static final int GAMEPAD_RSTICK_LBTN= (1 << 20);
+    private static final int GAMEPAD_RSTICK_RBTN= (1 << 21);
+    private static final int GAMEPAD_RSTICK_UBTN= (1 << 22);
+    private static final int GAMEPAD_RSTICK_DBTN= (1 << 23);
+    private static final int GAMEPAD_LTRIGGER_BTN=(1 << 24);
+    private static final int GAMEPAD_RTRIGGER_BTN=(1 << 25);
 
     public enum ButtonType
     {
@@ -67,7 +77,17 @@ public class FtcGamepad extends TrcGameController
         Start,
         Guide,
         LeftStickButton,
-        RightStickButton
+        RightStickButton,
+        LeftStickLeftButton,
+        LeftStickRightButton,
+        LeftStickUpButton,
+        LeftStickDownButton,
+        RightStickLeftButton,
+        RightStickRightButton,
+        RightStickUpButton,
+        RightStickDownButton,
+        LeftTriggerButton,
+        RightTriggerButton
     }   //enum ButtonType
 
     /**
@@ -92,6 +112,16 @@ public class FtcGamepad extends TrcGameController
     private ButtonEventHandler buttonEventHandler = null;
     private int leftXSign = 1, leftYSign = 1;
     private int rightXSign = 1, rightYSign = 1;
+    private Double leftStickLeftThreshold = null;
+    private Double leftStickRightThreshold = null;
+    private Double leftStickUpThreshold = null;
+    private Double leftStickDownThreshold = null;
+    private Double rightStickLeftThreshold = null;
+    private Double rightStickRightThreshold = null;
+    private Double rightStickUpThreshold = null;
+    private Double rightStickDownThreshold = null;
+    private Double leftTriggerThreshold = null;
+    private Double rightTriggerThreshold = null;
 
     /**
      * Constructor: Create an instance of the object.
@@ -122,6 +152,16 @@ public class FtcGamepad extends TrcGameController
             buttonTypeMap.put(GAMEPAD_GUIDE, ButtonType.Guide);
             buttonTypeMap.put(GAMEPAD_LSTICK_BTN, ButtonType.LeftStickButton);
             buttonTypeMap.put(GAMEPAD_RSTICK_BTN, ButtonType.RightStickButton);
+            buttonTypeMap.put(GAMEPAD_LSTICK_LBTN, ButtonType.LeftStickLeftButton);
+            buttonTypeMap.put(GAMEPAD_LSTICK_RBTN, ButtonType.LeftStickRightButton);
+            buttonTypeMap.put(GAMEPAD_LSTICK_UBTN, ButtonType.LeftStickUpButton);
+            buttonTypeMap.put(GAMEPAD_LSTICK_DBTN, ButtonType.LeftStickDownButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_LBTN, ButtonType.RightStickLeftButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_RBTN, ButtonType.RightStickRightButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_UBTN, ButtonType.RightStickUpButton);
+            buttonTypeMap.put(GAMEPAD_RSTICK_DBTN, ButtonType.RightStickDownButton);
+            buttonTypeMap.put(GAMEPAD_LTRIGGER_BTN, ButtonType.LeftTriggerButton);
+            buttonTypeMap.put(GAMEPAD_RTRIGGER_BTN, ButtonType.RightTriggerButton);
         }
         super.init();
     }   //FtcGamepad
@@ -171,6 +211,61 @@ public class FtcGamepad extends TrcGameController
         rightXSign = xInverted? -1: 1;
         rightYSign = yInverted? -1: 1;
     }   //setRightStickInverted
+
+    /**
+     * This method sets the left analog stick thresholds for the four directions and essentially converting the
+     * analog stick to a 4-button DPad. When pushing the stick above the threshold for that direction, that DPad
+     * button is considered pressed. When the stick value is below the threshold, that Dpad button is considered
+     * released.
+     *
+     * @param leftThreshold specifies the left threshold, null to disable the conversion for that direction.
+     * @param rightThreshold specifies the right threshold, null to disable the conversion for that direction.
+     * @param upThreshold specifies the up threshold, null to disable the conversion for that direction.
+     * @param downThreshold specifies the down threshold, null to disable the conversion for that direction.
+     */
+    public void setLeftStickThresholds(
+        Double leftThreshold, Double rightThreshold, Double upThreshold, Double downThreshold)
+    {
+        this.leftStickLeftThreshold = -Math.abs(leftThreshold);
+        this.leftStickRightThreshold = Math.abs(rightThreshold);
+        this.leftStickUpThreshold = -Math.abs(upThreshold);
+        this.leftStickDownThreshold = Math.abs(downThreshold);
+    }   //setLeftStickThresholds
+
+    /**
+     * This method sets the right analog stick thresholds for the four directions and essentially converting the
+     * analog stick to a 4-button DPad. When pushing the stick above the threshold for that direction, that DPad
+     * button is considered pressed. When the stick value is below the threshold, that Dpad button is considered
+     * released.
+     *
+     * @param leftThreshold specifies the left threshold, null to disable the conversion for that direction.
+     * @param rightThreshold specifies the right threshold, null to disable the conversion for that direction.
+     * @param upThreshold specifies the up threshold, null to disable the conversion for that direction.
+     * @param downThreshold specifies the down threshold, null to disable the conversion for that direction.
+     */
+    public void setRightStickThresholds(
+        Double leftThreshold, Double rightThreshold, Double upThreshold, Double downThreshold)
+    {
+        this.rightStickLeftThreshold = -Math.abs(leftThreshold);
+        this.rightStickRightThreshold = Math.abs(rightThreshold);
+        this.rightStickUpThreshold = -Math.abs(upThreshold);
+        this.rightStickDownThreshold = Math.abs(downThreshold);
+    }   //setRightStickThresholds
+
+    /**
+     * This method sets the analog trigger thresholds for left and right and essentially converting the triggers
+     * to the left and right buttons. When pushing the trigger value above the threshold, that trigger buttons is
+     * considered pressed. When the trigger value is below the threshold, that trigger button is considered
+     * released.
+     *
+     * @param leftThreshold specifies the left threshold, null to disable the conversion for that direction.
+     * @param rightThreshold specifies the right threshold, null to disable the conversion for that direction.
+     */
+    public void setTriggerThresholds(Double leftThreshold, Double rightThreshold)
+    {
+        this.leftTriggerThreshold = Math.abs(leftThreshold);
+        this.rightTriggerThreshold = Math.abs(rightThreshold);
+    }   //setTriggerThreshold
 
     /**
      * This method returns the x-axis value of the left stick using the cubic polynomial curve.
@@ -500,6 +595,46 @@ public class FtcGamepad extends TrcGameController
         buttons |= gamepad.guide? GAMEPAD_GUIDE: 0;
         buttons |= gamepad.left_stick_button? GAMEPAD_LSTICK_BTN: 0;
         buttons |= gamepad.right_stick_button? GAMEPAD_RSTICK_BTN: 0;
+        if (leftStickLeftThreshold != null)
+        {
+            buttons |= gamepad.left_stick_x < leftStickLeftThreshold? GAMEPAD_LSTICK_LBTN: 0;
+        }
+        if (leftStickRightThreshold != null)
+        {
+            buttons |= gamepad.left_stick_x > leftStickRightThreshold? GAMEPAD_LSTICK_RBTN: 0;
+        }
+        if (leftStickUpThreshold != null)
+        {
+            buttons |= gamepad.left_stick_y < leftStickUpThreshold? GAMEPAD_LSTICK_UBTN: 0;
+        }
+        if (leftStickDownThreshold != null)
+        {
+            buttons |= gamepad.left_stick_y > leftStickDownThreshold? GAMEPAD_LSTICK_DBTN: 0;
+        }
+        if (rightStickLeftThreshold != null)
+        {
+            buttons |= gamepad.right_stick_x < rightStickLeftThreshold? GAMEPAD_RSTICK_LBTN: 0;
+        }
+        if (rightStickRightThreshold != null)
+        {
+            buttons |= gamepad.right_stick_x > rightStickRightThreshold? GAMEPAD_RSTICK_RBTN: 0;
+        }
+        if (rightStickUpThreshold != null)
+        {
+            buttons |= gamepad.right_stick_y < rightStickUpThreshold? GAMEPAD_RSTICK_UBTN: 0;
+        }
+        if (rightStickDownThreshold != null)
+        {
+            buttons |= gamepad.right_stick_y > rightStickDownThreshold? GAMEPAD_RSTICK_DBTN: 0;
+        }
+        if (leftTriggerThreshold != null)
+        {
+            buttons |= gamepad.left_trigger > leftTriggerThreshold? GAMEPAD_LTRIGGER_BTN: 0;
+        }
+        if (rightTriggerThreshold != null)
+        {
+            buttons |= gamepad.right_trigger > rightTriggerThreshold? GAMEPAD_RTRIGGER_BTN: 0;
+        }
         tracer.traceDebug(instanceName, "buttons=0x" + Integer.toHexString(buttons));
 
         return buttons;
