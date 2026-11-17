@@ -121,6 +121,7 @@ public class FtcMotorActuator
                    "\nupperLimitName=" + upperLimitSwitchName +
                    ",upperLimitInverted=" + upperLimitSwitchInverted +
                    "\nencoderName=" + externalEncoderName +
+                   ",encoder=" + externalEncoder +
                    ",encoderInverted=" + externalEncoderInverted +
                    ",encoderWrapped=" + externalEncoderWrapped +
                    "\nposScale=" + positionScale +
@@ -342,8 +343,11 @@ public class FtcMotorActuator
             if (encoder != null)
             {
                 sensors.setEncoder(encoder, params.externalEncoderInverted);
-                // Enable wrap value converter for absolute encoder.
-                ((FtcAnalogEncoder) encoder).setEnabled(true);
+                if (encoder instanceof FtcAnalogEncoder)
+                {
+                    // Enable wrap value converter for absolute encoder.
+                    ((FtcAnalogEncoder) encoder).setEnabled(true);
+                }
             }
         }
 
