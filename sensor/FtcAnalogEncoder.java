@@ -42,6 +42,8 @@ public class FtcAnalogEncoder implements TrcEncoder
     private double scale = 1.0;
     private double offset = 0.0;
     private double zeroOffset = 0.0;
+    private boolean unwrapWindowEnabled = false;
+    private double unwrapWindowMin = 0.0;
 
     /**
      * Constructor: Creates an instance of the object.
@@ -95,6 +97,25 @@ public class FtcAnalogEncoder implements TrcEncoder
     }   //isEnabled
 
     /**
+     * This method sets a fixed unwrap window for a mechanism that travels less than one encoder revolution. The
+     * scaled position is mapped into [minPos, minPos + one encoder revolution), so the encoder's wrap point is placed
+     * at minPos, which must be outside the mechanism's travel. No crossover counting is needed, so the position has
+     * no state to reset and recovers on its own from power glitches. This cannot be used with WrapValueConverter.
+     *
+     * @param minPos specifies the minimum position of the window in scaled units.
+     * @throws IllegalStateException if the encoder was created with WrapValueConverter.
+     */
+    public void setUnwrapWindow(double minPos)
+    {
+        if (wrapValueConverter != null)
+        {
+            throw new IllegalStateException(instanceName + ": unwrap window cannot be used with WrapValueConverter.");
+        }
+        unwrapWindowMin = minPos;
+        unwrapWindowEnabled = true;
+    }   //setUnwrapWindow
+
+    /**
      * This method reads the raw voltage from the analog input of the encoder.
      *
      * @return raw voltage of the analog encoder.
@@ -135,7 +156,8 @@ public class FtcAnalogEncoder implements TrcEncoder
     }   //getRawPosition
 
     /**
-     * This method returns the encoder position adjusted by scale and offset.
+     * This method returns the encoder position adjusted by scale and offset. If an unwrap window is set, the position
+     * is mapped into the window.
      *
      * @return encoder position adjusted by scale and offset.
      */
@@ -144,6 +166,18 @@ public class FtcAnalogEncoder implements TrcEncoder
     {
         double pos = wrapValueConverter != null? wrapValueConverter.getContinuousValue(): getRawPosition();
         double scaledPos = (pos - zeroOffset) * scale * sign + offset;
+
+        // If the unwrap window is enabled, map the position into the one-revolution window
+        // [unwrapWindowMin, unwrapWindowMin + posRange). This puts the encoder's wrap point at unwrapWindowMin,
+        // which must be outside the mechanism's travel.
+        if (unwrapWindowEnabled)
+        {
+            // posRange is one encoder revolution in scaled units. Java's % keeps the sign of the dividend, so add
+            // posRange and take % again to get a non-negative offset into the window.
+            double posRange = Math.abs(scale);
+            scaledPos = unwrapWindowMin + ((scaledPos - unwrapWindowMin)%posRange + posRange)%posRange;
+        }
+
         tracer.traceDebug(
             instanceName, "RawPos=%f, ScaledPos=%f (zeroOffset=%f, scale=%f, offset=%f, sign=%.0f)",
             pos, scaledPos, zeroOffset, scale, offset, sign);
