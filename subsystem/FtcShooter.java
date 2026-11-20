@@ -182,12 +182,12 @@ public class FtcShooter
          */
         public Params setTiltMotor(
             String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
-            boolean brakeModeEnabled, TrcEncoder encoder, TrcShooter.PanTiltParams tiltParams)
+            boolean brakeModeEnabled, TrcEncoder encoder, boolean encoderInverted, TrcShooter.PanTiltParams tiltParams)
         {
             setTiltMotor(
                 motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled, null, false, false,
                 tiltParams);
-            tiltMotorParams.setExternalEncoder(encoder);
+            tiltMotorParams.setExternalEncoder(encoder, encoderInverted);
             return this;
         }   //setTiltMotor
 
@@ -288,15 +288,16 @@ public class FtcShooter
          * @param voltageCompEnabled specifies true to enable voltage compensation, false otherwise.
          * @param brakeModeEnabled specifies true to enable brake mode, false for coast mode.
          * @param encoder specifies the external encoder, null if none.
+         * @param encoderInverted specifies true if the external encoder is inverted, false otherwise.
          * @param panParams specifies pan parameters.
          * @return this object for chaining.
          */
         public Params setPanMotor(
             String motorName, MotorType motorType, boolean motorInverted, boolean voltageCompEnabled,
-            boolean brakeModeEnabled, TrcEncoder encoder, TrcShooter.PanTiltParams panParams)
+            boolean brakeModeEnabled, TrcEncoder encoder, boolean encoderInverted, TrcShooter.PanTiltParams panParams)
         {
             setPanMotor(motorName, motorType, motorInverted, voltageCompEnabled, brakeModeEnabled, panParams);
-            panMotorParams.setExternalEncoder(encoder);
+            panMotorParams.setExternalEncoder(encoder, encoderInverted);
             return this;
         }   //setPanMotor
 

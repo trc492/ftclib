@@ -199,7 +199,7 @@ public class FtcSwerveBase extends FtcRobotBase
                 .setMotor(
                     swerveInfo.steerMotorNames[i], swerveInfo.steerMotorType, swerveInfo.steerMotorInverted[i], true,
                     false)
-                .setExternalEncoder(steerEncoders[i]);
+                .setExternalEncoder(steerEncoders[i], swerveInfo.steerEncoderInverted[i]);
             motors[i] = new FtcMotorActuator(motorParams).getMotor();
             motors[i].setPositionSensorScaleAndOffset(360.0, 0.0, steerEncZeros[i]);
             motors[i].setPositionPidParameters(swerveInfo.swerveParams.steerMotorPidParams, null);

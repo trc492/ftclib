@@ -220,15 +220,17 @@ public class FtcMotorActuator
          * This method sets the external encoder parameters.
          *
          * @param encoder specifies the external analog encoder.
+         * @param inverted specifies true if the encoder is inverted, false otherwise.
          * @return this object for chaining.
          */
-        public Params setExternalEncoder(TrcEncoder encoder)
+        public Params setExternalEncoder(TrcEncoder encoder, boolean inverted)
         {
             if (this.externalEncoderName != null)
             {
                 throw new IllegalStateException("Can only specify encoder or encode name but not both.");
             }
             this.externalEncoder = encoder;
+            this.externalEncoderInverted = inverted;
             return this;
         }   //setExternalEncoder
 
