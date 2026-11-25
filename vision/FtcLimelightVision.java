@@ -148,7 +148,8 @@ public class FtcLimelightVision
             {
                 if (aprilTagFieldPoseCallback == null)
                 {
-                    // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1 instead.
+                    // MT2 requires initial robot heading to resolve ambiguity. If we don't have that, we will do MT1
+                    // instead.
                     Pose3D camFieldPose3d = USE_MT2? llResult.getBotpose_MT2(): llResult.getBotpose();
 
                     if (camFieldPose3d != null)
@@ -804,7 +805,8 @@ public class FtcLimelightVision
                                     llResult, resultType, capturedTimestampSec, obj, objId, cameraInfo,
                                     aprilTagFieldPoseCallback,
                                     targetKnownWidth != null? targetKnownWidth.getRealWorldWidth(objId): null,
-                                    targetGroundOffset != null? targetGroundOffset.getOffset(objId): 0.0, homographyMapper);
+                                    targetGroundOffset != null? targetGroundOffset.getOffset(objId): 0.0,
+                                    homographyMapper);
                             detectedList.add(detectedTarget);
                             tracer.traceDebug(instanceName, "resultType=%s, label=%s", resultType, objId);
                         }

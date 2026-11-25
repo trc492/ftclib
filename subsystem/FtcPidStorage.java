@@ -237,8 +237,8 @@ public class FtcPidStorage
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
             entryTriggerParams = new TrcPidStorage.TriggerParams(
-                new FtcSensorTrigger().setDigitalInputTrigger(sensorName, sensorInverted).getTrigger(), advanceOnTrigger,
-                triggerCallback, triggerCallbackContext);
+                new FtcSensorTrigger().setDigitalInputTrigger(sensorName, sensorInverted).getTrigger(),
+                advanceOnTrigger, triggerCallback, triggerCallbackContext);
             return this;
         }   //setEntryDigitalInputTrigger
 
@@ -261,8 +261,8 @@ public class FtcPidStorage
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
             entryTriggerParams = new TrcPidStorage.TriggerParams(
-                new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), advanceOnTrigger,
-                triggerCallback, triggerCallbackContext);
+                new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(),
+                advanceOnTrigger, triggerCallback, triggerCallbackContext);
             return this;
         }   //setEntryDigitalSourceTrigger
 
@@ -383,8 +383,8 @@ public class FtcPidStorage
                 throw new IllegalStateException("You can only set one type of trigger.");
             }
             exitTriggerParams = new TrcPidStorage.TriggerParams(
-                new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(), advanceOnTrigger,
-                triggerCallback, triggerCallbackContext);
+                new FtcSensorTrigger().setDigitalSourceTrigger(sourceName, digitalSource).getTrigger(),
+                advanceOnTrigger, triggerCallback, triggerCallbackContext);
             return this;
         }   //setExitDigitalSourceTrigger
 

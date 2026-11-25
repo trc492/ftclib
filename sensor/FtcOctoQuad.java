@@ -321,7 +321,8 @@ public class FtcOctoQuad implements TrcEncoder, TrcOdometrySensor
      * This method returns a copy of the odometry data of the specified axis. It must be a copy so it won't change while
      * the caller is accessing the data fields.
      *
-     * @param axisIndex specifies the axis index if it is a multi-axes sensor, 0 if it is a single axis sensor (not used).
+     * @param axisIndex specifies the axis index if it is a multi-axes sensor, 0 if it is a single axis
+     *                  sensor (not used).
      * @return a copy of the odometry data of the specified axis.
      */
     @Override

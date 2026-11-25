@@ -55,11 +55,13 @@ public class FtcRevBlinkin extends TrcRevBlinkin
         .add(RevLedPattern.FixedSinelonOcean, RevBlinkinLedDriver.BlinkinPattern.SINELON_OCEAN_PALETTE)
         .add(RevLedPattern.FixedSinelonLava, RevBlinkinLedDriver.BlinkinPattern.SINELON_LAVA_PALETTE)
         .add(RevLedPattern.FixedSinelonForest, RevBlinkinLedDriver.BlinkinPattern.SINELON_FOREST_PALETTE)
-        .add(RevLedPattern.FixedBeatsPerMinuteRainbow, RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_RAINBOW_PALETTE)
+        .add(RevLedPattern.FixedBeatsPerMinuteRainbow,
+            RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_RAINBOW_PALETTE)
         .add(RevLedPattern.FixedBeatsPerMinuteParty, RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_PARTY_PALETTE)
         .add(RevLedPattern.FixedBeatsPerMinuteOcean, RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_OCEAN_PALETTE)
         .add(RevLedPattern.FixedBeatsPerMinuteLave, RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_LAVA_PALETTE)
-        .add(RevLedPattern.FixedBeatsPerMinuteForest, RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_FOREST_PALETTE)
+        .add(RevLedPattern.FixedBeatsPerMinuteForest,
+            RevBlinkinLedDriver.BlinkinPattern.BEATS_PER_MINUTE_FOREST_PALETTE)
         .add(RevLedPattern.FixedFireMedium, RevBlinkinLedDriver.BlinkinPattern.FIRE_MEDIUM)
         .add(RevLedPattern.FixedFireLarge, RevBlinkinLedDriver.BlinkinPattern.FIRE_LARGE)
         .add(RevLedPattern.FixedTwinklesRainbow, RevBlinkinLedDriver.BlinkinPattern.TWINKLES_RAINBOW_PALETTE)

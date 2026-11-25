@@ -131,9 +131,9 @@ public class FtcImu extends TrcGyro
      *
      * Some examples.
      *
-     * ----------------------------------------------------------------------------------------------------------------------------------
-     * Example A) Assume that the hub is mounted on a sloped plate at the back of the robot, with the USB ports coming out the top of the hub.
-     *  The plate is tilted UP 60 degrees from horizontal.
+     * -----------------------------------------------------------------------------------------------------------------
+     * Example A) Assume that the hub is mounted on a sloped plate at the back of the robot, with the USB ports coming
+     *  out the top of the hub. The plate is tilted UP 60 degrees from horizontal.
      *
      *  To get the "Default" hub into this configuration you would just need a single rotation.
      *  1) Rotate the Hub +60 degrees around the X axis to tilt up the front edge.
@@ -141,25 +141,28 @@ public class FtcImu extends TrcGyro
      *
      *  So the X,Y,Z rotations would be 60,0,0
      *
-     * ----------------------------------------------------------------------------------------------------------------------------------
-     * Example B) Assume that the hub is laying flat on the chassis, but it has been twisted 30 degrees towards the right front wheel to make
-     *  the USB cable accessible.
+     * -----------------------------------------------------------------------------------------------------------------
+     * Example B) Assume that the hub is laying flat on the chassis, but it has been twisted 30 degrees towards the
+     *  right front wheel to make the USB cable accessible.
      *
-     *  To get the "Default" hub into this configuration you would just need a single rotation, but around a different axis.
+     *  To get the "Default" hub into this configuration you would just need a single rotation, but around a different
+     *  axis.
      *  1) No rotation around the X or Y axes.
      *  1) Rotate the Hub -30 degrees (Clockwise) around the Z axis, since a positive angle would be Counter Clockwise.
      *
      *  So the X,Y,Z rotations would be 0,0,-30
      *
-     * ----------------------------------------------------------------------------------------------------------------------------------
-     *  Example C) Assume that the hub is mounted on a vertical plate on the right side of the robot, with the Logo facing out, and the
-     *  Hub rotated so that the USB ports are facing down 30 degrees towards the back wheels of the robot.
+     * -----------------------------------------------------------------------------------------------------------------
+     *  Example C) Assume that the hub is mounted on a vertical plate on the right side of the robot, with the Logo
+     *  facing out, and the Hub rotated so that the USB ports are facing down 30 degrees towards the back wheels of the
+     *  robot.
      *
      *  To get the "Default" hub into this configuration will require several rotations.
-     *  1) Rotate the hub +90 degrees around the X axis to get it standing upright with the logo pointing backwards on the robot
+     *  1) Rotate the hub +90 degrees around the X axis to get it standing upright with the logo pointing backwards on
+     *     the robot
      *  2) Next, rotate the hub +90 around the Y axis to get it facing to the right.
-     *  3) Finally rotate the hub +120 degrees around the Z axis to take the USB ports from vertical to sloping down 30 degrees and
-     *     facing towards the back of the robot.
+     *  3) Finally rotate the hub +120 degrees around the Z axis to take the USB ports from vertical to sloping down 30
+     *     degrees and facing towards the back of the robot.
      *
      *  So the X,Y,Z rotations would be 90,90,120
      */
